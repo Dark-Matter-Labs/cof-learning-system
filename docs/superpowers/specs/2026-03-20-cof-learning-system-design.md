@@ -56,6 +56,10 @@ Each slot has independent provider/model/key configuration via environment varia
 
 No external job queue — Vercel Pro 60s timeout sufficient for LLM calls.
 
+### Failure Recovery
+
+If extraction fails (LLM timeout, malformed response, network error), the node is set to `status='error'` with error details stored in `llm_extraction` JSONB as `{ error: string, failed_at: string }`. The UI shows an error indicator with a "Retry Processing" button that re-triggers `/api/capture/process`. The status enum includes `error` alongside the existing values.
+
 ## Data Model
 
 ### Tables
@@ -66,20 +70,22 @@ No external job queue — Vercel Pro 60s timeout sufficient for LLM calls.
 **edge_types** — Configurable relationship vocabulary.
 - Fields: id (TEXT PK), label, description, is_directional
 
-**nodes** — Single table for all entity types (hunches, assumptions, tests, learnings, people, orgs, sites).
+**nodes** — Single table for all entity types (hunches, assumptions, tests, learnings, people, orgs, sites). Entity-type nodes (person, org, site) use only core fields (title, description, domain_tags). Hunch-specific columns are null for these types.
 - Core: id (UUID), node_type (FK), title, description
-- Flexible content: `content` JSONB with type-specific structure
+- Flexible content: `content` JSONB — reserved for v2 type-specific extensions, null for v1
 - Hunch-specific: hunch_type, confidence_level, confidence_basis
-- Processing: status (raw → processing → llm_reviewed → human_reviewed → promoted | archived | falsified | suspended)
+- Processing: status (raw → processing → llm_reviewed → human_reviewed → promoted | error | archived | falsified | suspended)
 - LLM pipeline: llm_extraction JSONB, llm_review JSONB, human_review JSONB (separate columns = full audit trail)
 - Provenance: author_id, parent_node_id (self-referential for hunch chains)
-- Tagging: domain_tags TEXT[], external_links JSONB
+- Tagging: domain_tags TEXT[]
+- External links: `external_links JSONB` — array of `{ url: string, label: string, added_at: string }`
+- Attachments: files stored in Supabase Storage, referenced via `attachments` field in content JSONB as `[{ storage_path, filename, mime_type, size }]`. Max 10MB per file. Allowed types: PDF, PNG, JPG, MP3, M4A. Files stored but not processed by extraction agent in v1.
 
 **edges** — Connects any two nodes with typed relationships.
 - Fields: source_id, target_id, edge_type (FK), weight, description, author_id
 - UNIQUE(source_id, target_id, edge_type)
 
-**activity_log** — Powers dashboard and weekly review ritual.
+**activity_log** — Powers dashboard and weekly review ritual. Written by API routes on node creation, status transitions, and edge creation. No database triggers for v1.
 - Fields: actor_id, action, target_node_id, details JSONB
 
 **assets** — v2 (Create Mode output), deferred.
@@ -147,7 +153,11 @@ Enabled on: nodes, edges, activity_log
 
 ### 5. Weekly Review Ritual
 
-Surfaces: nodes awaiting promotion, stale hunches, assumption challenges, diverging chains. Designed for 30-min team session.
+Filtered list view for the 30-min team session. Surfaces:
+- **Awaiting promotion:** nodes in `llm_reviewed` status, sorted by age
+- **Stale hunches:** nodes in `llm_reviewed` for >7 days without human review
+- **Assumption challenges:** recently promoted nodes where `edge_type='challenges'`
+- Bulk promote/archive actions for efficiency
 
 ### 6. Settings
 
@@ -175,7 +185,6 @@ src/
       review/route.ts             # LLM review agent (v2)
       graph/nodes/route.ts
       graph/edges/route.ts
-      graph/query/route.ts
       llm/route.ts                # LLM proxy
   lib/
     llm.ts                        # LLM abstraction layer
@@ -210,6 +219,14 @@ src/
       StatusBadge.tsx
 ```
 
+## Empty & Error States
+
+- **Empty graph:** centered prompt "Capture your first hunch to start building the graph" with link to /capture
+- **Empty review queue:** success message "All caught up — no hunches awaiting review"
+- **Empty dashboard:** onboarding prompt guiding to first capture
+- **Processing error:** error indicator on hunch card with "Retry Processing" button and error message
+- **Loading:** skeleton placeholders matching component layout
+
 ## Design Tokens
 
 ```
@@ -232,7 +249,38 @@ Fonts:
 
 ### Extraction Agent
 
-Runs on every new hunch. Extracts: title, summary, structured claim (if/then/because), assumption type, entities, domain tags, suggested connections, confidence assessment, open questions. Returns JSON. All outputs are suggestions for human review.
+Runs on every new hunch. Returns JSON matching this schema:
+
+```typescript
+interface LlmExtraction {
+  title: string;
+  summary: string;
+  structured_claim: { if: string; then: string; because: string } | null;
+  assumption_type: 'background' | 'foreground' | null;
+  entities: Array<{ name: string; type: 'person' | 'organisation' | 'site' | 'concept' }>;
+  domain_tags: string[];
+  suggested_connections: Array<{ target_title: string; edge_type: string; rationale: string }>;
+  confidence_assessment: { level: 1 | 2 | 3 | 4 | 5; basis: 'intuition' | 'analogy' | 'observation' | 'early_evidence' | 'strong_evidence' };
+  open_questions: string[];
+}
+```
+
+Suggested connections use `target_title` (string match) since the extraction agent has no access to existing node IDs. The review UI does a fuzzy search against existing node titles and presents matches for human confirmation. If no match is found, the connection suggestion is shown as "unresolved" and the human can manually search and link.
+
+All outputs are suggestions for human review.
+
+### Human Review Schema
+
+```typescript
+interface HumanReview {
+  reviewed_at: string;
+  reviewer_id: string;
+  fields: Record<string, { action: 'accepted' | 'rejected' | 'edited'; original: unknown; final: unknown }>;
+  connections_accepted: Array<{ target_node_id: string; edge_type: string }>;
+  connections_rejected: string[]; // target_titles that were rejected
+  connections_added: Array<{ target_node_id: string; edge_type: string }>; // manually drawn
+}
+```
 
 ### Review Agent (v2)
 
