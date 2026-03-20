@@ -79,7 +79,7 @@ If extraction fails (LLM timeout, malformed response, network error), the node i
 - Provenance: author_id, parent_node_id (self-referential for hunch chains)
 - Tagging: domain_tags TEXT[]
 - External links: `external_links JSONB` — array of `{ url: string, label: string, added_at: string }`
-- Attachments: files stored in Supabase Storage, referenced via `attachments` field in content JSONB as `[{ storage_path, filename, mime_type, size }]`. Max 10MB per file. Allowed types: PDF, PNG, JPG, MP3, M4A. Files stored but not processed by extraction agent in v1.
+- Attachments: `attachments JSONB` column — files stored in Supabase Storage, referenced as `[{ storage_path, filename, mime_type, size }]`. Max 10MB per file. Allowed types: PDF, PNG, JPG, MP3, M4A. Files stored but not processed by extraction agent in v1.
 
 **edges** — Connects any two nodes with typed relationships.
 - Fields: source_id, target_id, edge_type (FK), weight, description, author_id
