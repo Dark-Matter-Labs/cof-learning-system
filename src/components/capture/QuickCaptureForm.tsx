@@ -17,6 +17,14 @@ interface QuickCaptureFormProps {
   readonly isSubmitting?: boolean;
 }
 
+const CONFIDENCE_LEVELS = [
+  { level: 1, label: 'Gut feel' },
+  { level: 2, label: 'Analogy' },
+  { level: 3, label: 'Observed' },
+  { level: 4, label: 'Early data' },
+  { level: 5, label: 'Strong data' },
+] as const;
+
 const HUNCH_TYPES: { value: HunchType; label: string }[] = [
   { value: 'new', label: 'New hunch' },
   { value: 'feedback', label: 'Feedback' },
@@ -105,17 +113,21 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
           <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
             Confidence
           </label>
-          <div className="flex gap-1.5 pt-1.5">
-            {[1, 2, 3, 4, 5].map(level => (
+          <div className="flex gap-1 pt-1">
+            {CONFIDENCE_LEVELS.map(({ level, label }) => (
               <button
                 key={level}
                 type="button"
                 onClick={() => setConfidence(level)}
-                className={`w-6 h-6 rounded-full transition-colors ${
-                  level <= confidence ? 'bg-node-hunch' : 'border border-gray-600 hover:border-gray-500'
+                className={`flex-1 py-1.5 text-[10px] rounded-md transition-colors ${
+                  level === confidence
+                    ? 'bg-node-hunch text-white'
+                    : 'bg-gray-800 text-gray-500 hover:bg-gray-750 hover:text-gray-400'
                 }`}
-                aria-label={`Confidence level ${level}`}
-              />
+                aria-label={`Confidence: ${label}`}
+              >
+                {label}
+              </button>
             ))}
           </div>
         </div>
