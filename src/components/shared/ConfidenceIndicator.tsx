@@ -1,20 +1,27 @@
+const CONFIDENCE_LABELS: Record<number, string> = {
+  1: 'Gut feel',
+  2: 'Analogy',
+  3: 'Observed',
+  4: 'Early data',
+  5: 'Strong data',
+};
+
 interface ConfidenceIndicatorProps {
   readonly level: number | null;
-  readonly max?: number;
-  readonly color?: string;
 }
 
-export function ConfidenceIndicator({ level, max = 5, color = 'bg-node-hunch' }: ConfidenceIndicatorProps) {
+export function ConfidenceIndicator({ level }: ConfidenceIndicatorProps) {
+  if (level === null) return null;
+
+  const label = CONFIDENCE_LABELS[level] ?? `Level ${level}`;
+
   return (
-    <div className="flex gap-1">
-      {Array.from({ length: max }, (_, i) => (
-        <div
-          key={i}
-          className={`w-3 h-3 rounded-full ${
-            level !== null && i < level ? color : 'border border-gray-600'
-          }`}
-        />
-      ))}
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+      <span
+        className="w-2 h-2 rounded-full bg-node-hunch"
+        style={{ opacity: 0.4 + (level / 5) * 0.6 }}
+      />
+      {label}
+    </span>
   );
 }
