@@ -37,10 +37,12 @@ export default async function ReviewPage() {
 
   if (awaiting.length === 0 && challenges.length === 0) {
     return (
-      <EmptyState
-        title="All caught up — no hunches awaiting review"
-        description="New hunches will appear here after AI processing"
-      />
+      <div className="page-with-nav">
+        <EmptyState
+          title="All caught up — no hunches awaiting review"
+          description="New hunches will appear here after AI processing"
+        />
+      </div>
     );
   }
 
