@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { title, description, hunch_type, confidence_level, external_link } = body;
+  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link } = body;
 
   if (!title || typeof title !== 'string' || title.trim().length === 0) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const { data: node, error } = await supabase
     .from('nodes')
     .insert({
-      node_type: 'hunch',
+      node_type,
       title: title.trim(),
       description: description?.trim() || null,
       hunch_type: hunch_type || 'new',
