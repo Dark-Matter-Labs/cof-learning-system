@@ -10,6 +10,28 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Node-type colours */
+  --color-node-hunch: #7F77DD;
+  --color-node-assumption-bg: #1D9E75;
+  --color-node-assumption-fg: #D85A30;
+  --color-node-test: #D4537E;
+  --color-node-learning: #378ADD;
+  --color-node-option: #BA7517;
+  --color-node-entity: #888780;
+  --color-node-site: #639922;
+  --color-node-commitment: #185FA5;
+
+  /* COF earth-tone palette (groundwork for Martin's design) */
+  --color-cof-earth: #8B7355;
+  --color-cof-ocean: #2D6A7F;
+  --color-cof-atmosphere: #6B8AA3;
+  --color-cof-canopy: #5A7247;
+
+  /* Font stacks — swap with Martin's fonts when delivered */
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 @media (prefers-color-scheme: dark) {
