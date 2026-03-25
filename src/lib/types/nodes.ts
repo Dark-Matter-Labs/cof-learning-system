@@ -45,6 +45,7 @@ export interface HumanReview {
   }>>;
   readonly connections_accepted: ReadonlyArray<{
     readonly target_node_id: string;
+    readonly target_title: string;
     readonly edge_type: string;
   }>;
   readonly connections_rejected: readonly string[];

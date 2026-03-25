@@ -54,7 +54,7 @@ export function ReviewCard({ node, onPromote, onSaveDraft, onArchive, isSubmitti
     },
     connections_accepted: (extraction.suggested_connections ?? [])
       .filter((_, i) => connectionStatuses[i] === 'accepted')
-      .map(c => ({ target_node_id: '', edge_type: c.edge_type })),
+      .map(c => ({ target_node_id: '', target_title: c.target_title, edge_type: c.edge_type })),
     connections_rejected: (extraction.suggested_connections ?? [])
       .filter((_, i) => connectionStatuses[i] === 'rejected')
       .map(c => c.target_title),

@@ -6,6 +6,41 @@ import { createClient } from '@/lib/supabase/client';
 import { ReviewCard } from '@/components/review/ReviewCard';
 import type { Node, HumanReview } from '@/lib/types/nodes';
 
+const STOP_WORDS = new Set(['the', 'a', 'an', 'of', 'in', 'to', 'and', 'for', 'is', 'as', 'on', 'by', 'at', 'or', 'not']);
+
+function getKeywords(text: string): string[] {
+  return text.toLowerCase().split(/\W+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+}
+
+function findBestMatch(targetTitle: string, candidates: { id: string; title: string }[]): { id: string; title: string } | null {
+  // Exact match
+  const exact = candidates.find(n => n.title === targetTitle);
+  if (exact) return exact;
+
+  // Substring match
+  const sub = candidates.find(n => n.title.toLowerCase().includes(targetTitle.toLowerCase()))
+    ?? candidates.find(n => targetTitle.toLowerCase().includes(n.title.toLowerCase()));
+  if (sub) return sub;
+
+  // Word overlap — match if ANY significant keyword overlaps
+  const searchWords = getKeywords(targetTitle);
+  if (searchWords.length === 0) return null;
+
+  let bestScore = 0;
+  let bestMatch: { id: string; title: string } | null = null;
+
+  for (const candidate of candidates) {
+    const candidateWords = getKeywords(candidate.title);
+    const overlap = searchWords.filter(w => candidateWords.some(cw => cw.includes(w) || w.includes(cw))).length;
+    if (overlap > 0 && overlap > bestScore) {
+      bestScore = overlap;
+      bestMatch = candidate;
+    }
+  }
+
+  return bestMatch;
+}
+
 export default function ReviewPage() {
   const params = useParams();
   const router = useRouter();
@@ -29,6 +64,8 @@ export default function ReviewPage() {
     setIsSubmitting(true);
     try {
       const supabase = createClient();
+      const nodeId = params.id as string;
+
       await supabase
         .from('nodes')
         .update({
@@ -37,11 +74,38 @@ export default function ReviewPage() {
           confidence_level: review.fields.confidence?.final as number,
           domain_tags: review.fields.domain_tags?.final as string[],
         })
-        .eq('id', params.id);
+        .eq('id', nodeId);
+
+      // Create edges for accepted connections by matching target titles to existing nodes
+      if (review.connections_accepted.length > 0) {
+        const accepted = review.connections_accepted.filter(c => c.target_title);
+
+        if (accepted.length > 0) {
+          const { data: allNodes } = await supabase
+            .from('nodes')
+            .select('id, title')
+            .in('status', ['promoted', 'human_reviewed'])
+            .neq('id', nodeId);
+
+          if (allNodes && allNodes.length > 0) {
+            const edges = accepted
+              .map(conn => {
+                const target = findBestMatch(conn.target_title, allNodes);
+                if (!target) return null;
+                return { source_id: nodeId, target_id: target.id, edge_type: conn.edge_type, weight: 1 };
+              })
+              .filter((e): e is NonNullable<typeof e> => e !== null);
+
+            if (edges.length > 0) {
+              await supabase.from('edges').insert(edges);
+            }
+          }
+        }
+      }
 
       await supabase.from('activity_log').insert({
         action: 'promoted',
-        target_node_id: params.id as string,
+        target_node_id: nodeId,
         details: { from_status: node?.status },
       });
 
