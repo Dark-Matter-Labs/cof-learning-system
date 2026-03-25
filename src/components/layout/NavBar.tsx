@@ -21,9 +21,8 @@ export function NavBar({ reviewCount }: NavBarProps) {
   };
 
   const links = [
-    { href: '/', label: 'Dashboard' },
+    { href: '/', label: 'Graph' },
     { href: '/capture', label: 'Capture' },
-    { href: '/graph', label: 'Graph' },
     { href: '/review', label: 'Review' },
     { href: '/settings', label: 'Settings' },
   ];
