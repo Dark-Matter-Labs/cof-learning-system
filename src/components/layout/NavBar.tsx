@@ -33,7 +33,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800/50">
       <div className="flex items-center gap-8">
         <Link href="/" className="text-sm font-bold text-gray-300 tracking-widest">
           COF

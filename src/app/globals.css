@@ -65,3 +65,8 @@ body {
 .animate-skeleton {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
+
+.page-with-nav {
+  padding-top: 49px;
+  min-height: 100vh;
+}

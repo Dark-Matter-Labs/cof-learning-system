@@ -25,7 +25,7 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="page-with-nav max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-lg font-bold text-gray-200 mb-6">Settings</h1>
 
       {/* Node Types */}
