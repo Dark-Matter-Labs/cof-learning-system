@@ -9,6 +9,9 @@ const NODE_TYPES = [
   { value: 'test', label: 'Test' },
   { value: 'learning', label: 'Learning' },
   { value: 'option', label: 'Option' },
+  { value: 'commitment', label: 'Commitment' },
+  { value: 'signal', label: 'Signal' },
+  { value: 'goal_space', label: 'Goal space' },
 ];
 
 interface InlineCaptureCardProps {

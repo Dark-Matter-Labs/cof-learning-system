@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link } = body;
+  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link, content } = body;
 
   if (!title || typeof title !== 'string' || title.trim().length === 0) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       status: 'raw',
       author_id: user.id,
       external_links: externalLinks,
+      content: content ?? null,
     })
     .select()
     .single();
@@ -47,6 +48,19 @@ export async function POST(request: Request) {
     target_node_id: node.id,
     details: { title: node.title, hunch_type: node.hunch_type },
   });
+
+  // Fire-and-forget: propagate signal if this is a signal node
+  if (node_type === 'signal') {
+    const signalUrl = new URL('/api/signals', request.url);
+    fetch(signalUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') ?? '',
+      },
+      body: JSON.stringify({ node_id: node.id }),
+    }).catch(() => {});
+  }
 
   // Fire-and-forget: trigger LLM extraction
   const processUrl = new URL('/api/capture/process', request.url);

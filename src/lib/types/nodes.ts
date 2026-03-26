@@ -33,6 +33,12 @@ export interface LlmExtraction {
     readonly basis: 'intuition' | 'analogy' | 'observation' | 'early_evidence' | 'strong_evidence';
   };
   readonly open_questions: readonly string[];
+  readonly commitment_relevance: {
+    readonly relevant: boolean;
+    readonly commitment_areas: readonly string[];
+    readonly tension_flag: boolean;
+    readonly tension_description: string | null;
+  } | null;
 }
 
 export interface HumanReview {

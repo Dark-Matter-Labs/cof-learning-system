@@ -7,7 +7,12 @@ const NODE_TYPE_COLORS: Record<string, string> = {
   option: 'bg-node-option',
   person: 'bg-node-entity',
   organisation: 'bg-node-entity',
+  entity: 'bg-node-entity',
   site: 'bg-node-site',
+  commitment: 'bg-[#185FA5]',
+  intervention: 'bg-[#534AB7]',
+  signal: 'bg-[#A32D2D]',
+  goal_space: 'bg-[#0F6E56]',
 };
 
 interface NodeTypeBadgeProps {

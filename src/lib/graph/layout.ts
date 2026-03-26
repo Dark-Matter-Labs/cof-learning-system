@@ -30,7 +30,12 @@ const NODE_TYPE_COLORS: Record<string, string> = {
   option: '#BA7517',
   person: '#888780',
   organisation: '#888780',
+  entity: '#888780',
   site: '#639922',
+  commitment: '#185FA5',
+  intervention: '#534AB7',
+  signal: '#A32D2D',
+  goal_space: '#0F6E56',
 };
 
 const NODE_TYPE_RADII: Record<string, number> = {

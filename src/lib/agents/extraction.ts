@@ -14,8 +14,23 @@ Given input text (which may be a rough note, call transcript, document excerpt, 
   "domain_tags": ["dartmoor", "madrid", "copenhagen", "antarctica", "capital_strategy", "formation", "demand_architecture", "philanthropy", "natural_assets", "carbon", "water"],
   "suggested_connections": [{ "target_title": "existing concept name", "edge_type": "supports|contradicts|requires|challenges", "rationale": "why" }],
   "confidence_assessment": { "level": 1-5, "basis": "intuition|analogy|observation|early_evidence|strong_evidence" },
-  "open_questions": ["question 1", "question 2"]
+  "open_questions": ["question 1", "question 2"],
+  "commitment_relevance": {
+    "relevant": true,
+    "commitment_areas": ["area 1", "area 2"],
+    "tension_flag": false,
+    "tension_description": null
+  }
 }
+
+Rules for commitment_relevance:
+10. COMMITMENT_RELEVANCE: Does this hunch or signal relate to any existing commitments?
+    Could it support, challenge, or inform reallocation of any committed resources?
+    - Set relevant=true if this relates to resource allocation, delivery obligations, or active commitments
+    - List commitment_areas as the domains/areas of work this might affect (e.g. "carbon", "philanthropy", "COF formation")
+    - Set tension_flag=true ONLY if this DIRECTLY contradicts a known assumption a commitment depends on
+    - If tension_flag is true, write a clear tension_description explaining the contradiction
+    - If this is a signal that contradicts a known assumption, flag TENSION_FLAG: true prominently
 
 Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
 
