@@ -47,7 +47,7 @@ Plans:
 **Requirements**: GOAL-01, GOAL-02, GOAL-03, GOAL-04
 **Success Criteria** (what must be TRUE):
   1. Clicking a goal_space node opens a GoalSpacePanel instead of the generic node detail panel
-  2. GoalSpacePanel lists every linked trigger outcome with a status indicator (○ not started, ◐ in progress, ◉ met, ✕ blocked)
+  2. GoalSpacePanel lists every linked trigger outcome with a status indicator (not started, in progress, met, blocked)
   3. Status indicator for each trigger outcome is computed from connected tests, signals, and commitments — not a manual field
   4. Each trigger outcome row shows commitment count and hunch count
 **Plans:** 2/2 plans complete
@@ -65,7 +65,10 @@ Plans:
   3. Capture form has an optional "What signal would tell you this is working?" text field whose value is stored in content.expected_signals
   4. Weekly review surfaces hunches with no targets_outcome edge and prompts the user to consider linking them
   5. Extraction agent review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — Capture form outcome dropdown + expected signals + extraction agent goal context
+- [ ] 03-02-PLAN.md — Weekly review undirected hunches + GoalRelevanceField in ReviewCard
 
 ### Phase 4: Convergence Computation
 **Goal**: The system computes a convergence score per goal space using defined weight rules, stores snapshots as a time series, and triggers snapshots automatically on threshold
@@ -84,7 +87,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Each goal space shows a trajectory badge labeled converging (+) / neutral / drifting (-) with the numeric score
   2. Clicking the trajectory badge expands an inline breakdown listing positive and negative contributing factors
-  3. Goal space displays an inline SVG sparkline (200×40, teal/coral fill) showing convergence score over the last 30 days
+  3. Goal space displays an inline SVG sparkline (200x40, teal/coral fill) showing convergence score over the last 30 days
 **Plans**: TBD
 
 ### Phase 6: Reflection Agent
@@ -120,7 +123,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Goal Hierarchy | 0/2 | Not started | - |
 | 2. Goal Space Panel | 1/2 | Complete    | 2026-03-27 |
-| 3. Capture Linking + Extraction | 0/TBD | Not started | - |
+| 3. Capture Linking + Extraction | 0/2 | Not started | - |
 | 4. Convergence Computation | 0/TBD | Not started | - |
 | 5. Trajectory Indicators | 0/TBD | Not started | - |
 | 6. Reflection Agent | 0/TBD | Not started | - |
