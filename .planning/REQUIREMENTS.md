@@ -7,9 +7,9 @@
 
 ### Goal Hierarchy
 
-- [ ] **HIER-01**: User can create trigger_outcome nodes linked to a goal_space
+- [x] **HIER-01**: User can create trigger_outcome nodes linked to a goal_space
 - [ ] **HIER-02**: Commitment panel renders goal_space → trigger_outcome → commitment as a 3-level collapsible tree
-- [ ] **HIER-03**: DB schema has trigger_outcome node type and advances_goal / targets_outcome / indicates_progress edge types
+- [x] **HIER-03**: DB schema has trigger_outcome node type and advances_goal / targets_outcome / indicates_progress edge types
 - [ ] **HIER-04**: Commitment panel header shows trajectory badge per goal space
 
 ### Goal Space Panel
@@ -85,9 +85,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HIER-01 | Phase 1 | Pending |
+| HIER-01 | Phase 1 | Complete |
 | HIER-02 | Phase 1 | Pending |
-| HIER-03 | Phase 1 | Pending |
+| HIER-03 | Phase 1 | Complete |
 | HIER-04 | Phase 1 | Pending |
 | GOAL-01 | Phase 2 | Pending |
 | GOAL-02 | Phase 2 | Pending |
