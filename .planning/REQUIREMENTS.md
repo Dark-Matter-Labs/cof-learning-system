@@ -14,10 +14,10 @@
 
 ### Goal Space Panel
 
-- [ ] **GOAL-01**: User can select a goal_space node and see a dedicated detail panel (GoalSpacePanel)
-- [ ] **GOAL-02**: Goal space panel shows all trigger outcomes with progress indicators (○ not started, ◐ in progress, ◉ met, ✕ blocked)
+- [x] **GOAL-01**: User can select a goal_space node and see a dedicated detail panel (GoalSpacePanel)
+- [x] **GOAL-02**: Goal space panel shows all trigger outcomes with progress indicators (○ not started, ◐ in progress, ◉ met, ✕ blocked)
 - [ ] **GOAL-03**: Progress indicators are computed from connected tests, signals, and commitments
-- [ ] **GOAL-04**: Goal space panel shows commitment count and hunch count per trigger outcome
+- [x] **GOAL-04**: Goal space panel shows commitment count and hunch count per trigger outcome
 
 ### Capture / Linking
 
@@ -89,10 +89,10 @@
 | HIER-02 | Phase 1 | Complete |
 | HIER-03 | Phase 1 | Pending |
 | HIER-04 | Phase 1 | Complete |
-| GOAL-01 | Phase 2 | Pending |
-| GOAL-02 | Phase 2 | Pending |
+| GOAL-01 | Phase 2 | Complete |
+| GOAL-02 | Phase 2 | Complete |
 | GOAL-03 | Phase 2 | Pending |
-| GOAL-04 | Phase 2 | Pending |
+| GOAL-04 | Phase 2 | Complete |
 | CAPT-01 | Phase 3 | Pending |
 | CAPT-02 | Phase 3 | Pending |
 | CAPT-03 | Phase 3 | Pending |
