@@ -43,7 +43,7 @@ The system must always tell you whether your exploration and your commitments ar
 
 - [x] Goal hierarchy: goal_space → trigger_outcome → commitment — Phase 1
 - [x] Commitment panel restructured as goal hierarchy tree — Phase 1
-- [ ] Goal space detail panel with progress indicators
+- [x] Goal space detail panel with progress indicators — Phase 2
 - [ ] Hunch-to-outcome linking in capture forms
 - [ ] Extraction agent goal context injection and relevance suggestion
 - [ ] Convergence scoring function per goal space
@@ -112,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after milestone v0.4 initialization*
+*Last updated: 2026-03-27 after Phase 2 completion*
