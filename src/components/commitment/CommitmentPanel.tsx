@@ -115,14 +115,14 @@ export function CommitmentPanel({
 
   if (collapsed) {
     return (
-      <div className="absolute right-0 top-[49px] bottom-0 w-6 flex flex-col items-center pt-3 bg-gray-950 border-l border-gray-800/50 z-20">
+      <div className="absolute left-0 top-[49px] bottom-0 w-6 flex flex-col items-center pt-3 bg-gray-950 border-r border-gray-800/50 z-10">
         <button
           type="button"
           onClick={() => setCollapsed(false)}
-          className="text-gray-600 hover:text-gray-400 rotate-180"
+          className="text-gray-600 hover:text-gray-400"
           title="Expand commitment panel"
         >
-          ›
+          ‹
         </button>
         {activeTensions.length > 0 && (
           <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-500" title={`${activeTensions.length} active tensions`} />
@@ -132,7 +132,7 @@ export function CommitmentPanel({
   }
 
   return (
-    <div className="absolute right-0 top-[49px] bottom-0 w-[260px] bg-gray-950 border-l border-gray-800/50 z-20 flex flex-col overflow-hidden">
+    <div className="absolute left-0 top-[49px] bottom-0 w-[260px] bg-gray-950 border-r border-gray-800/50 z-10 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800/50 shrink-0">
         <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Commitments</span>
@@ -142,7 +142,7 @@ export function CommitmentPanel({
           className="text-gray-600 hover:text-gray-400 text-sm"
           title="Collapse"
         >
-          ›
+          ‹
         </button>
       </div>
 
