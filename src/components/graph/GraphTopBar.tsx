@@ -16,11 +16,11 @@ interface GraphTopBarProps {
   readonly onChangeView: (view: GraphView) => void;
 }
 
-const VIEW_ICONS: Record<GraphView, string> = {
-  force: '⬡',
-  tree: '⤷',
-  timeline: '⋯',
-  workflow: '⊞',
+const VIEW_LABELS: Record<GraphView, string> = {
+  force:    'Force',
+  tree:     'Tree',
+  timeline: 'Timeline',
+  workflow: 'Workflow',
 };
 
 export function GraphTopBar({ activeTypes, onToggleType, nodeTypes, currentView, onChangeView }: GraphTopBarProps) {
@@ -60,7 +60,7 @@ export function GraphTopBar({ activeTypes, onToggleType, nodeTypes, currentView,
                 : 'text-gray-600 hover:text-gray-400'
             }`}
           >
-            {VIEW_ICONS[view]}
+            {VIEW_LABELS[view]}
           </button>
         ))}
       </div>
