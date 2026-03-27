@@ -1,0 +1,22 @@
+{
+  "model_profile": "balanced",
+  "commit_docs": true,
+  "search_gitignored": false,
+  "branching_strategy": "none",
+  "phase_branch_template": "gsd/phase-{phase}-{slug}",
+  "milestone_branch_template": "gsd/{milestone}-{slug}",
+  "quick_branch_template": null,
+  "research": true,
+  "plan_checker": true,
+  "verifier": true,
+  "nyquist_validation": true,
+  "parallelization": true,
+  "brave_search": false,
+  "firecrawl": false,
+  "exa_search": false,
+  "text_mode": false,
+  "sub_repos": [],
+  "resolve_model_ids": false,
+  "context_window": 200000,
+  "phase_naming": "sequential"
+}
