@@ -50,7 +50,10 @@ Plans:
   2. GoalSpacePanel lists every linked trigger outcome with a status indicator (○ not started, ◐ in progress, ◉ met, ✕ blocked)
   3. Status indicator for each trigger outcome is computed from connected tests, signals, and commitments — not a manual field
   4. Each trigger outcome row shows commitment count and hunch count
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Pure functions (computeOutcomeStatus + counts) with TDD
+- [ ] 02-02-PLAN.md — GoalSpacePanel component + GraphOSSurface routing
 
 ### Phase 3: Capture Linking + Extraction
 **Goal**: Users can link a capture directly to a trigger outcome at creation time, and the extraction agent suggests goal relevance and expected signals for new hunches
@@ -116,7 +119,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Goal Hierarchy | 0/2 | Not started | - |
-| 2. Goal Space Panel | 0/TBD | Not started | - |
+| 2. Goal Space Panel | 0/2 | Not started | - |
 | 3. Capture Linking + Extraction | 0/TBD | Not started | - |
 | 4. Convergence Computation | 0/TBD | Not started | - |
 | 5. Trajectory Indicators | 0/TBD | Not started | - |
