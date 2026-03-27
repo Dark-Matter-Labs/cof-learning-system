@@ -41,7 +41,8 @@ The system must always tell you whether your exploration and your commitments ar
 
 ### Active (v0.4)
 
-- [ ] Goal hierarchy: goal_space → trigger_outcome → commitment
+- [x] Goal hierarchy: goal_space → trigger_outcome → commitment — Phase 1
+- [x] Commitment panel restructured as goal hierarchy tree — Phase 1
 - [ ] Goal space detail panel with progress indicators
 - [ ] Hunch-to-outcome linking in capture forms
 - [ ] Extraction agent goal context injection and relevance suggestion
@@ -51,7 +52,6 @@ The system must always tell you whether your exploration and your commitments ar
 - [ ] Trajectory sparkline (SVG, 30-day window)
 - [ ] Reflection agent (system-wide analysis)
 - [ ] Reflection report UI (weekly review integration)
-- [ ] Commitment panel restructured as goal hierarchy tree
 - [ ] /reflect page with guided questions, decisions log, session storage
 - [ ] reflection_sessions table
 
