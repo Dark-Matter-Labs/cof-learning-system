@@ -47,20 +47,15 @@ export function GraphTopBar({ activeTypes, onToggleType, nodeTypes, currentView,
         })}
       </div>
 
-      {/* View switcher — only force is implemented */}
+      {/* View switcher */}
       <div className="flex items-center gap-1 flex-shrink-0 border border-gray-800 rounded-md overflow-hidden">
-        <button
-          onClick={() => onChangeView('force')}
-          className="px-2.5 py-1 text-xs bg-gray-700 text-gray-200"
-        >
-          Force
-        </button>
-        {(['tree', 'timeline', 'workflow'] as GraphView[]).map(view => (
+        {(['force', 'tree', 'timeline', 'workflow'] as GraphView[]).map(view => (
           <button
             key={view}
-            disabled
-            title="Not yet implemented"
-            className="px-2.5 py-1 text-xs text-gray-700 cursor-not-allowed"
+            onClick={() => onChangeView(view)}
+            className={`px-2.5 py-1 text-xs transition-colors ${
+              currentView === view ? 'bg-gray-700 text-gray-200' : 'text-gray-600 hover:text-gray-400'
+            }`}
           >
             {VIEW_LABELS[view]}
           </button>

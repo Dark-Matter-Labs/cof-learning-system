@@ -259,6 +259,7 @@ export function GraphOSSurface() {
         nodes={nodes}
         edges={edges}
         activeTypes={activeTypes}
+        view={currentView}
         onSelectNode={handleSelectNode}
         onCanvasClick={handleCanvasClick}
         highlight={highlight}
