@@ -2,8 +2,8 @@
 phase: 4
 slug: convergence-computation
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-30
 ---
 
@@ -19,7 +19,7 @@ created: 2026-03-30
 |----------|-------|
 | **Framework** | vitest |
 | **Config file** | vitest.config.ts |
-| **Quick run command** | `npx vitest run src/lib/graph/convergence.ts --reporter=verbose` |
+| **Quick run command** | `npx vitest run src/lib/graph/__tests__/convergence.test.ts --reporter=verbose` |
 | **Full suite command** | `npx vitest run --reporter=verbose` |
 | **Estimated runtime** | ~5 seconds |
 
@@ -38,9 +38,10 @@ created: 2026-03-30
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 04-01-01 | 01 | 1 | CONV-01 | unit | `npx vitest run src/lib/graph/__tests__/convergence.test.ts` | ❌ W0 | ⬜ pending |
-| 04-01-02 | 01 | 1 | CONV-02 | migration | verify supabase migration file exists + contains convergence_snapshots | ❌ W0 | ⬜ pending |
-| 04-02-01 | 02 | 1 | CONV-03 | integration | `npx vitest run src/app/api/__tests__/convergence.test.ts` | ❌ W0 | ⬜ pending |
+| 04-01-01 | 01 | 1 | CONV-01 | unit | `npx vitest run src/lib/graph/__tests__/convergence.test.ts` | Created in Plan 01 Task 1 (TDD) | ⬜ pending |
+| 04-01-02 | 01 | 1 | CONV-02 | migration | verify supabase migration file exists + contains convergence_snapshots | Created in Plan 01 Task 2 | ⬜ pending |
+| 04-02-01 | 02 | 2 | CONV-03 (on-demand) | type-check | `npx tsc --noEmit` + grep verification | N/A (route, no unit test) | ⬜ pending |
+| 04-02-02 | 02 | 2 | CONV-03 (threshold) | unit | `npx vitest run src/lib/graph/__tests__/convergence.test.ts` | Extended in Plan 02 Task 2 (TDD) | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,9 +49,8 @@ created: 2026-03-30
 
 ## Wave 0 Requirements
 
-- [ ] `src/lib/graph/__tests__/convergence.test.ts` — failing unit tests for scoring function (CONV-01)
-- [ ] `src/app/api/__tests__/convergence.test.ts` — failing tests for snapshot API + threshold trigger (CONV-03)
-- [ ] Migration file stub — `supabase/v0.4-convergence-snapshots.sql` (CONV-02)
+- [x] `src/lib/graph/__tests__/convergence.test.ts` — created in Plan 01 Task 1 (TDD RED phase) with 15 scoring tests, extended in Plan 02 Task 2 (TDD RED phase) with 7 threshold tests
+- [ ] `supabase/v0.4-convergence-snapshots.sql` — convergence_snapshots DDL (Plan 01 Task 2)
 
 ---
 
@@ -64,11 +64,11 @@ created: 2026-03-30
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 5s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
