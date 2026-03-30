@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
 import type { TensionAlert } from '@/lib/types/tension';
+import type { ConvergenceData } from '@/lib/types/convergence';
 import { CommitmentCard } from './CommitmentCard';
-import { TrajectoryBadge } from './TrajectoryBadge';
+import { TrajectoryBadge, scoreToStatus } from './TrajectoryBadge';
 import { AllocationSummary } from './AllocationSummary';
+import { ConvergenceSparkline } from '@/components/graph/convergence/ConvergenceSparkline';
 
 interface GoalSpaceSectionProps {
   readonly goalSpace: Node;
@@ -34,6 +36,24 @@ export function GoalSpaceSection({
   onAssumptionClick,
 }: GoalSpaceSectionProps) {
   const [expanded, setExpanded] = useState(true);
+  const [convergenceData, setConvergenceData] = useState<ConvergenceData | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/convergence/snapshots?goal_space_id=${goalSpace.id}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.data) setConvergenceData(json.data);
+      })
+      .catch(() => {
+        // Silent fail — badge stays 'pending' when data unavailable
+      });
+  }, [goalSpace.id]);
+
+  const trajectoryStatus = convergenceData?.latest
+    ? scoreToStatus(convergenceData.latest.score)
+    : 'pending';
+  const trajectoryScore = convergenceData?.latest?.score;
+  const trajectoryBreakdown = convergenceData?.latest?.factor_breakdown;
 
   // All commitments in this goal space (for AllocationSummary)
   const allSectionCommitments: readonly Node[] = [
@@ -53,12 +73,22 @@ export function GoalSpaceSection({
           <span className="text-[10px] text-gray-500">{expanded ? '\u25BC' : '\u25B6'}</span>
           <span className="text-[10px] font-semibold text-gray-300 truncate">{goalSpace.title}</span>
         </div>
-        <TrajectoryBadge status="pending" />
+        <TrajectoryBadge
+          status={trajectoryStatus}
+          score={trajectoryScore}
+          factorBreakdown={trajectoryBreakdown}
+        />
       </button>
 
       {/* Expanded content */}
       {expanded && (
         <div className="pb-2">
+          {convergenceData && convergenceData.history.length > 0 && (
+            <div className="px-3 py-1">
+              <ConvergenceSparkline snapshots={convergenceData.history} />
+            </div>
+          )}
+
           {triggerOutcomes.length === 0 && unlinkedCommitments.length === 0 && (
             <p className="px-3 pl-6 text-[9px] text-gray-600 italic">No outcomes or commitments</p>
           )}

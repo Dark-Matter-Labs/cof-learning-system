@@ -1,6 +1,12 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
+import type { ConvergenceData } from '@/lib/types/convergence';
 import { NodeTypeBadge } from '@/components/shared/NodeTypeBadge';
+import { TrajectoryBadge, scoreToStatus } from '@/components/commitment/TrajectoryBadge';
+import { ConvergenceSparkline } from '@/components/graph/convergence/ConvergenceSparkline';
 import {
   computeOutcomeStatus,
   getOutcomeCommitmentCount,
@@ -30,10 +36,34 @@ export function GoalSpacePanel({ node, edges, allNodes, onClose }: GoalSpacePane
     .map(e => nodeMap.get(e.source_id))
     .filter((n): n is Node => n !== undefined);
 
+  const [convergenceData, setConvergenceData] = useState<ConvergenceData | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/convergence/snapshots?goal_space_id=${node.id}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.data) setConvergenceData(json.data);
+      })
+      .catch(() => {
+        // Silent fail — badge stays 'pending'
+      });
+  }, [node.id]);
+
+  const trajectoryStatus = convergenceData?.latest
+    ? scoreToStatus(convergenceData.latest.score)
+    : 'pending';
+
   return (
     <div className="absolute right-0 top-[49px] bottom-0 w-72 bg-gray-950 border-l border-gray-800 p-4 overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
-        <NodeTypeBadge nodeType={node.node_type} />
+        <div className="flex items-center gap-2">
+          <NodeTypeBadge nodeType={node.node_type} />
+          <TrajectoryBadge
+            status={trajectoryStatus}
+            score={convergenceData?.latest?.score}
+            factorBreakdown={convergenceData?.latest?.factor_breakdown}
+          />
+        </div>
         <button
           onClick={onClose}
           className="text-gray-600 hover:text-gray-400 text-lg"
@@ -43,7 +73,12 @@ export function GoalSpacePanel({ node, edges, allNodes, onClose }: GoalSpacePane
         </button>
       </div>
 
-      <h3 className="text-sm font-bold text-gray-200 mb-4">{node.title}</h3>
+      <h3 className="text-sm font-bold text-gray-200 mb-2">{node.title}</h3>
+
+      {/* Convergence sparkline */}
+      <div className="mb-3">
+        <ConvergenceSparkline snapshots={convergenceData?.history ?? []} />
+      </div>
 
       <div className="text-[10px] text-gray-600 uppercase mb-2">
         Trigger Outcomes ({outcomes.length})
