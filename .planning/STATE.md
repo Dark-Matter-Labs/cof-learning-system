@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-trajectory-indicators/05-01-PLAN.md
-last_updated: "2026-03-30T12:33:00.000Z"
+stopped_at: Completed 05-trajectory-indicators/05-02-PLAN.md
+last_updated: "2026-03-30T10:30:09.865Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 9
+  total_plans: 10
   completed_plans: 9
   percent: 57
 ---
@@ -56,6 +56,7 @@ Progress: [█████░░░░░] 57%
 | Phase 03-capture-linking-extraction P03-01 | 15min | 3 tasks | 5 files |
 | Phase 04-convergence-computation P04-01 | 15min | 2 tasks | 3 files |
 | Phase 05-trajectory-indicators P05-01 | 15min | 2 tasks | 4 files |
+| Phase 05-trajectory-indicators P02 | 18min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 05-trajectory-indicators]: maybeSingle() used for latest snapshot query — single() throws when no rows, maybeSingle() returns null
 - [Phase 05-trajectory-indicators]: d3 domain fixed at [-10, 10] matching computeConvergenceScore clamping range — consistent y-axis scaling
 - [Phase 05-trajectory-indicators]: Separate queries for latest (with factor_breakdown) and history (lean: score + computed_at only)
+- [Phase 05-trajectory-indicators]: Render weight and node_title in separate spans in breakdown panel — allows CSS class targeting and cleaner DOM
+- [Phase 05-trajectory-indicators]: GoalSpacePanel gets use client directive — needed for useState/useEffect convergence fetch
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T12:33:00.000Z
-Stopped at: Completed 05-trajectory-indicators/05-01-PLAN.md
+Last session: 2026-03-30T10:30:09.863Z
+Stopped at: Completed 05-trajectory-indicators/05-02-PLAN.md
 Resume file: None

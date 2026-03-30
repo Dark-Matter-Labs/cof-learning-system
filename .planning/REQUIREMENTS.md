@@ -38,8 +38,8 @@
 - [x] **CONV-01**: System computes convergence score per goal space using defined positive/negative weight rules
 - [x] **CONV-02**: convergence_snapshots table stores scores with timestamp and factor breakdown (JSONB)
 - [ ] **CONV-03**: Convergence snapshots taken on-demand and triggered when 10+ new nodes added since last snapshot
-- [ ] **CONV-04**: Trajectory indicator badge shows converging (+) / neutral / drifting (-) with numeric score
-- [ ] **CONV-05**: Clicking trajectory badge expands to show positive and negative factor breakdown
+- [x] **CONV-04**: Trajectory indicator badge shows converging (+) / neutral / drifting (-) with numeric score
+- [x] **CONV-05**: Clicking trajectory badge expands to show positive and negative factor breakdown
 - [x] **CONV-06**: Trajectory sparkline renders 30-day convergence history as inline SVG (200×40, teal/coral fill)
 
 ### Reflection Agent
@@ -104,8 +104,8 @@
 | CONV-01 | Phase 4 | Complete |
 | CONV-02 | Phase 4 | Complete |
 | CONV-03 | Phase 4 | Pending |
-| CONV-04 | Phase 5 | Pending |
-| CONV-05 | Phase 5 | Pending |
+| CONV-04 | Phase 5 | Complete |
+| CONV-05 | Phase 5 | Complete |
 | CONV-06 | Phase 5 | Complete |
 | REFL-01 | Phase 6 | Pending |
 | REFL-02 | Phase 6 | Pending |

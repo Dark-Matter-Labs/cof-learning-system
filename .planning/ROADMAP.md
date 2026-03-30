@@ -91,9 +91,9 @@ Plans:
   1. Each goal space shows a trajectory badge labeled converging (+) / neutral / drifting (-) with the numeric score
   2. Clicking the trajectory badge expands an inline breakdown listing positive and negative contributing factors
   3. Goal space displays an inline SVG sparkline (200x40, teal/coral fill) showing convergence score over the last 30 days
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 05-01-PLAN.md — GET snapshot endpoint + ConvergenceSparkline component
+- [x] 05-01-PLAN.md — GET snapshot endpoint + ConvergenceSparkline component
 - [ ] 05-02-PLAN.md — TrajectoryBadge upgrade + data wiring into panels
 
 ### Phase 6: Reflection Agent
@@ -131,6 +131,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Goal Space Panel | 1/2 | Complete    | 2026-03-27 |
 | 3. Capture Linking + Extraction | 0/2 | Not started | - |
 | 4. Convergence Computation | 1/2 | In progress | - |
-| 5. Trajectory Indicators | 1/2 | In progress | - |
+| 5. Trajectory Indicators | 1/2 | In Progress|  |
 | 6. Reflection Agent | 0/TBD | Not started | - |
 | 7. Reflection Session Page | 0/TBD | Not started | - |
