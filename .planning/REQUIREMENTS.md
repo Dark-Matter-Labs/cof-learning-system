@@ -1,64 +1,63 @@
-# Requirements: COF OS v0.4
+# Requirements: COF OS v0.5
 
-**Defined:** 2026-03-27
+**Defined:** 2026-03-31
 **Core Value:** The system must always tell you whether your exploration and your commitments are spiraling together toward your goals — or apart.
 
-## v0.4 Requirements
+## v0.5 Requirements
 
-### Goal Hierarchy
+*All requirements in this milestone are UX fixes from Robyn's first real usage session (2026-03-28).*
 
-- [ ] **HIER-01**: User can create trigger_outcome nodes linked to a goal_space
-- [x] **HIER-02**: Commitment panel renders goal_space → trigger_outcome → commitment as a 3-level collapsible tree
-- [ ] **HIER-03**: DB schema has trigger_outcome node type and advances_goal / targets_outcome / indicates_progress edge types
-- [x] **HIER-04**: Commitment panel header shows trajectory badge per goal space
+### Layout & Theme
 
-### Goal Space Panel
+- [ ] **LAYOUT-01**: Sidebar content (commitment panel, any left/right panel) starts below the navbar — not obscured by fixed nav
+- [ ] **LAYOUT-02**: All components use Tailwind `dark:` variants or CSS variables — no hardcoded colors remaining
+- [ ] **LAYOUT-03**: Graph canvas, node cards, commitment panel, and tension alerts are readable in both light and dark mode
 
-- [x] **GOAL-01**: User can select a goal_space node and see a dedicated detail panel (GoalSpacePanel)
-- [x] **GOAL-02**: Goal space panel shows all trigger outcomes with progress indicators (○ not started, ◐ in progress, ◉ met, ✕ blocked)
-- [ ] **GOAL-03**: Progress indicators are computed from connected tests, signals, and commitments
-- [x] **GOAL-04**: Goal space panel shows commitment count and hunch count per trigger outcome
+### Review UX
 
-### Capture / Linking
+- [ ] **REVIEW-01**: ReviewCard extraction fields default to checked (opt-out model — user rejects bad ones, not approves good ones)
+- [ ] **REVIEW-02**: Promote button enabled by default when all fields are checked
+- [ ] **REVIEW-03**: "Promote all" one-click shortcut accepts all fields and promotes to graph immediately
 
-- [x] **CAPT-01**: Capture form shows "Which outcome does this target?" dropdown (optional, lists active trigger_outcomes)
-- [x] **CAPT-02**: Selecting an outcome auto-creates a targets_outcome edge on save
-- [x] **CAPT-03**: Capture form has "What signal would tell you this is working?" optional text field, saved as content.expected_signals
-- [x] **CAPT-04**: Weekly review surfaces undirected hunches (no targets_outcome edge) with "consider linking" prompt
+### Capture Types
 
-### Extraction Agent
+- [ ] **CAPT-05**: Capture page title renamed from "Capture a Hunch" to "Capture"
+- [ ] **CAPT-06**: Shared `CAPTURE_TYPES` config (in `lib/config/captureTypes.ts`) used by both capture page and inline graph card
+- [ ] **CAPT-07**: Meeting notes / call transcript is a selectable capture type showing title, date, and participants fields
+- [ ] **CAPT-08**: Meeting transcript submission extracts and proposes multiple nodes (insights, actions, people, decisions, open questions)
 
-- [x] **EXTR-01**: Extraction agent receives active goal spaces and trigger outcomes in system prompt context
-- [x] **EXTR-02**: Extraction agent suggests GOAL_RELEVANCE (which trigger outcome(s) the hunch targets)
-- [x] **EXTR-03**: Extraction agent suggests EXPECTED_SIGNALS (specific observable signals if this hunch is correct)
-- [x] **EXTR-04**: Review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
+### Date & People
 
-### Convergence
+- [ ] **CAPT-09**: Insight date field on capture form ("When did this happen?", defaults to today), stored as `insight_date` on node
+- [ ] **CAPT-10**: Timeline view uses `insight_date` for node positioning when set, falling back to `created_at`
+- [ ] **PEOP-01**: Capture form has people/participants field with autocomplete suggestions from existing person nodes
+- [ ] **PEOP-02**: Selected participants create `authored_by` or `connected_to` edges to person nodes on save
+- [ ] **PEOP-03**: Extraction agent detects people mentioned in text and suggests person node connections
 
-- [x] **CONV-01**: System computes convergence score per goal space using defined positive/negative weight rules
-- [x] **CONV-02**: convergence_snapshots table stores scores with timestamp and factor breakdown (JSONB)
-- [ ] **CONV-03**: Convergence snapshots taken on-demand and triggered when 10+ new nodes added since last snapshot
-- [x] **CONV-04**: Trajectory indicator badge shows converging (+) / neutral / drifting (-) with numeric score
-- [x] **CONV-05**: Clicking trajectory badge expands to show positive and negative factor breakdown
-- [x] **CONV-06**: Trajectory sparkline renders 30-day convergence history as inline SVG (200×40, teal/coral fill)
+### Edit Nodes & Connections
 
-### Reflection Agent
+- [ ] **EDIT-01**: Node detail panel has Edit button that switches to edit mode (title, description, type, confidence, status, domain tags)
+- [ ] **EDIT-02**: Node detail panel shows all current connections (edge type + connected node title) with a Remove button per connection
+- [ ] **EDIT-03**: User can add a new connection from the detail panel: search existing nodes, select edge type and direction, confirm
 
-- [x] **REFL-01**: Reflection agent runs system-wide analysis: pattern detection, contradictions, coverage gaps, author blind spots, stop/strengthen/reframe recommendations
-- [x] **REFL-02**: Reflection agent assembles full system context (goals, outcomes, nodes, edges, convergence scores, tension alerts, activity by author)
-- [x] **REFL-03**: Reflection agent runs on-demand from weekly review and on threshold (10+ new nodes since last reflection)
-- [x] **REFL-04**: Reflection report renders in weekly review as expandable section with sections: Patterns, Contradictions, Coverage Gaps, Trajectory, Recommendations
-- [x] **REFL-05**: Each recommendation in reflection report has an action button opening the appropriate form
+### Options & Auto-Connect
 
-### Reflection Session
+- [ ] **OPT-01**: When an option node is created, extraction agent suggests `connected_to` edges to related existing nodes
+- [ ] **OPT-02**: When any new node's text mentions an existing option node by name, extraction agent suggests a `connected_to` edge to that option
 
-- [x] **SESS-01**: /reflect page exists for periodic deep reflection ritual
-- [x] **SESS-02**: /reflect shows convergence sparklines for all goal spaces over 30-90 day window
-- [x] **SESS-03**: /reflect shows guided reflection questions as text inputs with answers persisted
-- [x] **SESS-04**: /reflect shows decisions log where team records decisions with linked node effects
-- [x] **SESS-05**: reflection_sessions table stores machine_reflection, human_responses, decisions, convergence_snapshot, participants
+### File Upload
 
-## v0.5 Requirements (deferred)
+- [ ] **UPLOAD-01**: Capture page has a file upload zone accepting .pdf, .txt, and .md files
+- [ ] **UPLOAD-02**: Uploaded PDFs are extracted server-side (pdf-parse); extracted text pre-populates the description field
+- [ ] **UPLOAD-03**: Original file stored in Supabase Storage (`uploads` bucket); URL saved in `content.media_url` on the node
+
+## v0.4 Requirements (archived)
+
+*All v0.4 requirements are complete — see git history for REQUIREMENTS.md pre-2026-03-31.*
+
+Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extraction agent, convergence scoring, trajectory indicators, reflection agent, /reflect page.
+
+## Deferred (from v0.4 → future)
 
 ### Design Pass
 
@@ -70,59 +69,53 @@
 - **TUNE-01**: Admin UI for adjusting convergence score weights — defer until real usage reveals tuning needs
 - **TUNE-02**: Per-goal-space weight overrides — defer
 
+### Scheduled Cron
+
+- **CRON-01**: Scheduled reflection cron (Supabase Edge Function) — on-demand + threshold sufficient; defer to v0.6
+
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Spiral SVG animation | Deferred to Martin's design pass; badge (Option C) ships in v0.4 |
+| Spiral SVG animation | Deferred to Martin's design pass |
 | ML-based convergence scoring | Deliberate rough heuristic first — tune over real usage |
 | Mobile app | Web-first, team tool |
 | Real-time collaboration / presence | Single-user usage pattern in v0.x |
 | OAuth / SSO | Auth whitelist sufficient for small team |
-| Scheduled reflection cron (Supabase Edge Function) | On-demand + threshold sufficient for v0.4; cron is v0.5 |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HIER-01 | Phase 1 | Pending |
-| HIER-02 | Phase 1 | Complete |
-| HIER-03 | Phase 1 | Pending |
-| HIER-04 | Phase 1 | Complete |
-| GOAL-01 | Phase 2 | Complete |
-| GOAL-02 | Phase 2 | Complete |
-| GOAL-03 | Phase 2 | Pending |
-| GOAL-04 | Phase 2 | Complete |
-| CAPT-01 | Phase 3 | Complete |
-| CAPT-02 | Phase 3 | Complete |
-| CAPT-03 | Phase 3 | Complete |
-| CAPT-04 | Phase 3 | Complete |
-| EXTR-01 | Phase 3 | Complete |
-| EXTR-02 | Phase 3 | Complete |
-| EXTR-03 | Phase 3 | Complete |
-| EXTR-04 | Phase 3 | Complete |
-| CONV-01 | Phase 4 | Complete |
-| CONV-02 | Phase 4 | Complete |
-| CONV-03 | Phase 4 | Pending |
-| CONV-04 | Phase 5 | Complete |
-| CONV-05 | Phase 5 | Complete |
-| CONV-06 | Phase 5 | Complete |
-| REFL-01 | Phase 6 | Complete |
-| REFL-02 | Phase 6 | Complete |
-| REFL-03 | Phase 6 | Complete |
-| REFL-04 | Phase 6 | Complete |
-| REFL-05 | Phase 6 | Complete |
-| SESS-01 | Phase 7 | Complete |
-| SESS-02 | Phase 7 | Complete |
-| SESS-03 | Phase 7 | Complete |
-| SESS-04 | Phase 7 | Complete |
-| SESS-05 | Phase 7 | Complete |
+| LAYOUT-01 | TBD | Pending |
+| LAYOUT-02 | TBD | Pending |
+| LAYOUT-03 | TBD | Pending |
+| REVIEW-01 | TBD | Pending |
+| REVIEW-02 | TBD | Pending |
+| REVIEW-03 | TBD | Pending |
+| CAPT-05 | TBD | Pending |
+| CAPT-06 | TBD | Pending |
+| CAPT-07 | TBD | Pending |
+| CAPT-08 | TBD | Pending |
+| CAPT-09 | TBD | Pending |
+| CAPT-10 | TBD | Pending |
+| PEOP-01 | TBD | Pending |
+| PEOP-02 | TBD | Pending |
+| PEOP-03 | TBD | Pending |
+| EDIT-01 | TBD | Pending |
+| EDIT-02 | TBD | Pending |
+| EDIT-03 | TBD | Pending |
+| OPT-01 | TBD | Pending |
+| OPT-02 | TBD | Pending |
+| UPLOAD-01 | TBD | Pending |
+| UPLOAD-02 | TBD | Pending |
+| UPLOAD-03 | TBD | Pending |
 
 **Coverage:**
-- v0.4 requirements: 30 total
-- Mapped to phases: 30
-- Unmapped: 0 ✓
+- v0.5 requirements: 23 total
+- Mapped to phases: 0 (roadmap pending)
+- Unmapped: 23
 
 ---
-*Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after initial definition*
+*Requirements defined: 2026-03-31*
+*Last updated: 2026-03-31 — initial v0.5 definition*
