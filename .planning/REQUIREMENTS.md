@@ -46,7 +46,7 @@
 
 - [x] **REFL-01**: Reflection agent runs system-wide analysis: pattern detection, contradictions, coverage gaps, author blind spots, stop/strengthen/reframe recommendations
 - [x] **REFL-02**: Reflection agent assembles full system context (goals, outcomes, nodes, edges, convergence scores, tension alerts, activity by author)
-- [ ] **REFL-03**: Reflection agent runs on-demand from weekly review and on threshold (10+ new nodes since last reflection)
+- [x] **REFL-03**: Reflection agent runs on-demand from weekly review and on threshold (10+ new nodes since last reflection)
 - [ ] **REFL-04**: Reflection report renders in weekly review as expandable section with sections: Patterns, Contradictions, Coverage Gaps, Trajectory, Recommendations
 - [ ] **REFL-05**: Each recommendation in reflection report has an action button opening the appropriate form
 
@@ -109,7 +109,7 @@
 | CONV-06 | Phase 5 | Complete |
 | REFL-01 | Phase 6 | Complete |
 | REFL-02 | Phase 6 | Complete |
-| REFL-03 | Phase 6 | Pending |
+| REFL-03 | Phase 6 | Complete |
 | REFL-04 | Phase 6 | Pending |
 | REFL-05 | Phase 6 | Pending |
 | SESS-01 | Phase 7 | Pending |
