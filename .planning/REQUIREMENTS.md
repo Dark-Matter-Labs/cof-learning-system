@@ -87,35 +87,35 @@ Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extract
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAYOUT-01 | TBD | Pending |
-| LAYOUT-02 | TBD | Pending |
-| LAYOUT-03 | TBD | Pending |
-| REVIEW-01 | TBD | Pending |
-| REVIEW-02 | TBD | Pending |
-| REVIEW-03 | TBD | Pending |
-| CAPT-05 | TBD | Pending |
-| CAPT-06 | TBD | Pending |
-| CAPT-07 | TBD | Pending |
-| CAPT-08 | TBD | Pending |
-| CAPT-09 | TBD | Pending |
-| CAPT-10 | TBD | Pending |
-| PEOP-01 | TBD | Pending |
-| PEOP-02 | TBD | Pending |
-| PEOP-03 | TBD | Pending |
-| EDIT-01 | TBD | Pending |
-| EDIT-02 | TBD | Pending |
-| EDIT-03 | TBD | Pending |
-| OPT-01 | TBD | Pending |
-| OPT-02 | TBD | Pending |
-| UPLOAD-01 | TBD | Pending |
-| UPLOAD-02 | TBD | Pending |
-| UPLOAD-03 | TBD | Pending |
+| LAYOUT-01 | Phase 8 | Pending |
+| LAYOUT-02 | Phase 8 | Pending |
+| LAYOUT-03 | Phase 8 | Pending |
+| REVIEW-01 | Phase 9 | Pending |
+| REVIEW-02 | Phase 9 | Pending |
+| REVIEW-03 | Phase 9 | Pending |
+| CAPT-05 | Phase 10 | Pending |
+| CAPT-06 | Phase 10 | Pending |
+| CAPT-07 | Phase 10 | Pending |
+| CAPT-08 | Phase 10 | Pending |
+| CAPT-09 | Phase 11 | Pending |
+| CAPT-10 | Phase 11 | Pending |
+| PEOP-01 | Phase 12 | Pending |
+| PEOP-02 | Phase 12 | Pending |
+| PEOP-03 | Phase 12 | Pending |
+| EDIT-01 | Phase 13 | Pending |
+| EDIT-02 | Phase 13 | Pending |
+| EDIT-03 | Phase 13 | Pending |
+| OPT-01 | Phase 14 | Pending |
+| OPT-02 | Phase 14 | Pending |
+| UPLOAD-01 | Phase 15 | Pending |
+| UPLOAD-02 | Phase 15 | Pending |
+| UPLOAD-03 | Phase 15 | Pending |
 
 **Coverage:**
 - v0.5 requirements: 23 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 23
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 — initial v0.5 definition*
+*Last updated: 2026-03-31 — traceability filled after roadmap creation*
