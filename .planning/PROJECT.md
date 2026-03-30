@@ -50,10 +50,10 @@ The system must always tell you whether your exploration and your commitments ar
 - [x] convergence_snapshots table for time-series storage — Validated in Phase 4: Convergence Computation
 - [x] Trajectory indicator badge on goal spaces — Validated in Phase 5: Trajectory Indicators
 - [x] Trajectory sparkline (SVG, 30-day window) — Validated in Phase 5: Trajectory Indicators
-- [ ] Reflection agent (system-wide analysis)
-- [ ] Reflection report UI (weekly review integration)
+- [x] Reflection agent (system-wide analysis) — Validated in Phase 6: Reflection Agent
+- [x] Reflection report UI (weekly review integration) — Validated in Phase 6: Reflection Agent
+- [x] reflection_sessions table — Validated in Phase 6: Reflection Agent
 - [ ] /reflect page with guided questions, decisions log, session storage
-- [ ] reflection_sessions table
 
 ### Out of Scope
 
