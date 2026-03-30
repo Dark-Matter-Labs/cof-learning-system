@@ -40,7 +40,7 @@
 - [ ] **CONV-03**: Convergence snapshots taken on-demand and triggered when 10+ new nodes added since last snapshot
 - [ ] **CONV-04**: Trajectory indicator badge shows converging (+) / neutral / drifting (-) with numeric score
 - [ ] **CONV-05**: Clicking trajectory badge expands to show positive and negative factor breakdown
-- [ ] **CONV-06**: Trajectory sparkline renders 30-day convergence history as inline SVG (200×40, teal/coral fill)
+- [x] **CONV-06**: Trajectory sparkline renders 30-day convergence history as inline SVG (200×40, teal/coral fill)
 
 ### Reflection Agent
 
@@ -106,7 +106,7 @@
 | CONV-03 | Phase 4 | Pending |
 | CONV-04 | Phase 5 | Pending |
 | CONV-05 | Phase 5 | Pending |
-| CONV-06 | Phase 5 | Pending |
+| CONV-06 | Phase 5 | Complete |
 | REFL-01 | Phase 6 | Pending |
 | REFL-02 | Phase 6 | Pending |
 | REFL-03 | Phase 6 | Pending |

@@ -131,6 +131,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Goal Space Panel | 1/2 | Complete    | 2026-03-27 |
 | 3. Capture Linking + Extraction | 0/2 | Not started | - |
 | 4. Convergence Computation | 1/2 | In progress | - |
-| 5. Trajectory Indicators | 0/2 | Not started | - |
+| 5. Trajectory Indicators | 1/2 | In progress | - |
 | 6. Reflection Agent | 0/TBD | Not started | - |
 | 7. Reflection Session Page | 0/TBD | Not started | - |
