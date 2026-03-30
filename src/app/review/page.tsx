@@ -4,12 +4,14 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import Link from 'next/link';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
+import { ReflectionPanel } from './ReflectionPanel';
+import { shouldTriggerReflection } from '@/lib/types/convergence';
 
 export default async function ReviewPage() {
   const supabase = await createClient();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [awaitingRes, staleRes, lowConfRes, testsRes, tensionsRes, commitmentsRes, stalledRes] = await Promise.all([
+  const [awaitingRes, staleRes, lowConfRes, testsRes, tensionsRes, commitmentsRes, stalledRes, allHunchesRes, targetEdgesRes, reflectionCountRes, reflectionLastRes] = await Promise.all([
     // Context: awaiting promotion
     supabase
       .from('nodes')
@@ -53,6 +55,28 @@ export default async function ReviewPage() {
       .select('*')
       .eq('node_type', 'commitment')
       .lt('updated_at', sevenDaysAgo),
+    // Undirected: all active hunches
+    supabase
+      .from('nodes')
+      .select('*')
+      .eq('node_type', 'hunch')
+      .not('status', 'in', '("archived","falsified","suspended")'),
+    // Undirected: all targets_outcome edges (to compute which hunches are linked)
+    supabase
+      .from('edges')
+      .select('source_id')
+      .eq('edge_type', 'targets_outcome'),
+    // Reflection threshold: count qualified nodes
+    supabase
+      .from('nodes')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['promoted', 'human_reviewed']),
+    // Reflection threshold: last reflection session
+    supabase
+      .from('reflection_sessions')
+      .select('node_count_at_reflection, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1),
   ]);
 
   const awaiting = (awaitingRes.data ?? []) as unknown as Node[];
@@ -63,15 +87,35 @@ export default async function ReviewPage() {
   const commitments = (commitmentsRes.data ?? []) as unknown as Node[];
   const stalled = (stalledRes.data ?? []) as unknown as Node[];
 
-  const isEmpty = awaiting.length === 0 && tensions.length === 0 && lowConf.length === 0;
+  const qualifiedNodeCount = reflectionCountRes.count ?? 0;
+  const lastSession = (reflectionLastRes.data?.[0] ?? null) as { node_count_at_reflection: number; created_at: string } | null;
+  const reflectionDue = shouldTriggerReflection(
+    qualifiedNodeCount,
+    lastSession?.node_count_at_reflection ?? 0,
+    lastSession?.created_at ? new Date(lastSession.created_at) : null,
+  );
+
+  const linkedHunchIds = new Set(
+    ((targetEdgesRes.data ?? []) as unknown as { source_id: string }[]).map(e => e.source_id)
+  );
+  const undirectedHunches = ((allHunchesRes.data ?? []) as unknown as Node[]).filter(
+    n => !linkedHunchIds.has(n.id)
+  );
+
+  const isEmpty = awaiting.length === 0 && tensions.length === 0 && lowConf.length === 0 && undirectedHunches.length === 0;
 
   if (isEmpty) {
     return (
       <div className="page-with-nav">
-        <EmptyState
-          title="All caught up"
-          description="No hunches awaiting review, no tension alerts, no low-confidence assumptions."
-        />
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <EmptyState
+            title="All caught up"
+            description="No hunches awaiting review, no tension alerts, no low-confidence assumptions."
+          />
+          <div className="mt-8">
+            <ReflectionPanel reflectionDue={reflectionDue} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -169,6 +213,28 @@ export default async function ReviewPage() {
                 </div>
               </section>
             )}
+
+            {/* Undirected hunches */}
+            {undirectedHunches.length > 0 && (
+              <section className="mb-5" data-testid="undirected-hunches">
+                <h3 className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">
+                  Undirected hunches ({undirectedHunches.length})
+                </h3>
+                <p className="text-[10px] text-amber-500/80 mb-2">Consider linking these to a trigger outcome</p>
+                <div className="space-y-1.5">
+                  {undirectedHunches.map(node => (
+                    <Link
+                      key={node.id}
+                      href={`/capture/${node.id}/review`}
+                      className="flex items-center justify-between bg-gray-900 border border-amber-900/30 rounded-lg p-2.5 hover:border-amber-800/50 transition-colors"
+                    >
+                      <div className="text-xs text-gray-300 truncate">{node.title}</div>
+                      <span className="text-[9px] text-amber-500 shrink-0 ml-2">consider linking</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* ── RIGHT: Commitment health ── */}
@@ -239,6 +305,12 @@ export default async function ReviewPage() {
           </div>
 
         </div>
+
+        {/* ── System Reflection ── */}
+        <div className="mt-8">
+          <ReflectionPanel reflectionDue={reflectionDue} />
+        </div>
+
       </div>
     </div>
   );

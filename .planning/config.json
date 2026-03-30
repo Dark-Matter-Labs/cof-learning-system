@@ -18,5 +18,8 @@
   "sub_repos": [],
   "resolve_model_ids": false,
   "context_window": 200000,
-  "phase_naming": "sequential"
+  "phase_naming": "sequential",
+  "workflow": {
+    "_auto_chain_active": false
+  }
 }

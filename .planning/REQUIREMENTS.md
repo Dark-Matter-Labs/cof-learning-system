@@ -8,55 +8,55 @@
 ### Goal Hierarchy
 
 - [ ] **HIER-01**: User can create trigger_outcome nodes linked to a goal_space
-- [ ] **HIER-02**: Commitment panel renders goal_space → trigger_outcome → commitment as a 3-level collapsible tree
+- [x] **HIER-02**: Commitment panel renders goal_space → trigger_outcome → commitment as a 3-level collapsible tree
 - [ ] **HIER-03**: DB schema has trigger_outcome node type and advances_goal / targets_outcome / indicates_progress edge types
-- [ ] **HIER-04**: Commitment panel header shows trajectory badge per goal space
+- [x] **HIER-04**: Commitment panel header shows trajectory badge per goal space
 
 ### Goal Space Panel
 
-- [ ] **GOAL-01**: User can select a goal_space node and see a dedicated detail panel (GoalSpacePanel)
-- [ ] **GOAL-02**: Goal space panel shows all trigger outcomes with progress indicators (○ not started, ◐ in progress, ◉ met, ✕ blocked)
+- [x] **GOAL-01**: User can select a goal_space node and see a dedicated detail panel (GoalSpacePanel)
+- [x] **GOAL-02**: Goal space panel shows all trigger outcomes with progress indicators (○ not started, ◐ in progress, ◉ met, ✕ blocked)
 - [ ] **GOAL-03**: Progress indicators are computed from connected tests, signals, and commitments
-- [ ] **GOAL-04**: Goal space panel shows commitment count and hunch count per trigger outcome
+- [x] **GOAL-04**: Goal space panel shows commitment count and hunch count per trigger outcome
 
 ### Capture / Linking
 
-- [ ] **CAPT-01**: Capture form shows "Which outcome does this target?" dropdown (optional, lists active trigger_outcomes)
-- [ ] **CAPT-02**: Selecting an outcome auto-creates a targets_outcome edge on save
-- [ ] **CAPT-03**: Capture form has "What signal would tell you this is working?" optional text field, saved as content.expected_signals
-- [ ] **CAPT-04**: Weekly review surfaces undirected hunches (no targets_outcome edge) with "consider linking" prompt
+- [x] **CAPT-01**: Capture form shows "Which outcome does this target?" dropdown (optional, lists active trigger_outcomes)
+- [x] **CAPT-02**: Selecting an outcome auto-creates a targets_outcome edge on save
+- [x] **CAPT-03**: Capture form has "What signal would tell you this is working?" optional text field, saved as content.expected_signals
+- [x] **CAPT-04**: Weekly review surfaces undirected hunches (no targets_outcome edge) with "consider linking" prompt
 
 ### Extraction Agent
 
-- [ ] **EXTR-01**: Extraction agent receives active goal spaces and trigger outcomes in system prompt context
-- [ ] **EXTR-02**: Extraction agent suggests GOAL_RELEVANCE (which trigger outcome(s) the hunch targets)
-- [ ] **EXTR-03**: Extraction agent suggests EXPECTED_SIGNALS (specific observable signals if this hunch is correct)
-- [ ] **EXTR-04**: Review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
+- [x] **EXTR-01**: Extraction agent receives active goal spaces and trigger outcomes in system prompt context
+- [x] **EXTR-02**: Extraction agent suggests GOAL_RELEVANCE (which trigger outcome(s) the hunch targets)
+- [x] **EXTR-03**: Extraction agent suggests EXPECTED_SIGNALS (specific observable signals if this hunch is correct)
+- [x] **EXTR-04**: Review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
 
 ### Convergence
 
-- [ ] **CONV-01**: System computes convergence score per goal space using defined positive/negative weight rules
-- [ ] **CONV-02**: convergence_snapshots table stores scores with timestamp and factor breakdown (JSONB)
+- [x] **CONV-01**: System computes convergence score per goal space using defined positive/negative weight rules
+- [x] **CONV-02**: convergence_snapshots table stores scores with timestamp and factor breakdown (JSONB)
 - [ ] **CONV-03**: Convergence snapshots taken on-demand and triggered when 10+ new nodes added since last snapshot
-- [ ] **CONV-04**: Trajectory indicator badge shows converging (+) / neutral / drifting (-) with numeric score
-- [ ] **CONV-05**: Clicking trajectory badge expands to show positive and negative factor breakdown
-- [ ] **CONV-06**: Trajectory sparkline renders 30-day convergence history as inline SVG (200×40, teal/coral fill)
+- [x] **CONV-04**: Trajectory indicator badge shows converging (+) / neutral / drifting (-) with numeric score
+- [x] **CONV-05**: Clicking trajectory badge expands to show positive and negative factor breakdown
+- [x] **CONV-06**: Trajectory sparkline renders 30-day convergence history as inline SVG (200×40, teal/coral fill)
 
 ### Reflection Agent
 
-- [ ] **REFL-01**: Reflection agent runs system-wide analysis: pattern detection, contradictions, coverage gaps, author blind spots, stop/strengthen/reframe recommendations
-- [ ] **REFL-02**: Reflection agent assembles full system context (goals, outcomes, nodes, edges, convergence scores, tension alerts, activity by author)
-- [ ] **REFL-03**: Reflection agent runs on-demand from weekly review and on threshold (10+ new nodes since last reflection)
-- [ ] **REFL-04**: Reflection report renders in weekly review as expandable section with sections: Patterns, Contradictions, Coverage Gaps, Trajectory, Recommendations
-- [ ] **REFL-05**: Each recommendation in reflection report has an action button opening the appropriate form
+- [x] **REFL-01**: Reflection agent runs system-wide analysis: pattern detection, contradictions, coverage gaps, author blind spots, stop/strengthen/reframe recommendations
+- [x] **REFL-02**: Reflection agent assembles full system context (goals, outcomes, nodes, edges, convergence scores, tension alerts, activity by author)
+- [x] **REFL-03**: Reflection agent runs on-demand from weekly review and on threshold (10+ new nodes since last reflection)
+- [x] **REFL-04**: Reflection report renders in weekly review as expandable section with sections: Patterns, Contradictions, Coverage Gaps, Trajectory, Recommendations
+- [x] **REFL-05**: Each recommendation in reflection report has an action button opening the appropriate form
 
 ### Reflection Session
 
-- [ ] **SESS-01**: /reflect page exists for periodic deep reflection ritual
-- [ ] **SESS-02**: /reflect shows convergence sparklines for all goal spaces over 30-90 day window
-- [ ] **SESS-03**: /reflect shows guided reflection questions as text inputs with answers persisted
-- [ ] **SESS-04**: /reflect shows decisions log where team records decisions with linked node effects
-- [ ] **SESS-05**: reflection_sessions table stores machine_reflection, human_responses, decisions, convergence_snapshot, participants
+- [x] **SESS-01**: /reflect page exists for periodic deep reflection ritual
+- [x] **SESS-02**: /reflect shows convergence sparklines for all goal spaces over 30-90 day window
+- [x] **SESS-03**: /reflect shows guided reflection questions as text inputs with answers persisted
+- [x] **SESS-04**: /reflect shows decisions log where team records decisions with linked node effects
+- [x] **SESS-05**: reflection_sessions table stores machine_reflection, human_responses, decisions, convergence_snapshot, participants
 
 ## v0.5 Requirements (deferred)
 
@@ -86,37 +86,37 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | HIER-01 | Phase 1 | Pending |
-| HIER-02 | Phase 1 | Pending |
+| HIER-02 | Phase 1 | Complete |
 | HIER-03 | Phase 1 | Pending |
-| HIER-04 | Phase 1 | Pending |
-| GOAL-01 | Phase 2 | Pending |
-| GOAL-02 | Phase 2 | Pending |
+| HIER-04 | Phase 1 | Complete |
+| GOAL-01 | Phase 2 | Complete |
+| GOAL-02 | Phase 2 | Complete |
 | GOAL-03 | Phase 2 | Pending |
-| GOAL-04 | Phase 2 | Pending |
-| CAPT-01 | Phase 3 | Pending |
-| CAPT-02 | Phase 3 | Pending |
-| CAPT-03 | Phase 3 | Pending |
-| CAPT-04 | Phase 3 | Pending |
-| EXTR-01 | Phase 3 | Pending |
-| EXTR-02 | Phase 3 | Pending |
-| EXTR-03 | Phase 3 | Pending |
-| EXTR-04 | Phase 3 | Pending |
-| CONV-01 | Phase 4 | Pending |
-| CONV-02 | Phase 4 | Pending |
+| GOAL-04 | Phase 2 | Complete |
+| CAPT-01 | Phase 3 | Complete |
+| CAPT-02 | Phase 3 | Complete |
+| CAPT-03 | Phase 3 | Complete |
+| CAPT-04 | Phase 3 | Complete |
+| EXTR-01 | Phase 3 | Complete |
+| EXTR-02 | Phase 3 | Complete |
+| EXTR-03 | Phase 3 | Complete |
+| EXTR-04 | Phase 3 | Complete |
+| CONV-01 | Phase 4 | Complete |
+| CONV-02 | Phase 4 | Complete |
 | CONV-03 | Phase 4 | Pending |
-| CONV-04 | Phase 5 | Pending |
-| CONV-05 | Phase 5 | Pending |
-| CONV-06 | Phase 5 | Pending |
-| REFL-01 | Phase 6 | Pending |
-| REFL-02 | Phase 6 | Pending |
-| REFL-03 | Phase 6 | Pending |
-| REFL-04 | Phase 6 | Pending |
-| REFL-05 | Phase 6 | Pending |
-| SESS-01 | Phase 7 | Pending |
-| SESS-02 | Phase 7 | Pending |
-| SESS-03 | Phase 7 | Pending |
-| SESS-04 | Phase 7 | Pending |
-| SESS-05 | Phase 7 | Pending |
+| CONV-04 | Phase 5 | Complete |
+| CONV-05 | Phase 5 | Complete |
+| CONV-06 | Phase 5 | Complete |
+| REFL-01 | Phase 6 | Complete |
+| REFL-02 | Phase 6 | Complete |
+| REFL-03 | Phase 6 | Complete |
+| REFL-04 | Phase 6 | Complete |
+| REFL-05 | Phase 6 | Complete |
+| SESS-01 | Phase 7 | Complete |
+| SESS-02 | Phase 7 | Complete |
+| SESS-03 | Phase 7 | Complete |
+| SESS-04 | Phase 7 | Complete |
+| SESS-05 | Phase 7 | Complete |
 
 **Coverage:**
 - v0.4 requirements: 30 total

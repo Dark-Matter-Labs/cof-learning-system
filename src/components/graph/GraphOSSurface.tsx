@@ -11,6 +11,7 @@ import { GraphTopBar, type GraphView } from './GraphTopBar';
 import { DashboardSidebar } from './DashboardSidebar';
 import { InlineCaptureCard } from './InlineCaptureCard';
 import { NodeDetailPanel } from './NodeDetailPanel';
+import { GoalSpacePanel } from './GoalSpacePanel';
 import { CommitmentPanel } from '@/components/commitment/CommitmentPanel';
 
 const NODE_TYPE_OPTIONS = [
@@ -26,6 +27,7 @@ const NODE_TYPE_OPTIONS = [
   { id: 'intervention',            label: 'Intervention',            color: '#534AB7' },
   { id: 'signal',                  label: 'Signal',                  color: '#A32D2D' },
   { id: 'goal_space',              label: 'Goal space',              color: '#0F6E56' },
+  { id: 'trigger_outcome',         label: 'Trigger outcome',         color: '#085041' },
 ] as const;
 
 const ALL_TYPE_IDS = NODE_TYPE_OPTIONS.map(t => t.id);
@@ -225,6 +227,8 @@ export function GraphOSSurface() {
   }, []);
 
   const commitments = nodes.filter(n => n.node_type === 'commitment');
+  const goalSpaces = nodes.filter(n => n.node_type === 'goal_space');
+  const triggerOutcomes = nodes.filter(n => n.node_type === 'trigger_outcome');
 
   const sidebarStats = {
     awaitingReview: nodes.filter(n => n.status === 'llm_reviewed').length,
@@ -280,6 +284,8 @@ export function GraphOSSurface() {
       />
 
       <CommitmentPanel
+        goalSpaces={goalSpaces}
+        triggerOutcomes={triggerOutcomes}
         commitments={commitments}
         allNodes={nodes}
         edges={edges}
@@ -302,10 +308,20 @@ export function GraphOSSurface() {
           defaultNodeType={captureDefaultType}
           onClose={() => setCapturePos(null)}
           onCreated={handleNodeCreated}
+          goalSpaces={goalSpaces}
+          triggerOutcomes={triggerOutcomes}
         />
       )}
 
-      {selectedNode !== null && (
+      {selectedNode !== null && selectedNode.node_type === 'goal_space' && (
+        <GoalSpacePanel
+          node={selectedNode}
+          edges={edges}
+          allNodes={nodes}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
+      {selectedNode !== null && selectedNode.node_type !== 'goal_space' && (
         <NodeDetailPanel
           node={selectedNode}
           edges={edges}

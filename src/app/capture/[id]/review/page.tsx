@@ -46,16 +46,25 @@ export default function ReviewPage() {
   const router = useRouter();
   const [node, setNode] = useState<Node | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [triggerOutcomes, setTriggerOutcomes] = useState<ReadonlyArray<{ readonly id: string; readonly title: string }>>([]);
 
   useEffect(() => {
     const fetchNode = async () => {
       const supabase = createClient();
-      const { data } = await supabase
-        .from('nodes')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-      if (data) setNode(data as unknown as Node);
+      const [{ data: nodeData }, { data: outcomesData }] = await Promise.all([
+        supabase
+          .from('nodes')
+          .select('*')
+          .eq('id', params.id)
+          .single(),
+        supabase
+          .from('nodes')
+          .select('id, title')
+          .eq('node_type', 'trigger_outcome')
+          .neq('status', 'archived'),
+      ]);
+      if (nodeData) setNode(nodeData as unknown as Node);
+      if (outcomesData) setTriggerOutcomes(outcomesData as { id: string; title: string }[]);
     };
     fetchNode();
   }, [params.id]);
@@ -101,6 +110,23 @@ export default function ReviewPage() {
             }
           }
         }
+      }
+
+      // Create targets_outcome edges for accepted/edited goal relevance suggestions
+      const goalRelevanceEdges = Object.entries(review.fields)
+        .filter(([key, field]) =>
+          key.startsWith('goal_relevance_') &&
+          (field.action === 'accepted' || field.action === 'edited')
+        )
+        .map(([, field]) => ({
+          source_id: nodeId,
+          target_id: field.final as string,
+          edge_type: 'targets_outcome',
+          weight: 1,
+        }));
+
+      if (goalRelevanceEdges.length > 0) {
+        await supabase.from('edges').insert(goalRelevanceEdges);
       }
 
       await supabase.from('activity_log').insert({
@@ -183,6 +209,7 @@ export default function ReviewPage() {
         onSaveDraft={handleSaveDraft}
         onArchive={handleArchive}
         isSubmitting={isSubmitting}
+        triggerOutcomes={triggerOutcomes}
       />
     </div>
   );

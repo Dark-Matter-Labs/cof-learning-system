@@ -39,6 +39,12 @@ export interface LlmExtraction {
     readonly tension_flag: boolean;
     readonly tension_description: string | null;
   } | null;
+  readonly goal_relevance?: ReadonlyArray<{
+    readonly outcome_id: string;
+    readonly outcome_title: string;
+    readonly rationale: string;
+  }>;
+  readonly expected_signals?: readonly string[];
 }
 
 export interface HumanReview {

@@ -41,19 +41,19 @@ The system must always tell you whether your exploration and your commitments ar
 
 ### Active (v0.4)
 
-- [ ] Goal hierarchy: goal_space → trigger_outcome → commitment
-- [ ] Goal space detail panel with progress indicators
+- [x] Goal hierarchy: goal_space → trigger_outcome → commitment — Phase 1
+- [x] Commitment panel restructured as goal hierarchy tree — Phase 1
+- [x] Goal space detail panel with progress indicators — Phase 2
 - [ ] Hunch-to-outcome linking in capture forms
 - [ ] Extraction agent goal context injection and relevance suggestion
-- [ ] Convergence scoring function per goal space
-- [ ] convergence_snapshots table for time-series storage
-- [ ] Trajectory indicator badge on goal spaces
-- [ ] Trajectory sparkline (SVG, 30-day window)
-- [ ] Reflection agent (system-wide analysis)
-- [ ] Reflection report UI (weekly review integration)
-- [ ] Commitment panel restructured as goal hierarchy tree
-- [ ] /reflect page with guided questions, decisions log, session storage
-- [ ] reflection_sessions table
+- [x] Convergence scoring function per goal space — Validated in Phase 4: Convergence Computation
+- [x] convergence_snapshots table for time-series storage — Validated in Phase 4: Convergence Computation
+- [x] Trajectory indicator badge on goal spaces — Validated in Phase 5: Trajectory Indicators
+- [x] Trajectory sparkline (SVG, 30-day window) — Validated in Phase 5: Trajectory Indicators
+- [x] Reflection agent (system-wide analysis) — Validated in Phase 6: Reflection Agent
+- [x] Reflection report UI (weekly review integration) — Validated in Phase 6: Reflection Agent
+- [x] reflection_sessions table — Validated in Phase 6: Reflection Agent
+- [x] /reflect page with guided questions, decisions log, session storage — Validated in Phase 7: Reflection Session Page
 
 ### Out of Scope
 
@@ -91,12 +91,14 @@ The system must always tell you whether your exploration and your commitments ar
 | Left sidebar for commitments | Right sidebar used by node detail panel | ✓ Good |
 | Permissive RLS with auth whitelist | Small known team, simplicity over granular permissions | ✓ Good |
 | Configurable LLM agent slots | Allows model swapping without code changes | ✓ Good |
-| Trajectory badge (Option C) over spiral SVG | Practical for v0.4; spiral deferred to design pass | — Pending |
-| Rough convergence weights | Purpose is visibility not optimization; tune over real usage | — Pending |
+| Trajectory badge (Option C) over spiral SVG | Practical for v0.4; spiral deferred to design pass | ✓ Shipped Phase 5 |
+| Rough convergence weights | Purpose is visibility not optimization; tune over real usage | ✓ Shipped Phase 4 |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
+
+Last updated: 2026-03-31
 
 **After each phase transition** (via `/gsd:transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason
@@ -112,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after milestone v0.4 initialization*
+*Last updated: 2026-03-27 after Phase 2 completion*

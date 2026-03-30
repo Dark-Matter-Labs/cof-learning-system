@@ -6,8 +6,11 @@ import type { Edge } from '@/lib/types/edges';
 import type { TensionAlert, TensionResolutionAction } from '@/lib/types/tension';
 import { CommitmentCard } from './CommitmentCard';
 import { TensionAlertItem } from './TensionAlertItem';
+import { GoalSpaceSection } from './GoalSpaceSection';
 
 interface CommitmentPanelProps {
+  readonly goalSpaces: readonly Node[];
+  readonly triggerOutcomes: readonly Node[];
   readonly commitments: readonly Node[];
   readonly allNodes: readonly Node[];
   readonly edges: readonly Edge[];
@@ -21,51 +24,6 @@ interface CommitmentPanelProps {
   readonly onResolveTension: (id: string, action: TensionResolutionAction, belief: string) => void;
 }
 
-function AllocationSummary({ commitments }: { commitments: readonly Node[] }) {
-  const allocations = commitments
-    .filter(c => {
-      const status = getStatus(c);
-      return status === 'active' || status === 'proposed';
-    })
-    .map(c => ({
-      title: c.title,
-      allocation: getAllocation(c),
-    }))
-    .filter(c => c.allocation !== null) as { title: string; allocation: number }[];
-
-  if (allocations.length === 0) return null;
-
-  const total = allocations.reduce((sum, c) => sum + c.allocation, 0);
-
-  return (
-    <div className="px-3 pb-3">
-      <div className="text-[9px] text-gray-600 uppercase tracking-wide mb-2">Allocation</div>
-      <div className="space-y-1.5">
-        {allocations.map(({ title, allocation }) => (
-          <div key={title}>
-            <div className="flex justify-between mb-0.5">
-              <span className="text-[9px] text-gray-500 truncate flex-1 min-w-0">{title}</span>
-              <span className="text-[9px] text-gray-600 ml-1">{allocation}%</span>
-            </div>
-            <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#185FA5]/70 rounded-full"
-                style={{ width: `${allocation}%` }}
-              />
-            </div>
-          </div>
-        ))}
-        <div className="flex justify-between pt-1 border-t border-gray-800 mt-1">
-          <span className="text-[9px] text-gray-600">Total committed</span>
-          <span className={`text-[9px] font-medium ${total > 100 ? 'text-red-400' : 'text-gray-400'}`}>
-            {total}%
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function getStatus(node: Node): string {
   if (node.content && typeof node.content === 'object') {
     const c = node.content as Record<string, unknown>;
@@ -74,17 +32,9 @@ function getStatus(node: Node): string {
   return 'active';
 }
 
-function getAllocation(node: Node): number | null {
-  if (node.content && typeof node.content === 'object') {
-    const c = node.content as Record<string, unknown>;
-    if (typeof c.resource_allocation === 'number') return c.resource_allocation;
-  }
-  return null;
-}
-
-function sortCommitments(commitments: readonly Node[]): readonly Node[] {
+function sortCommitments(nodes: readonly Node[]): readonly Node[] {
   const order = { active: 0, proposed: 1 };
-  return [...commitments].sort((a, b) => {
+  return [...nodes].sort((a, b) => {
     const statusA = getStatus(a);
     const statusB = getStatus(b);
     const orderA = order[statusA as keyof typeof order] ?? 2;
@@ -95,6 +45,8 @@ function sortCommitments(commitments: readonly Node[]): readonly Node[] {
 }
 
 export function CommitmentPanel({
+  goalSpaces,
+  triggerOutcomes,
   commitments,
   allNodes,
   edges,
@@ -108,10 +60,58 @@ export function CommitmentPanel({
   onResolveTension,
 }: CommitmentPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [allocationOpen, setAllocationOpen] = useState(false);
 
   const activeTensions = tensions.filter(t => t.status === 'active');
-  const sorted = sortCommitments(commitments);
+
+  // Build hierarchy from edges
+  // advances_goal: trigger_outcome (source) -> goal_space (target)
+  // assigned_to_outcome: commitment (source) -> trigger_outcome (target)
+  // belongs_to_goalspace: commitment (source) -> goal_space (target)
+
+  const outcomesByGoalSpace: Record<string, Node[]> = {};
+  const commitmentsByOutcome: Record<string, Node[]> = {};
+  const commitmentsByGoalSpace: Record<string, Node[]> = {};
+  const linkedCommitmentIds = new Set<string>();
+
+  for (const edge of edges) {
+    if (edge.edge_type === 'advances_goal') {
+      const outcome = triggerOutcomes.find(n => n.id === edge.source_id);
+      if (outcome) {
+        const list = outcomesByGoalSpace[edge.target_id] ?? [];
+        outcomesByGoalSpace[edge.target_id] = [...list, outcome];
+      }
+    }
+    if (edge.edge_type === 'assigned_to_outcome') {
+      const commitment = commitments.find(n => n.id === edge.source_id);
+      if (commitment) {
+        const list = commitmentsByOutcome[edge.target_id] ?? [];
+        commitmentsByOutcome[edge.target_id] = [...list, commitment];
+        linkedCommitmentIds.add(commitment.id);
+      }
+    }
+    if (edge.edge_type === 'belongs_to_goalspace') {
+      const commitment = commitments.find(n => n.id === edge.source_id);
+      if (commitment) {
+        const list = commitmentsByGoalSpace[edge.target_id] ?? [];
+        commitmentsByGoalSpace[edge.target_id] = [...list, commitment];
+      }
+    }
+  }
+
+  // Commitments linked to a goal space but NOT to any trigger outcome
+  const goalSpaceOnlyCommitments: Record<string, readonly Node[]> = {};
+  for (const gs of goalSpaces) {
+    const gsCommitments = commitmentsByGoalSpace[gs.id] ?? [];
+    goalSpaceOnlyCommitments[gs.id] = gsCommitments.filter(c => !linkedCommitmentIds.has(c.id));
+  }
+
+  // Fully unlinked commitments (no goal space, no trigger outcome)
+  const allGoalSpaceCommitmentIds = new Set(
+    Object.values(commitmentsByGoalSpace).flat().map(c => c.id)
+  );
+  const unlinkedCommitments = sortCommitments(
+    commitments.filter(c => !linkedCommitmentIds.has(c.id) && !allGoalSpaceCommitmentIds.has(c.id))
+  );
 
   if (collapsed) {
     return (
@@ -147,27 +147,61 @@ export function CommitmentPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Active commitments */}
-        <div className="px-3 pt-3">
-          {sorted.length === 0 ? (
-            <p className="text-[10px] text-gray-600 italic">No commitments yet</p>
-          ) : (
-            sorted.map(c => (
-              <CommitmentCard
-                key={c.id}
-                commitment={c}
+        {/* Goal space hierarchy */}
+        {goalSpaces.length > 0 && (
+          <div className="pt-2">
+            {goalSpaces.map(gs => (
+              <GoalSpaceSection
+                key={gs.id}
+                goalSpace={gs}
+                triggerOutcomes={outcomesByGoalSpace[gs.id] ?? []}
+                commitmentsByOutcome={commitmentsByOutcome}
+                unlinkedCommitments={goalSpaceOnlyCommitments[gs.id] ?? []}
                 allNodes={allNodes}
                 edges={edges}
                 tensions={tensions}
-                isSelected={selectedCommitmentId === c.id}
-                onSelect={onSelectCommitment}
+                selectedCommitmentId={selectedCommitmentId}
+                onSelectCommitment={onSelectCommitment}
                 onAssumptionClick={onAssumptionClick}
               />
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
-        <div className="px-3 pb-3">
+        {/* Unlinked commitments (no goal space, no trigger outcome) */}
+        {unlinkedCommitments.length > 0 && (
+          <div className="pt-2">
+            {goalSpaces.length > 0 && (
+              <div className="px-3 pb-1">
+                <span className="text-[9px] text-gray-600 uppercase tracking-wide">Unlinked</span>
+              </div>
+            )}
+            <div className="px-3">
+              {unlinkedCommitments.map(c => (
+                <CommitmentCard
+                  key={c.id}
+                  commitment={c}
+                  allNodes={allNodes}
+                  edges={edges}
+                  tensions={tensions}
+                  isSelected={selectedCommitmentId === c.id}
+                  onSelect={onSelectCommitment}
+                  onAssumptionClick={onAssumptionClick}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {goalSpaces.length === 0 && commitments.length === 0 && (
+          <div className="px-3 pt-3">
+            <p className="text-[10px] text-gray-600 italic">No commitments yet</p>
+          </div>
+        )}
+
+        {/* Add commitment button */}
+        <div className="px-3 pb-3 pt-2">
           <button
             type="button"
             onClick={onAddCommitment}
@@ -192,21 +226,6 @@ export function CommitmentPanel({
                 onResolve={onResolveTension}
               />
             ))}
-          </div>
-        )}
-
-        {/* Allocation summary */}
-        {commitments.length > 0 && (
-          <div className="border-t border-gray-800/50 mt-1">
-            <button
-              type="button"
-              onClick={() => setAllocationOpen(prev => !prev)}
-              className="w-full flex items-center justify-between px-3 py-2 text-[10px] text-gray-600 hover:text-gray-400"
-            >
-              <span className="uppercase tracking-wide">Allocation</span>
-              <span>{allocationOpen ? '▲' : '▼'}</span>
-            </button>
-            {allocationOpen && <AllocationSummary commitments={commitments} />}
           </div>
         )}
       </div>

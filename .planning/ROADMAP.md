@@ -18,12 +18,12 @@ Seven phases transform COF OS from a workflow tool into a trajectory management 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Goal Hierarchy** - DB schema and commitment panel restructured as 3-level goal tree
-- [ ] **Phase 2: Goal Space Panel** - Dedicated GoalSpacePanel with progress indicators per trigger outcome
-- [ ] **Phase 3: Capture Linking + Extraction** - Outcome dropdown in capture forms and goal-aware extraction agent
+- [x] **Phase 2: Goal Space Panel** - Dedicated GoalSpacePanel with progress indicators per trigger outcome (completed 2026-03-27)
+- [x] **Phase 3: Capture Linking + Extraction** - Outcome dropdown in capture forms and goal-aware extraction agent (completed 2026-03-30)
 - [ ] **Phase 4: Convergence Computation** - Scoring function and convergence_snapshots time-series table
 - [ ] **Phase 5: Trajectory Indicators** - Badge UI, factor breakdown, and 30-day sparkline SVG
-- [ ] **Phase 6: Reflection Agent** - System-wide LLM analysis integrated into weekly review
-- [ ] **Phase 7: Reflection Session Page** - /reflect page with guided questions, decisions log, and session persistence
+- [x] **Phase 6: Reflection Agent** - System-wide LLM analysis integrated into weekly review (completed 2026-03-30)
+- [x] **Phase 7: Reflection Session Page** - /reflect page with guided questions, decisions log, and session persistence (completed 2026-03-30)
 
 ## Phase Details
 
@@ -36,7 +36,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Commitment panel displays goal_space → trigger_outcome → commitment as a collapsible 3-level tree
   3. DB schema contains trigger_outcome node type and advances_goal / targets_outcome / indicates_progress edge types (verifiable via migration file)
   4. Each goal space section in the commitment panel header shows a trajectory badge placeholder
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — DB migration + trigger_outcome in type selectors
+- [ ] 01-02-PLAN.md — TrajectoryBadge + CommitmentPanel 3-level hierarchy restructure
 
 ### Phase 2: Goal Space Panel
 **Goal**: Selecting a goal_space node opens a dedicated panel that shows all trigger outcomes with computed progress indicators and item counts
@@ -44,10 +47,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Requirements**: GOAL-01, GOAL-02, GOAL-03, GOAL-04
 **Success Criteria** (what must be TRUE):
   1. Clicking a goal_space node opens a GoalSpacePanel instead of the generic node detail panel
-  2. GoalSpacePanel lists every linked trigger outcome with a status indicator (○ not started, ◐ in progress, ◉ met, ✕ blocked)
+  2. GoalSpacePanel lists every linked trigger outcome with a status indicator (not started, in progress, met, blocked)
   3. Status indicator for each trigger outcome is computed from connected tests, signals, and commitments — not a manual field
   4. Each trigger outcome row shows commitment count and hunch count
-**Plans**: TBD
+**Plans:** 2/2 plans complete
+Plans:
+- [x] 02-01-PLAN.md — Pure functions (computeOutcomeStatus + counts) with TDD
+- [ ] 02-02-PLAN.md — GoalSpacePanel component + GraphOSSurface routing
 
 ### Phase 3: Capture Linking + Extraction
 **Goal**: Users can link a capture directly to a trigger outcome at creation time, and the extraction agent suggests goal relevance and expected signals for new hunches
@@ -59,7 +65,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Capture form has an optional "What signal would tell you this is working?" text field whose value is stored in content.expected_signals
   4. Weekly review surfaces hunches with no targets_outcome edge and prompts the user to consider linking them
   5. Extraction agent review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
-**Plans**: TBD
+**Plans:** 2/2 plans complete
+Plans:
+- [x] 03-01-PLAN.md — Capture form outcome dropdown + expected signals + extraction agent goal context (completed 2026-03-30)
+- [x] 03-02-PLAN.md — Weekly review undirected hunches + GoalRelevanceField in ReviewCard (completed 2026-03-27)
 
 ### Phase 4: Convergence Computation
 **Goal**: The system computes a convergence score per goal space using defined weight rules, stores snapshots as a time series, and triggers snapshots automatically on threshold
@@ -69,7 +78,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. A convergence score can be computed for any goal space using the defined positive/negative weight rules (verifiable via API or function call)
   2. convergence_snapshots table exists and stores scores with timestamp and factor breakdown as JSONB
   3. A snapshot is taken automatically when 10 or more new nodes have been added since the last snapshot
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [x] 04-01-PLAN.md — Pure convergence scoring function (TDD) + convergence_snapshots migration (completed 2026-03-27)
+- [ ] 04-02-PLAN.md — Snapshot API route + threshold trigger in nodes POST
 
 ### Phase 5: Trajectory Indicators
 **Goal**: Every goal space displays a live trajectory badge and a 30-day convergence sparkline so users can see at a glance whether they are converging or drifting
@@ -78,8 +90,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Success Criteria** (what must be TRUE):
   1. Each goal space shows a trajectory badge labeled converging (+) / neutral / drifting (-) with the numeric score
   2. Clicking the trajectory badge expands an inline breakdown listing positive and negative contributing factors
-  3. Goal space displays an inline SVG sparkline (200×40, teal/coral fill) showing convergence score over the last 30 days
-**Plans**: TBD
+  3. Goal space displays an inline SVG sparkline (200x40, teal/coral fill) showing convergence score over the last 30 days
+**Plans:** 1/2 plans executed
+Plans:
+- [x] 05-01-PLAN.md — GET snapshot endpoint + ConvergenceSparkline component
+- [ ] 05-02-PLAN.md — TrajectoryBadge upgrade + data wiring into panels
 
 ### Phase 6: Reflection Agent
 **Goal**: The weekly review page can trigger a system-wide LLM reflection that detects patterns, contradictions, and gaps, and surfaces actionable recommendations with direct action buttons
@@ -91,7 +106,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Reflection auto-triggers when 10 or more new nodes have been added since the last reflection run
   4. Weekly review page renders the reflection report as an expandable section with Patterns, Contradictions, Coverage Gaps, Trajectory, and Recommendations sections
   5. Each recommendation in the report has an action button that opens the appropriate form or panel
-**Plans**: TBD
+**Plans:** 3/3 plans complete
+Plans:
+- [x] 06-01-PLAN.md — Pure reflection agent functions (TDD) + DB migration + LLM slot extension
+- [x] 06-02-PLAN.md — Streaming route handler + threshold trigger
+- [x] 06-03-PLAN.md — ReflectionPanel UI component + weekly review integration
 
 ### Phase 7: Reflection Session Page
 **Goal**: /reflect is a dedicated page for periodic deep reflection rituals where users view trajectory over time, answer guided questions, and log decisions — all persisted to a reflection_sessions record
@@ -99,23 +118,26 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Requirements**: SESS-01, SESS-02, SESS-03, SESS-04, SESS-05
 **Success Criteria** (what must be TRUE):
   1. /reflect page exists and is accessible
-  2. /reflect shows convergence sparklines for all goal spaces over a selectable 30–90 day window
+  2. /reflect shows convergence sparklines for all goal spaces over a selectable 30-90 day window
   3. /reflect presents guided reflection questions as text inputs and persists answers
   4. /reflect shows a decisions log where team members can record decisions with linked node effects
   5. reflection_sessions table stores machine_reflection, human_responses, decisions, convergence_snapshot, and participants for each session
-**Plans**: TBD
+**Plans:** 2/2 plans complete
+Plans:
+- [x] 07-01-PLAN.md — DB migration + snapshots days param + types and questions config
+- [x] 07-02-PLAN.md — /reflect page, ReflectClient UI, session POST route, NavBar link
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Goal Hierarchy | 0/TBD | Not started | - |
-| 2. Goal Space Panel | 0/TBD | Not started | - |
-| 3. Capture Linking + Extraction | 0/TBD | Not started | - |
-| 4. Convergence Computation | 0/TBD | Not started | - |
-| 5. Trajectory Indicators | 0/TBD | Not started | - |
-| 6. Reflection Agent | 0/TBD | Not started | - |
-| 7. Reflection Session Page | 0/TBD | Not started | - |
+| 1. Goal Hierarchy | 0/2 | Not started | - |
+| 2. Goal Space Panel | 1/2 | Complete    | 2026-03-27 |
+| 3. Capture Linking + Extraction | 0/2 | Not started | - |
+| 4. Convergence Computation | 1/2 | In progress | - |
+| 5. Trajectory Indicators | 1/2 | In Progress|  |
+| 6. Reflection Agent | 3/3 | Complete   | 2026-03-30 |
+| 7. Reflection Session Page | 2/2 | Complete   | 2026-03-30 |
