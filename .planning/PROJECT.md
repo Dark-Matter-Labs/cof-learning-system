@@ -53,7 +53,7 @@ The system must always tell you whether your exploration and your commitments ar
 - [x] Reflection agent (system-wide analysis) — Validated in Phase 6: Reflection Agent
 - [x] Reflection report UI (weekly review integration) — Validated in Phase 6: Reflection Agent
 - [x] reflection_sessions table — Validated in Phase 6: Reflection Agent
-- [ ] /reflect page with guided questions, decisions log, session storage
+- [x] /reflect page with guided questions, decisions log, session storage — Validated in Phase 7: Reflection Session Page
 
 ### Out of Scope
 
@@ -97,6 +97,8 @@ The system must always tell you whether your exploration and your commitments ar
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
+
+Last updated: 2026-03-31
 
 **After each phase transition** (via `/gsd:transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason
