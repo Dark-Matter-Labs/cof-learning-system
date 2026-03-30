@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { runExtraction } from '@/lib/agents/extraction';
+import { runExtraction, type GoalContext } from '@/lib/agents/extraction';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -23,19 +23,40 @@ export async function POST(request: Request) {
     .eq('id', node_id);
 
   try {
-    // Fetch the node
-    const { data: node, error: fetchError } = await supabase
-      .from('nodes')
-      .select('title, description')
-      .eq('id', node_id)
-      .single();
+    // Fetch the node and goal context in parallel
+    const [
+      { data: node, error: fetchError },
+      { data: goalSpacesData },
+      { data: triggerOutcomesData },
+    ] = await Promise.all([
+      supabase
+        .from('nodes')
+        .select('title, description')
+        .eq('id', node_id)
+        .single(),
+      supabase
+        .from('nodes')
+        .select('id, title')
+        .eq('node_type', 'goal_space')
+        .neq('status', 'archived'),
+      supabase
+        .from('nodes')
+        .select('id, title')
+        .eq('node_type', 'trigger_outcome')
+        .neq('status', 'archived'),
+    ]);
 
     if (fetchError || !node) {
       throw new Error(`Node not found: ${node_id}`);
     }
 
-    // Run extraction
-    const extraction = await runExtraction(node.title, node.description ?? '');
+    const goalContext: GoalContext = {
+      goalSpaces: goalSpacesData ?? [],
+      triggerOutcomes: triggerOutcomesData ?? [],
+    };
+
+    // Run extraction with goal context
+    const extraction = await runExtraction(node.title, node.description ?? '', goalContext);
 
     // Update node with extraction results
     await supabase
