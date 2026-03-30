@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Goal Hierarchy** - DB schema and commitment panel restructured as 3-level goal tree
 - [x] **Phase 2: Goal Space Panel** - Dedicated GoalSpacePanel with progress indicators per trigger outcome (completed 2026-03-27)
-- [ ] **Phase 3: Capture Linking + Extraction** - Outcome dropdown in capture forms and goal-aware extraction agent
+- [x] **Phase 3: Capture Linking + Extraction** - Outcome dropdown in capture forms and goal-aware extraction agent (completed 2026-03-30)
 - [ ] **Phase 4: Convergence Computation** - Scoring function and convergence_snapshots time-series table
 - [ ] **Phase 5: Trajectory Indicators** - Badge UI, factor breakdown, and 30-day sparkline SVG
 - [ ] **Phase 6: Reflection Agent** - System-wide LLM analysis integrated into weekly review
@@ -65,9 +65,9 @@ Plans:
   3. Capture form has an optional "What signal would tell you this is working?" text field whose value is stored in content.expected_signals
   4. Weekly review surfaces hunches with no targets_outcome edge and prompts the user to consider linking them
   5. Extraction agent review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 03-01-PLAN.md — Capture form outcome dropdown + expected signals + extraction agent goal context
+- [x] 03-01-PLAN.md — Capture form outcome dropdown + expected signals + extraction agent goal context (completed 2026-03-30)
 - [x] 03-02-PLAN.md — Weekly review undirected hunches + GoalRelevanceField in ReviewCard (completed 2026-03-27)
 
 ### Phase 4: Convergence Computation

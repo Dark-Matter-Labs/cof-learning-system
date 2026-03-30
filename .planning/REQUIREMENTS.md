@@ -21,16 +21,16 @@
 
 ### Capture / Linking
 
-- [ ] **CAPT-01**: Capture form shows "Which outcome does this target?" dropdown (optional, lists active trigger_outcomes)
-- [ ] **CAPT-02**: Selecting an outcome auto-creates a targets_outcome edge on save
-- [ ] **CAPT-03**: Capture form has "What signal would tell you this is working?" optional text field, saved as content.expected_signals
+- [x] **CAPT-01**: Capture form shows "Which outcome does this target?" dropdown (optional, lists active trigger_outcomes)
+- [x] **CAPT-02**: Selecting an outcome auto-creates a targets_outcome edge on save
+- [x] **CAPT-03**: Capture form has "What signal would tell you this is working?" optional text field, saved as content.expected_signals
 - [x] **CAPT-04**: Weekly review surfaces undirected hunches (no targets_outcome edge) with "consider linking" prompt
 
 ### Extraction Agent
 
-- [ ] **EXTR-01**: Extraction agent receives active goal spaces and trigger outcomes in system prompt context
-- [ ] **EXTR-02**: Extraction agent suggests GOAL_RELEVANCE (which trigger outcome(s) the hunch targets)
-- [ ] **EXTR-03**: Extraction agent suggests EXPECTED_SIGNALS (specific observable signals if this hunch is correct)
+- [x] **EXTR-01**: Extraction agent receives active goal spaces and trigger outcomes in system prompt context
+- [x] **EXTR-02**: Extraction agent suggests GOAL_RELEVANCE (which trigger outcome(s) the hunch targets)
+- [x] **EXTR-03**: Extraction agent suggests EXPECTED_SIGNALS (specific observable signals if this hunch is correct)
 - [x] **EXTR-04**: Review card shows suggested goal relevance with Accept / Reject / Link to different outcome actions
 
 ### Convergence
@@ -93,13 +93,13 @@
 | GOAL-02 | Phase 2 | Complete |
 | GOAL-03 | Phase 2 | Pending |
 | GOAL-04 | Phase 2 | Complete |
-| CAPT-01 | Phase 3 | Pending |
-| CAPT-02 | Phase 3 | Pending |
-| CAPT-03 | Phase 3 | Pending |
+| CAPT-01 | Phase 3 | Complete |
+| CAPT-02 | Phase 3 | Complete |
+| CAPT-03 | Phase 3 | Complete |
 | CAPT-04 | Phase 3 | Complete |
-| EXTR-01 | Phase 3 | Pending |
-| EXTR-02 | Phase 3 | Pending |
-| EXTR-03 | Phase 3 | Pending |
+| EXTR-01 | Phase 3 | Complete |
+| EXTR-02 | Phase 3 | Complete |
+| EXTR-03 | Phase 3 | Complete |
 | EXTR-04 | Phase 3 | Complete |
 | CONV-01 | Phase 4 | Pending |
 | CONV-02 | Phase 4 | Pending |
