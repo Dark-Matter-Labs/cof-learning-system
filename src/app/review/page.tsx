@@ -9,7 +9,7 @@ export default async function ReviewPage() {
   const supabase = await createClient();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [awaitingRes, staleRes, lowConfRes, testsRes, tensionsRes, commitmentsRes, stalledRes] = await Promise.all([
+  const [awaitingRes, staleRes, lowConfRes, testsRes, tensionsRes, commitmentsRes, stalledRes, allHunchesRes, targetEdgesRes] = await Promise.all([
     // Context: awaiting promotion
     supabase
       .from('nodes')
@@ -53,6 +53,17 @@ export default async function ReviewPage() {
       .select('*')
       .eq('node_type', 'commitment')
       .lt('updated_at', sevenDaysAgo),
+    // Undirected: all active hunches
+    supabase
+      .from('nodes')
+      .select('*')
+      .eq('node_type', 'hunch')
+      .not('status', 'in', '("archived","falsified","suspended")'),
+    // Undirected: all targets_outcome edges (to compute which hunches are linked)
+    supabase
+      .from('edges')
+      .select('source_id')
+      .eq('edge_type', 'targets_outcome'),
   ]);
 
   const awaiting = (awaitingRes.data ?? []) as unknown as Node[];
@@ -63,7 +74,14 @@ export default async function ReviewPage() {
   const commitments = (commitmentsRes.data ?? []) as unknown as Node[];
   const stalled = (stalledRes.data ?? []) as unknown as Node[];
 
-  const isEmpty = awaiting.length === 0 && tensions.length === 0 && lowConf.length === 0;
+  const linkedHunchIds = new Set(
+    ((targetEdgesRes.data ?? []) as unknown as { source_id: string }[]).map(e => e.source_id)
+  );
+  const undirectedHunches = ((allHunchesRes.data ?? []) as unknown as Node[]).filter(
+    n => !linkedHunchIds.has(n.id)
+  );
+
+  const isEmpty = awaiting.length === 0 && tensions.length === 0 && lowConf.length === 0 && undirectedHunches.length === 0;
 
   if (isEmpty) {
     return (
@@ -165,6 +183,28 @@ export default async function ReviewPage() {
                       <span className="w-1.5 h-1.5 rounded-full bg-[#D4537E] shrink-0 mt-0.5" />
                       <div className="text-xs text-gray-400 truncate">{node.title}</div>
                     </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Undirected hunches */}
+            {undirectedHunches.length > 0 && (
+              <section className="mb-5" data-testid="undirected-hunches">
+                <h3 className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">
+                  Undirected hunches ({undirectedHunches.length})
+                </h3>
+                <p className="text-[10px] text-amber-500/80 mb-2">Consider linking these to a trigger outcome</p>
+                <div className="space-y-1.5">
+                  {undirectedHunches.map(node => (
+                    <Link
+                      key={node.id}
+                      href={`/capture/${node.id}/review`}
+                      className="flex items-center justify-between bg-gray-900 border border-amber-900/30 rounded-lg p-2.5 hover:border-amber-800/50 transition-colors"
+                    >
+                      <div className="text-xs text-gray-300 truncate">{node.title}</div>
+                      <span className="text-[9px] text-amber-500 shrink-0 ml-2">consider linking</span>
+                    </Link>
                   ))}
                 </div>
               </section>
