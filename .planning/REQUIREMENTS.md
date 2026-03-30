@@ -52,11 +52,11 @@
 
 ### Reflection Session
 
-- [ ] **SESS-01**: /reflect page exists for periodic deep reflection ritual
-- [ ] **SESS-02**: /reflect shows convergence sparklines for all goal spaces over 30-90 day window
-- [ ] **SESS-03**: /reflect shows guided reflection questions as text inputs with answers persisted
-- [ ] **SESS-04**: /reflect shows decisions log where team records decisions with linked node effects
-- [ ] **SESS-05**: reflection_sessions table stores machine_reflection, human_responses, decisions, convergence_snapshot, participants
+- [x] **SESS-01**: /reflect page exists for periodic deep reflection ritual
+- [x] **SESS-02**: /reflect shows convergence sparklines for all goal spaces over 30-90 day window
+- [x] **SESS-03**: /reflect shows guided reflection questions as text inputs with answers persisted
+- [x] **SESS-04**: /reflect shows decisions log where team records decisions with linked node effects
+- [x] **SESS-05**: reflection_sessions table stores machine_reflection, human_responses, decisions, convergence_snapshot, participants
 
 ## v0.5 Requirements (deferred)
 
@@ -112,11 +112,11 @@
 | REFL-03 | Phase 6 | Complete |
 | REFL-04 | Phase 6 | Complete |
 | REFL-05 | Phase 6 | Complete |
-| SESS-01 | Phase 7 | Pending |
-| SESS-02 | Phase 7 | Pending |
-| SESS-03 | Phase 7 | Pending |
-| SESS-04 | Phase 7 | Pending |
-| SESS-05 | Phase 7 | Pending |
+| SESS-01 | Phase 7 | Complete |
+| SESS-02 | Phase 7 | Complete |
+| SESS-03 | Phase 7 | Complete |
+| SESS-04 | Phase 7 | Complete |
+| SESS-05 | Phase 7 | Complete |
 
 **Coverage:**
 - v0.4 requirements: 30 total
