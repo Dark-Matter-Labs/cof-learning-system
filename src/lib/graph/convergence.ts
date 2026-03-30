@@ -183,6 +183,21 @@ function scoreOutcome(
   };
 }
 
+// ─── Threshold Trigger ────────────────────────────────────────────────────────
+
+export interface TriggerSnapshotInput {
+  readonly currentCount: number;
+  readonly lastSnapshotCount: number | null;
+  readonly threshold?: number;
+}
+
+export function shouldTriggerSnapshot(input: TriggerSnapshotInput): boolean {
+  const threshold = input.threshold ?? 10;
+  const lastCount = input.lastSnapshotCount ?? 0;
+  const delta = input.currentCount - lastCount;
+  return delta >= threshold;
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function computeConvergenceScore(

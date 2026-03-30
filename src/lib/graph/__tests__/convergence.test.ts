@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeConvergenceScore } from '@/lib/graph/convergence';
+import { computeConvergenceScore, shouldTriggerSnapshot } from '@/lib/graph/convergence';
 import type { Node, NodeStatus } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
 
@@ -346,5 +346,42 @@ describe('computeConvergenceScore', () => {
     expect(result.factor_breakdown.outcome_scores).toHaveLength(1);
     expect(result.factor_breakdown.outcome_scores[0].outcome_id).toBe('outcome-15');
     expect(result.factor_breakdown.outcome_scores[0].outcome_title).toBe('My Outcome');
+  });
+});
+
+describe('shouldTriggerSnapshot', () => {
+  it('returns false when delta is below threshold (delta=5, threshold=10)', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 15, lastSnapshotCount: 10, threshold: 10 });
+    expect(result).toBe(false);
+  });
+
+  it('returns true when delta equals threshold (delta=10, threshold=10)', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 20, lastSnapshotCount: 10, threshold: 10 });
+    expect(result).toBe(true);
+  });
+
+  it('returns true when delta exceeds threshold (delta=15, threshold=10)', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 25, lastSnapshotCount: 10, threshold: 10 });
+    expect(result).toBe(true);
+  });
+
+  it('treats null lastSnapshotCount as 0 (no prior snapshot exists)', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 12, lastSnapshotCount: null, threshold: 10 });
+    expect(result).toBe(true);
+  });
+
+  it('treats null lastSnapshotCount as 0 — below threshold', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 5, lastSnapshotCount: null, threshold: 10 });
+    expect(result).toBe(false);
+  });
+
+  it('returns false when delta is 0 (no new nodes)', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 10, lastSnapshotCount: 10, threshold: 10 });
+    expect(result).toBe(false);
+  });
+
+  it('uses default threshold of 10 when not specified', () => {
+    const result = shouldTriggerSnapshot({ currentCount: 20, lastSnapshotCount: 5 });
+    expect(result).toBe(true);
   });
 });
