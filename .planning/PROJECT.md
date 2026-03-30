@@ -8,52 +8,68 @@ COF OS is a trajectory management environment for the Civilization Options Fund 
 
 The system must always tell you whether your exploration and your commitments are spiraling together toward your goals — or apart.
 
-## Current Milestone: v0.4 Trajectory Management Environment
+## Current Milestone: v0.5 UX Polish — Real Usage Fixes
+
+**Goal:** Resolve all concrete usability blockers surfaced in Robyn's first real usage session so the system is comfortable to use daily.
+
+**Target features:**
+- Nav panel overlap fix (sidebar content hidden behind fixed navbar)
+- Light/dark mode consistency audit across all components
+- Review card: checkboxes default to checked (opt-out model)
+- Consistent capture types config shared across full page + inline graph card
+- Rename capture page; add meeting notes/transcript type with multi-node extraction
+- Insight date field ("when did this happen?" vs when entered)
+- People/participants field with person-node autocomplete
+- Edit nodes + manage connections from node detail panel
+- Option nodes auto-connect via extraction agent suggestions
+- PDF/file upload with server-side text extraction
+
+## Previous Milestone: v0.4 Trajectory Management Environment (shipped 2026-03-31)
 
 **Goal:** Transform COF OS from a workflow tool into a trajectory management environment where search and commitment vectors visibly spiral together (or apart) over time.
 
-**Target features:**
+**Shipped:**
 - Goal hierarchy: goal_space → trigger_outcome → commitment (3-level)
 - Goal space detail panel with progress indicators per trigger outcome
-- Hunch-to-outcome linking in capture forms
-- Extraction agent: inject active goal context, suggest goal relevance + expected signals
-- Convergence scoring: positive/negative signal weighting per goal space
-- Trajectory indicator badge (converging/neutral/drifting) on goal spaces
-- Trajectory sparkline: convergence score over 30 days (inline SVG)
-- Reflection agent: system-wide LLM pattern/contradiction/gap detection
-- Reflection report UI: clickable node refs, action buttons per recommendation
-- Commitment panel restructure: hierarchical tree (goal → outcome → commitment)
-- /reflect page: periodic deep reflection ritual with guided questions and decisions log
+- Convergence scoring + time-series snapshots
+- Trajectory indicator badge + sparkline (SVG, 30-day window)
+- Reflection agent (system-wide LLM analysis)
+- Reflection report UI integrated into weekly review
+- /reflect page with guided questions, decisions log, session persistence
 
 ## Requirements
 
-### Validated (v0.1–v0.3)
+
+### Active (v0.5)
+
+- [ ] Nav panel content no longer obscured by fixed navbar (padding fix)
+- [ ] Full light/dark mode consistency — no hardcoded colors
+- [ ] Review card defaults all fields to checked (opt-out model)
+- [ ] Shared CAPTURE_TYPES config used by both capture page and inline graph card
+- [ ] Capture page renamed; meeting notes/transcript type added with multi-node extraction
+- [ ] Insight date field on nodes (insight_date column, timeline uses it)
+- [ ] People/participants field with person-node autocomplete + edge creation
+- [ ] Node detail panel has edit mode + connection management
+- [ ] Option nodes get extraction-suggested connections automatically
+- [ ] PDF/file upload on capture page with server-side text extraction
+
+### Validated (v0.1–v0.4)
 
 - ✓ Graph canvas with force, tree, timeline, workflow views — v0.3
-- ✓ Inline node capture from graph (hunch, assumption, signal, intervention, commitment) — v0.2
+- ✓ Inline node capture from graph — v0.2
 - ✓ Node detail panel (right sidebar) — v0.2
-- ✓ Commitment panel (left sidebar) showing active commitments — v0.3
-- ✓ Tension alerts with signal propagation (signal → assumption → commitment) — v0.3
-- ✓ Intervention nodes with dual-linking (serves commitment + tests assumption) — v0.3
-- ✓ Weekly review page with context health / commitment health columns — v0.3
-- ✓ LLM-assisted node extraction from free text — v0.2
+- ✓ Commitment panel (left sidebar) — v0.3
+- ✓ Tension alerts with signal propagation — v0.3
+- ✓ Intervention nodes with dual-linking — v0.3
+- ✓ Weekly review page — v0.3
+- ✓ LLM-assisted node extraction — v0.2
 - ✓ Supabase backend with RLS, auth whitelist — v0.1
-
-### Active (v0.4)
-
-- [x] Goal hierarchy: goal_space → trigger_outcome → commitment — Phase 1
-- [x] Commitment panel restructured as goal hierarchy tree — Phase 1
-- [x] Goal space detail panel with progress indicators — Phase 2
-- [ ] Hunch-to-outcome linking in capture forms
-- [ ] Extraction agent goal context injection and relevance suggestion
-- [x] Convergence scoring function per goal space — Validated in Phase 4: Convergence Computation
-- [x] convergence_snapshots table for time-series storage — Validated in Phase 4: Convergence Computation
-- [x] Trajectory indicator badge on goal spaces — Validated in Phase 5: Trajectory Indicators
-- [x] Trajectory sparkline (SVG, 30-day window) — Validated in Phase 5: Trajectory Indicators
-- [x] Reflection agent (system-wide analysis) — Validated in Phase 6: Reflection Agent
-- [x] Reflection report UI (weekly review integration) — Validated in Phase 6: Reflection Agent
-- [x] reflection_sessions table — Validated in Phase 6: Reflection Agent
-- [x] /reflect page with guided questions, decisions log, session storage — Validated in Phase 7: Reflection Session Page
+- ✓ Goal hierarchy (3-level) — v0.4 Phase 1
+- ✓ Goal space detail panel — v0.4 Phase 2
+- ✓ Convergence scoring + snapshots — v0.4 Phase 4
+- ✓ Trajectory badge + sparkline — v0.4 Phase 5
+- ✓ Reflection agent + report UI — v0.4 Phase 6
+- ✓ /reflect page with session persistence — v0.4 Phase 7
 
 ### Out of Scope
 
@@ -98,7 +114,7 @@ The system must always tell you whether your exploration and your commitments ar
 
 This document evolves at phase transitions and milestone boundaries.
 
-Last updated: 2026-03-31
+Last updated: 2026-03-31 — milestone v0.5 started
 
 **After each phase transition** (via `/gsd:transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason
