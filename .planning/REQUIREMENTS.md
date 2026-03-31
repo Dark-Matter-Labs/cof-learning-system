@@ -15,9 +15,9 @@
 
 ### Review UX
 
-- [ ] **REVIEW-01**: ReviewCard extraction fields default to checked (opt-out model — user rejects bad ones, not approves good ones)
-- [ ] **REVIEW-02**: Promote button enabled by default when all fields are checked
-- [ ] **REVIEW-03**: "Promote all" one-click shortcut accepts all fields and promotes to graph immediately
+- [x] **REVIEW-01**: ReviewCard extraction fields default to checked (opt-out model — user rejects bad ones, not approves good ones)
+- [x] **REVIEW-02**: Promote button enabled by default when all fields are checked
+- [x] **REVIEW-03**: "Promote all" one-click shortcut accepts all fields and promotes to graph immediately
 
 ### Capture Types
 
@@ -90,9 +90,9 @@ Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extract
 | LAYOUT-01 | Phase 8 | Complete |
 | LAYOUT-02 | Phase 8 | Complete |
 | LAYOUT-03 | Phase 8 | Complete |
-| REVIEW-01 | Phase 9 | Pending |
-| REVIEW-02 | Phase 9 | Pending |
-| REVIEW-03 | Phase 9 | Pending |
+| REVIEW-01 | Phase 9 | Complete |
+| REVIEW-02 | Phase 9 | Complete |
+| REVIEW-03 | Phase 9 | Complete |
 | CAPT-05 | Phase 10 | Pending |
 | CAPT-06 | Phase 10 | Pending |
 | CAPT-07 | Phase 10 | Pending |

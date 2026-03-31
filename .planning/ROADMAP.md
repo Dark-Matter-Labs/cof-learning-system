@@ -149,10 +149,10 @@ Plans:
   1. Opening a ReviewCard shows all extraction fields pre-checked — Robyn does not have to check anything to proceed
   2. The Promote button is active immediately when all fields are checked (no extra interaction required)
   3. A single "Promote all" button accepts every field and promotes to the graph in one click
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 09-01-PLAN.md — ReviewCard opt-out defaults + Promote All button
+- [x] 09-01-PLAN.md — ReviewCard opt-out defaults + Promote All button
 
 ### Phase 10: Capture Foundation
 **Goal**: The capture page is renamed, has a shared type config used everywhere, and supports meeting notes as a capture type that extracts multiple nodes from a single transcript
@@ -250,7 +250,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14 → 
 | 6. Reflection Agent | v0.4 | 3/3 | Complete | 2026-03-30 |
 | 7. Reflection Session Page | v0.4 | 2/2 | Complete | 2026-03-30 |
 | 8. Layout & Theme | v0.5 | 3/4 | In Progress|  |
-| 9. Review UX | v0.5 | 0/1 | Not started | - |
+| 9. Review UX | v0.5 | 1/1 | Complete   | 2026-03-31 |
 | 10. Capture Foundation | v0.5 | 0/2 | Not started | - |
 | 11. Date & Timeline | v0.5 | 0/1 | Not started | - |
 | 12. People & Participants | v0.5 | 0/2 | Not started | - |
