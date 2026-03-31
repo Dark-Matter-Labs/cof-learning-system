@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: UX Polish
 status: executing
-stopped_at: Completed 08-03-PLAN.md — commitment panel and shared components dark mode
-last_updated: "2026-03-31T12:47:20.814Z"
+stopped_at: "Completed 08-04-PLAN.md — dark: variants applied to all remaining pages and components, LAYOUT-02 closed"
+last_updated: "2026-03-31T13:10:32.667Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 08 (layout-theme) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-03-31
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 08-layout-theme P03 | 13min | 3 tasks | 7 files |
+| Phase 08-layout-theme P08-04 | 10min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - v0.5 init: File upload stores original in Supabase Storage, extracted text pre-populates description
 - [Phase 08-layout-theme]: NodeTypeBadge and StatusBadge require no dark: changes — opaque colored chip backgrounds are mode-invariant
 - [Phase 08-layout-theme]: TensionAlertItem severity alerts use tinted light backgrounds (red-50, amber-50) paired with dark: variants for the original dark tints
+- [Phase 08-layout-theme]: Undirected hunches card amber border left as semantic; only bg updated to light+dark pair
+- [Phase 08-layout-theme]: text-gray-500 section subheaders left unchanged per color mapping table (same in both modes)
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T12:47:20.812Z
-Stopped at: Completed 08-03-PLAN.md — commitment panel and shared components dark mode
+Last session: 2026-03-31T13:10:32.665Z
+Stopped at: Completed 08-04-PLAN.md — dark: variants applied to all remaining pages and components, LAYOUT-02 closed
 Resume file: None
