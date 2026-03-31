@@ -273,6 +273,14 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
     if (!svgRef.current) return;
     simulationRef.current?.stop();
 
+    const isDark = document.documentElement.classList.contains('dark');
+    const NODE_CARD_BG = isDark ? '#1f2937' : '#ffffff';
+    const NODE_CARD_BORDER = isDark ? '#374151' : '#e5e7eb';
+    const NODE_TITLE_FILL = isDark ? '#e5e7eb' : '#111827';
+    const NODE_DOTS_EMPTY = isDark ? '#374151' : '#d1d5db';
+    const AXIS_STROKE = isDark ? '#374151' : '#d1d5db';
+    const AXIS_TEXT_FILL = isDark ? '#6b7280' : '#9ca3af';
+
     const svg = d3.select(svgRef.current);
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
@@ -311,9 +319,9 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
       g.append('g')
         .attr('transform', `translate(0, 30)`)
         .call(axis)
-        .call(ax => ax.select('.domain').attr('stroke', '#374151'))
-        .call(ax => ax.selectAll('text').attr('fill', '#6b7280').attr('font-size', 9))
-        .call(ax => ax.selectAll('line').attr('stroke', '#374151'));
+        .call(ax => ax.select('.domain').attr('stroke', AXIS_STROKE))
+        .call(ax => ax.selectAll('text').attr('fill', AXIS_TEXT_FILL).attr('font-size', 9))
+        .call(ax => ax.selectAll('line').attr('stroke', AXIS_STROKE));
     }
 
     // Links group (rendered before nodes)
@@ -342,18 +350,18 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
       .call(view === 'force' ? drag : d3.drag<SVGGElement, GraphNode>());
 
     cardG.append('rect').attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
-      .attr('rx', 8).attr('fill', '#111827').attr('stroke', '#1f2937').attr('stroke-width', 1);
+      .attr('rx', 8).attr('fill', NODE_CARD_BG).attr('stroke', NODE_CARD_BORDER).attr('stroke-width', 1);
     cardG.append('rect').attr('width', 3).attr('height', CARD_HEIGHT).attr('rx', 2).attr('fill', d => d.color);
     cardG.append('text').text(d => d.node_type.replace(/_/g, ' '))
       .attr('x', 12).attr('y', 20).attr('font-size', 9).attr('fill', d => d.color)
       .attr('font-weight', '600').attr('letter-spacing', '0.05em');
     cardG.append('text').text(d => truncate(d.title, 28))
-      .attr('x', 12).attr('y', 38).attr('font-size', 11).attr('fill', '#e5e7eb').attr('font-weight', '500');
+      .attr('x', 12).attr('y', 38).attr('font-size', 11).attr('fill', NODE_TITLE_FILL).attr('font-weight', '500');
     cardG.each(function(d) {
       const level = d.data.confidence_level ?? 0;
       for (let i = 0; i < 5; i++) {
         d3.select(this).append('circle').attr('cx', 12 + i * 10).attr('cy', 60).attr('r', 3)
-          .attr('fill', i < level ? d.color : '#374151');
+          .attr('fill', i < level ? d.color : NODE_DOTS_EMPTY);
       }
     });
 
@@ -458,6 +466,6 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
   }, [highlight]);
 
   return (
-    <svg ref={svgRef} className="w-full h-full" style={{ background: '#030712' }} onClick={handleCanvasClick} />
+    <svg ref={svgRef} className="w-full h-full bg-gray-50 dark:bg-[#030712]" onClick={handleCanvasClick} />
   );
 }

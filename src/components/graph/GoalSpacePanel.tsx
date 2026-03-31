@@ -54,7 +54,7 @@ export function GoalSpacePanel({ node, edges, allNodes, onClose }: GoalSpacePane
     : 'pending';
 
   return (
-    <div className="absolute right-0 top-[49px] bottom-0 w-72 bg-gray-950 border-l border-gray-800 p-4 overflow-y-auto">
+    <div className="absolute right-0 top-[49px] bottom-0 w-72 bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <NodeTypeBadge nodeType={node.node_type} />
@@ -66,26 +66,26 @@ export function GoalSpacePanel({ node, edges, allNodes, onClose }: GoalSpacePane
         </div>
         <button
           onClick={onClose}
-          className="text-gray-600 hover:text-gray-400 text-lg"
+          className="text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 text-lg"
           aria-label="Close goal space panel"
         >
           ×
         </button>
       </div>
 
-      <h3 className="text-sm font-bold text-gray-200 mb-2">{node.title}</h3>
+      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-200 mb-2">{node.title}</h3>
 
       {/* Convergence sparkline */}
       <div className="mb-3">
         <ConvergenceSparkline snapshots={convergenceData?.history ?? []} />
       </div>
 
-      <div className="text-[10px] text-gray-600 uppercase mb-2">
+      <div className="text-[10px] text-gray-500 dark:text-gray-600 uppercase mb-2">
         Trigger Outcomes ({outcomes.length})
       </div>
 
       {outcomes.length === 0 ? (
-        <p className="text-[10px] text-gray-700 italic">No trigger outcomes linked</p>
+        <p className="text-[10px] text-gray-500 dark:text-gray-700 italic">No trigger outcomes linked</p>
       ) : (
         outcomes.map(outcome => {
           const status = computeOutcomeStatus(outcome.id, edges, allNodes);
@@ -96,14 +96,14 @@ export function GoalSpacePanel({ node, edges, allNodes, onClose }: GoalSpacePane
           const hunchLabel = hunchCount === 1 ? '1 hunch' : `${hunchCount} hunches`;
 
           return (
-            <div key={outcome.id} className="mb-3 border border-gray-800 rounded p-2">
+            <div key={outcome.id} className="mb-3 border border-gray-200 dark:border-gray-800 rounded p-2">
               <div className="flex items-start gap-2">
                 <span className={`text-sm mt-0.5 ${colorClass}`}>{symbol}</span>
-                <span className="text-xs text-gray-300">{outcome.title}</span>
+                <span className="text-xs text-gray-700 dark:text-gray-300">{outcome.title}</span>
               </div>
               <div className="flex gap-3 mt-1.5 pl-5">
-                <span className="text-[10px] text-gray-600">{commitmentLabel}</span>
-                <span className="text-[10px] text-gray-600">{hunchLabel}</span>
+                <span className="text-[10px] text-gray-500 dark:text-gray-600">{commitmentLabel}</span>
+                <span className="text-[10px] text-gray-500 dark:text-gray-600">{hunchLabel}</span>
               </div>
             </div>
           );

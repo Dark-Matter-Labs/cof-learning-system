@@ -243,7 +243,7 @@ export function GraphOSSurface() {
 
   if (loading) {
     return (
-      <div className="w-full h-screen bg-gray-950 flex items-center justify-center text-gray-500 text-sm">
+      <div className="w-full h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center text-gray-500 text-sm">
         Loading graph…
       </div>
     );
@@ -251,14 +251,14 @@ export function GraphOSSurface() {
 
   if (error) {
     return (
-      <div className="w-full h-screen bg-gray-950 flex items-center justify-center text-red-400 text-sm">
+      <div className="w-full h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center text-red-400 text-sm">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="w-full h-screen relative overflow-hidden bg-gray-950">
+    <div className="w-full h-screen relative overflow-hidden bg-gray-50 dark:bg-gray-950">
       <GraphCanvas
         nodes={nodes}
         edges={edges}

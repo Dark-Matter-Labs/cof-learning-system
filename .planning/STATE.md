@@ -4,13 +4,13 @@ milestone: v0.5
 milestone_name: UX Polish
 status: executing
 stopped_at: "Completed 08-04-PLAN.md — dark: variants applied to all remaining pages and components, LAYOUT-02 closed"
-last_updated: "2026-03-31T13:10:32.667Z"
+last_updated: "2026-03-31T13:30:00.000Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 08 (layout-theme) — EXECUTING
-Plan: 3 of 4
-Status: Ready to execute
+Plan: 4 of 4
+Status: All plans complete — awaiting verification
 Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
@@ -52,8 +52,10 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: Stable (spikes on complex LLM work)
 
 *Updated after each plan completion*
+| Phase 08-layout-theme P01 | 15min | 3 tasks | 4 files |
+| Phase 08-layout-theme P02 | 16min | 3 tasks | 6 files |
 | Phase 08-layout-theme P03 | 13min | 3 tasks | 7 files |
-| Phase 08-layout-theme P08-04 | 10min | 2 tasks | 6 files |
+| Phase 08-layout-theme P04 | 10min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -66,6 +68,9 @@ Recent decisions affecting current work:
 - v0.5 init: Shared CAPTURE_TYPES config prevents drift between full capture page and inline graph card
 - v0.5 init: insight_date falls back to created_at in timeline — no data loss for existing nodes
 - v0.5 init: File upload stores original in Supabase Storage, extracted text pre-populates description
+- [Phase 08-layout-theme]: isDark check placed once at top of useEffect body in GraphCanvas — captures theme at render time, no reactive listener needed
+- [Phase 08-layout-theme]: Filter pill inactive state moved from inline style to Tailwind className conditional — enables dark: variants; active state keeps inline style for dynamic type color
+- [Phase 08-layout-theme]: D3 SVG pattern: read isDark once before createElement calls, define named constants for all color variants
 - [Phase 08-layout-theme]: NodeTypeBadge and StatusBadge require no dark: changes — opaque colored chip backgrounds are mode-invariant
 - [Phase 08-layout-theme]: TensionAlertItem severity alerts use tinted light backgrounds (red-50, amber-50) paired with dark: variants for the original dark tints
 - [Phase 08-layout-theme]: Undirected hunches card amber border left as semantic; only bg updated to light+dark pair
@@ -81,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T13:10:32.665Z
-Stopped at: Completed 08-04-PLAN.md — dark: variants applied to all remaining pages and components, LAYOUT-02 closed
+Last session: 2026-03-31T13:30:00.000Z
+Stopped at: All 4 plans in Phase 08 complete — wave 2 merged, proceeding to verification
 Resume file: None
