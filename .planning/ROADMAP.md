@@ -149,7 +149,7 @@ Plans:
   1. Opening a ReviewCard shows all extraction fields pre-checked — Robyn does not have to check anything to proceed
   2. The Promote button is active immediately when all fields are checked (no extra interaction required)
   3. A single "Promote all" button accepts every field and promotes to the graph in one click
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
 - [ ] 09-01-PLAN.md — ReviewCard opt-out defaults + Promote All button
