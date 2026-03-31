@@ -134,10 +134,12 @@ Plans:
   1. Robyn can scroll the commitment panel and node detail panel without content disappearing behind the navbar
   2. Robyn can switch between light and dark mode and see no hardcoded colors — all text, backgrounds, and borders adapt correctly
   3. Graph canvas, node cards, commitment panel, and tension alerts are legible in both light and dark mode
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Navbar padding fix + full dark/light mode audit and remediation
+- [ ] 08-01-PLAN.md — darkMode class config + system-preference script + layout padding + NavBar light/dark
+- [ ] 08-02-PLAN.md — Graph components dark mode (GraphCanvas SVG nodes, panels, TopBar)
+- [ ] 08-03-PLAN.md — Commitment panel and shared badges dark mode
 
 ### Phase 9: Review UX
 **Goal**: The weekly review extraction workflow defaults to accepting all proposed fields so Robyn rejects bad suggestions rather than approving good ones
@@ -247,7 +249,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14 → 
 | 5. Trajectory Indicators | v0.4 | 1/2 | In progress | - |
 | 6. Reflection Agent | v0.4 | 3/3 | Complete | 2026-03-30 |
 | 7. Reflection Session Page | v0.4 | 2/2 | Complete | 2026-03-30 |
-| 8. Layout & Theme | v0.5 | 0/1 | Not started | - |
+| 8. Layout & Theme | v0.5 | 0/3 | Not started | - |
 | 9. Review UX | v0.5 | 0/1 | Not started | - |
 | 10. Capture Foundation | v0.5 | 0/2 | Not started | - |
 | 11. Date & Timeline | v0.5 | 0/1 | Not started | - |
