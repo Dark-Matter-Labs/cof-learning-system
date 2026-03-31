@@ -39,11 +39,18 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var d=document.documentElement;if(window.matchMedia('(prefers-color-scheme: dark)').matches){d.classList.add('dark')}else{d.classList.remove('dark')}})();`,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-gray-950 text-gray-100`}>
         <AuthProvider initialUser={user}>
           {user && <NavBar reviewCount={reviewCount} />}
-          <main className="h-screen overflow-y-auto">
+          <main className="h-screen overflow-y-auto pt-[49px]">
             {children}
           </main>
         </AuthProvider>
