@@ -25,10 +25,33 @@ interface FieldState {
   readonly final: unknown;
 }
 
+function buildInitialFields(extraction: LlmExtraction): Record<string, FieldState> {
+  const initial: Record<string, FieldState> = {};
+  if (extraction.title) {
+    initial.title = { action: 'accepted', original: extraction.title, final: extraction.title };
+  }
+  if (extraction.summary) {
+    initial.summary = { action: 'accepted', original: extraction.summary, final: extraction.summary };
+  }
+  if (extraction.structured_claim) {
+    initial.structured_claim = { action: 'accepted', original: extraction.structured_claim, final: extraction.structured_claim };
+  }
+  if (extraction.assumption_type) {
+    initial.assumption_type = { action: 'accepted', original: extraction.assumption_type, final: extraction.assumption_type };
+  }
+  if (extraction.expected_signals && extraction.expected_signals.length > 0) {
+    const signalsStr = extraction.expected_signals.join(', ');
+    initial.expected_signals = { action: 'accepted', original: signalsStr, final: signalsStr };
+  }
+  return initial;
+}
+
 export function ReviewCard({ node, onPromote, onSaveDraft, onArchive, isSubmitting = false, triggerOutcomes = [] }: ReviewCardProps) {
   const extraction = node.llm_extraction;
 
-  const [fields, setFields] = useState<Record<string, FieldState>>({});
+  const [fields, setFields] = useState<Record<string, FieldState>>(() =>
+    extraction ? buildInitialFields(extraction) : {}
+  );
   const [confidence, setConfidence] = useState<number>(extraction?.confidence_assessment?.level ?? 3);
   const [domainTags, setDomainTags] = useState<readonly string[]>(extraction?.domain_tags ?? []);
   const [connectionStatuses, setConnectionStatuses] = useState<Record<number, 'accepted' | 'rejected'>>({});
@@ -53,6 +76,60 @@ export function ReviewCard({ node, onPromote, onSaveDraft, onArchive, isSubmitti
     },
     []
   );
+
+  const handlePromoteAll = useCallback(() => {
+    // Build accepted connection statuses locally (not from stale state)
+    const allConnectionStatuses = Object.fromEntries(
+      (extraction.suggested_connections ?? []).map((_, i) => [i, 'accepted' as const])
+    );
+    setConnectionStatuses(allConnectionStatuses);
+
+    // Build accepted goal relevance actions locally
+    const allGoalRelevanceActions = Object.fromEntries(
+      (extraction.goal_relevance ?? []).map(s => [
+        s.outcome_id,
+        { action: 'accepted' as const, final: s.outcome_id },
+      ])
+    );
+    setGoalRelevanceActions(allGoalRelevanceActions);
+
+    // Build HumanReview from local variables — NOT from state (stale closure pitfall)
+    const allFields = buildInitialFields(extraction);
+    const goalRelevanceFields: Record<string, FieldState> = {};
+    for (const [outcomeId, state] of Object.entries(allGoalRelevanceActions)) {
+      goalRelevanceFields[`goal_relevance_${outcomeId}`] = {
+        action: state.action,
+        original: outcomeId,
+        final: state.final,
+      };
+    }
+    const review: HumanReview = {
+      reviewed_at: new Date().toISOString(),
+      reviewer_id: node.author_id ?? '',
+      fields: {
+        ...allFields,
+        ...goalRelevanceFields,
+        confidence: {
+          action: 'accepted',
+          original: extraction.confidence_assessment?.level,
+          final: confidence,
+        },
+        domain_tags: {
+          action: 'accepted',
+          original: extraction.domain_tags,
+          final: domainTags,
+        },
+      },
+      connections_accepted: (extraction.suggested_connections ?? []).map(c => ({
+        target_node_id: '',
+        target_title: c.target_title,
+        edge_type: c.edge_type,
+      })),
+      connections_rejected: [],
+      connections_added: [],
+    };
+    onPromote(review);
+  }, [extraction, confidence, domainTags, node.author_id, onPromote]);
 
   const buildReview = (): HumanReview => {
     const goalRelevanceFields: Record<string, FieldState> = {};
@@ -166,6 +243,13 @@ export function ReviewCard({ node, onPromote, onSaveDraft, onArchive, isSubmitti
         </div>
 
         <div className="border-t border-gray-200 dark:border-gray-800 pt-4 space-y-2">
+          <button
+            onClick={handlePromoteAll}
+            disabled={isSubmitting}
+            className="w-full bg-teal-600 text-white rounded-lg px-4 py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+          >
+            Promote all
+          </button>
           <button
             onClick={() => onPromote(buildReview())}
             disabled={isSubmitting}
