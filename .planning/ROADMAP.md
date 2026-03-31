@@ -138,7 +138,7 @@ Plans:
 
 Plans:
 - [x] 08-01-PLAN.md — darkMode class config + system-preference script + layout padding + NavBar light/dark
-- [ ] 08-02-PLAN.md — Graph components dark mode (GraphCanvas SVG nodes, panels, TopBar)
+- [x] 08-02-PLAN.md — Graph components dark mode (GraphCanvas SVG nodes, panels, TopBar)
 - [x] 08-03-PLAN.md — Commitment panel and shared badges dark mode
 
 ### Phase 9: Review UX
