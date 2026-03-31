@@ -44,7 +44,7 @@ The system must always tell you whether your exploration and your commitments ar
 
 - ✓ Nav panel content no longer obscured by fixed navbar (padding fix) — Validated Phase 8
 - ✓ Full light/dark mode consistency — no hardcoded colors — Validated Phase 8
-- [ ] Review card defaults all fields to checked (opt-out model)
+- ✓ Review card defaults all fields to checked (opt-out model) — Validated Phase 9
 - [ ] Shared CAPTURE_TYPES config used by both capture page and inline graph card
 - [ ] Capture page renamed; meeting notes/transcript type added with multi-node extraction
 - [ ] Insight date field on nodes (insight_date column, timeline uses it)
