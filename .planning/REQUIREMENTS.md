@@ -10,8 +10,8 @@
 ### Layout & Theme
 
 - [ ] **LAYOUT-01**: Sidebar content (commitment panel, any left/right panel) starts below the navbar — not obscured by fixed nav
-- [ ] **LAYOUT-02**: All components use Tailwind `dark:` variants or CSS variables — no hardcoded colors remaining
-- [ ] **LAYOUT-03**: Graph canvas, node cards, commitment panel, and tension alerts are readable in both light and dark mode
+- [x] **LAYOUT-02**: All components use Tailwind `dark:` variants or CSS variables — no hardcoded colors remaining
+- [x] **LAYOUT-03**: Graph canvas, node cards, commitment panel, and tension alerts are readable in both light and dark mode
 
 ### Review UX
 
@@ -88,8 +88,8 @@ Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extract
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | LAYOUT-01 | Phase 8 | Pending |
-| LAYOUT-02 | Phase 8 | Pending |
-| LAYOUT-03 | Phase 8 | Pending |
+| LAYOUT-02 | Phase 8 | Complete |
+| LAYOUT-03 | Phase 8 | Complete |
 | REVIEW-01 | Phase 9 | Pending |
 | REVIEW-02 | Phase 9 | Pending |
 | REVIEW-03 | Phase 9 | Pending |
