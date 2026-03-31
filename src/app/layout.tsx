@@ -47,7 +47,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-gray-950 text-gray-100`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100`}>
         <AuthProvider initialUser={user}>
           {user && <NavBar reviewCount={reviewCount} />}
           <main className="h-screen overflow-y-auto pt-[49px]">
