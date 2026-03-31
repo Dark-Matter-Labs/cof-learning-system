@@ -11,9 +11,9 @@ interface TensionAlertItemProps {
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
-  high:   'bg-red-950/60 border border-red-900/50',
-  medium: 'bg-amber-950/60 border border-amber-900/50',
-  low:    'bg-gray-900 border border-gray-800',
+  high:   'bg-red-50 border border-red-200 dark:bg-red-950/60 dark:border-red-900/50',
+  medium: 'bg-amber-50 border border-amber-200 dark:bg-amber-950/60 dark:border-amber-900/50',
+  low:    'bg-gray-50 border border-gray-200 dark:bg-gray-900 dark:border-gray-800',
 };
 
 const SEVERITY_ICON: Record<string, string> = {
@@ -23,9 +23,9 @@ const SEVERITY_ICON: Record<string, string> = {
 };
 
 const SEVERITY_TEXT: Record<string, string> = {
-  high:   'text-red-400',
-  medium: 'text-amber-400',
-  low:    'text-gray-500',
+  high:   'text-red-600 dark:text-red-400',
+  medium: 'text-amber-600 dark:text-amber-400',
+  low:    'text-gray-500 dark:text-gray-500',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -65,7 +65,7 @@ export function TensionAlertItem({ alert, onSelect, onAcknowledge, onResolve }: 
             {TYPE_LABELS[alert.type] ?? alert.type}
           </span>
         </div>
-        <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-3">
+        <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
           {alert.description}
         </p>
         <div
@@ -75,14 +75,14 @@ export function TensionAlertItem({ alert, onSelect, onAcknowledge, onResolve }: 
           <button
             type="button"
             onClick={() => onAcknowledge(alert.id)}
-            className="text-[10px] text-gray-500 hover:text-gray-300 underline"
+            className="text-[10px] text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 underline"
           >
             Acknowledge
           </button>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="text-[10px] text-gray-500 hover:text-gray-300 underline"
+            className="text-[10px] text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 underline"
           >
             Resolve
           </button>
@@ -90,10 +90,10 @@ export function TensionAlertItem({ alert, onSelect, onAcknowledge, onResolve }: 
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-5 w-[360px] shadow-xl">
-            <h3 className="text-sm font-bold text-gray-200 mb-1">Resolve tension</h3>
-            <p className="text-xs text-gray-500 mb-4 leading-relaxed">{alert.description}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 w-[360px] shadow-xl">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-200 mb-1">Resolve tension</h3>
+            <p className="text-xs text-gray-600 dark:text-gray-500 mb-4 leading-relaxed">{alert.description}</p>
 
             <div className="mb-4">
               <label className="block text-[10px] text-gray-500 uppercase tracking-wide mb-1">
@@ -102,7 +102,7 @@ export function TensionAlertItem({ alert, onSelect, onAcknowledge, onResolve }: 
               <textarea
                 value={belief}
                 onChange={e => setBelief(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-200 rounded p-2 h-20 resize-none focus:outline-none focus:border-gray-600"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-900 dark:text-gray-200 rounded p-2 h-20 resize-none focus:outline-none focus:border-gray-400 dark:focus:border-gray-600"
                 placeholder="Describe your updated understanding…"
               />
             </div>
@@ -125,7 +125,7 @@ export function TensionAlertItem({ alert, onSelect, onAcknowledge, onResolve }: 
                       onChange={() => setAction(val)}
                       className="accent-blue-500"
                     />
-                    <span className="text-xs text-gray-400">{label}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-400">{label}</span>
                   </label>
                 ))}
               </div>
@@ -142,7 +142,7 @@ export function TensionAlertItem({ alert, onSelect, onAcknowledge, onResolve }: 
               <button
                 type="button"
                 onClick={handleResolve}
-                className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded"
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-3 py-1.5 rounded"
               >
                 Resolve
               </button>
