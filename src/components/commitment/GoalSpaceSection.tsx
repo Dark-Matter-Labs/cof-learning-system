@@ -62,16 +62,16 @@ export function GoalSpaceSection({
   ];
 
   return (
-    <div className="border-b border-gray-800/50">
+    <div className="border-b border-gray-200/80 dark:border-gray-800/50">
       {/* Goal space header */}
       <button
         type="button"
         onClick={() => setExpanded(prev => !prev)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-900/50 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-100/80 dark:hover:bg-gray-900/50 transition-colors"
       >
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-[10px] text-gray-500">{expanded ? '\u25BC' : '\u25B6'}</span>
-          <span className="text-[10px] font-semibold text-gray-300 truncate">{goalSpace.title}</span>
+          <span className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 truncate">{goalSpace.title}</span>
         </div>
         <TrajectoryBadge
           status={trajectoryStatus}
@@ -90,7 +90,7 @@ export function GoalSpaceSection({
           )}
 
           {triggerOutcomes.length === 0 && unlinkedCommitments.length === 0 && (
-            <p className="px-3 pl-6 text-[9px] text-gray-600 italic">No outcomes or commitments</p>
+            <p className="px-3 pl-6 text-[9px] text-gray-500 dark:text-gray-600 italic">No outcomes or commitments</p>
           )}
 
           {triggerOutcomes.map((outcome, idx) => {
@@ -102,9 +102,9 @@ export function GoalSpaceSection({
               <div key={outcome.id} className="pl-3">
                 {/* Trigger outcome row */}
                 <div className="flex items-center gap-1.5 px-2 py-1">
-                  <span className="text-[10px] text-gray-600 font-mono">{prefix}</span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-600 font-mono">{prefix}</span>
                   <span className="text-[10px] text-gray-500">{'\u25CB'}</span>
-                  <span className="text-[10px] text-gray-400 truncate">{outcome.title}</span>
+                  <span className="text-[10px] text-gray-600 dark:text-gray-400 truncate">{outcome.title}</span>
                 </div>
 
                 {/* Commitments under this outcome */}
@@ -124,7 +124,7 @@ export function GoalSpaceSection({
                     ))}
                   </div>
                 ) : (
-                  <p className="pl-8 text-[9px] text-gray-700 italic">no commitments</p>
+                  <p className="pl-8 text-[9px] text-gray-500 dark:text-gray-700 italic">no commitments</p>
                 )}
               </div>
             );

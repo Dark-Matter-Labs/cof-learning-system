@@ -36,15 +36,15 @@ export function AllocationSummary({ commitments }: { readonly commitments: reado
 
   return (
     <div className="px-3 pb-3">
-      <div className="text-[9px] text-gray-600 uppercase tracking-wide mb-2">Allocation</div>
+      <div className="text-[9px] text-gray-500 dark:text-gray-600 uppercase tracking-wide mb-2">Allocation</div>
       <div className="space-y-1.5">
         {allocations.map(({ title, allocation }) => (
           <div key={title}>
             <div className="flex justify-between mb-0.5">
               <span className="text-[9px] text-gray-500 truncate flex-1 min-w-0">{title}</span>
-              <span className="text-[9px] text-gray-600 ml-1">{allocation}%</span>
+              <span className="text-[9px] text-gray-500 dark:text-gray-600 ml-1">{allocation}%</span>
             </div>
-            <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#185FA5]/70 rounded-full"
                 style={{ width: `${allocation}%` }}
@@ -52,9 +52,9 @@ export function AllocationSummary({ commitments }: { readonly commitments: reado
             </div>
           </div>
         ))}
-        <div className="flex justify-between pt-1 border-t border-gray-800 mt-1">
-          <span className="text-[9px] text-gray-600">Total committed</span>
-          <span className={`text-[9px] font-medium ${total > 100 ? 'text-red-400' : 'text-gray-400'}`}>
+        <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-800 mt-1">
+          <span className="text-[9px] text-gray-500 dark:text-gray-600">Total committed</span>
+          <span className={`text-[9px] font-medium ${total > 100 ? 'text-red-500 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
             {total}%
           </span>
         </div>

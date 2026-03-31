@@ -12,10 +12,10 @@ export interface TrajectoryBadgeProps {
 }
 
 const STATUS_CONFIG: Record<TrajectoryStatus, { label: string; icon: string; bgClass: string; textClass: string }> = {
-  pending:    { label: '---',        icon: '\u2299', bgClass: 'bg-gray-800',    textClass: 'text-gray-500' },
-  converging: { label: 'Converging', icon: '\u2197', bgClass: 'bg-teal-900/50', textClass: 'text-teal-400' },
-  neutral:    { label: 'Neutral',    icon: '\u2192', bgClass: 'bg-gray-800',    textClass: 'text-gray-400' },
-  drifting:   { label: 'Drifting',   icon: '\u2198', bgClass: 'bg-red-900/30',  textClass: 'text-red-400'  },
+  pending:    { label: '---',        icon: '\u2299', bgClass: 'bg-gray-100 dark:bg-gray-800',    textClass: 'text-gray-500' },
+  converging: { label: 'Converging', icon: '\u2197', bgClass: 'bg-teal-50 dark:bg-teal-900/50', textClass: 'text-teal-600 dark:text-teal-400' },
+  neutral:    { label: 'Neutral',    icon: '\u2192', bgClass: 'bg-gray-100 dark:bg-gray-800',    textClass: 'text-gray-600 dark:text-gray-400' },
+  drifting:   { label: 'Drifting',   icon: '\u2198', bgClass: 'bg-red-50 dark:bg-red-900/30',    textClass: 'text-red-600 dark:text-red-400'   },
 };
 
 export function scoreToStatus(score: number): TrajectoryStatus {
@@ -53,20 +53,20 @@ export function TrajectoryBadge({ status, score, factorBreakdown }: TrajectoryBa
       </button>
 
       {expanded && factorBreakdown !== undefined && (
-        <div className="mt-1 p-2 bg-gray-900 border border-gray-800 rounded text-left">
+        <div className="mt-1 p-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded text-left">
           {factorBreakdown.outcome_scores.map(outcome => (
             <div key={outcome.outcome_id} className="mb-2">
-              <div className="text-[10px] text-gray-300 mb-0.5">{outcome.outcome_title}</div>
+              <div className="text-[10px] text-gray-700 dark:text-gray-300 mb-0.5">{outcome.outcome_title}</div>
               {outcome.positive_factors.map((factor, idx) => (
                 <div key={`pos-${idx}`} className="flex gap-1 text-[9px]">
                   <span className="text-teal-400">+{factor.weight.toFixed(1)}</span>
-                  <span className="text-gray-400">{factor.node_title}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{factor.node_title}</span>
                 </div>
               ))}
               {outcome.negative_factors.map((factor, idx) => (
                 <div key={`neg-${idx}`} className="flex gap-1 text-[9px]">
                   <span className="text-red-400">{factor.weight.toFixed(1)}</span>
-                  <span className="text-gray-400">{factor.node_title}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{factor.node_title}</span>
                 </div>
               ))}
             </div>
