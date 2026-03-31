@@ -123,13 +123,13 @@ export default async function ReviewPage() {
   const SEVERITY_COLORS: Record<string, string> = {
     high:   'text-red-400 border-red-900/50',
     medium: 'text-amber-400 border-amber-900/50',
-    low:    'text-gray-500 border-gray-800',
+    low:    'text-gray-500 border-gray-200 dark:border-gray-800',
   };
 
   return (
     <div className="page-with-nav">
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-lg font-bold text-gray-200 mb-6">Weekly Review</h1>
+        <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6">Weekly Review</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -160,11 +160,11 @@ export default async function ReviewPage() {
                     <Link
                       key={node.id}
                       href={`/capture/${node.id}/review`}
-                      className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg p-2.5 hover:border-gray-700 transition-colors"
+                      className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-2.5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs text-gray-200 truncate">{node.title}</div>
-                        <div className="text-[10px] text-gray-600 mt-0.5">
+                        <div className="text-xs text-gray-800 dark:text-gray-200 truncate">{node.title}</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-600 mt-0.5">
                           {new Date(node.created_at).toLocaleDateString()}
                         </div>
                       </div>
@@ -183,10 +183,10 @@ export default async function ReviewPage() {
                 </h3>
                 <div className="space-y-1.5">
                   {lowConf.map(node => (
-                    <div key={node.id} className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg p-2.5">
+                    <div key={node.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-2.5">
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs text-gray-300 truncate">{node.title}</div>
-                        <div className="text-[10px] text-gray-600 mt-0.5">
+                        <div className="text-xs text-gray-700 dark:text-gray-300 truncate">{node.title}</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-600 mt-0.5">
                           Confidence {node.confidence_level}/5
                         </div>
                       </div>
@@ -205,9 +205,9 @@ export default async function ReviewPage() {
                 </h3>
                 <div className="space-y-1.5">
                   {tests.slice(0, 5).map(node => (
-                    <div key={node.id} className="flex items-center bg-gray-900 border border-gray-800 rounded-lg p-2.5 gap-2">
+                    <div key={node.id} className="flex items-center bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-2.5 gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#D4537E] shrink-0 mt-0.5" />
-                      <div className="text-xs text-gray-400 truncate">{node.title}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{node.title}</div>
                     </div>
                   ))}
                 </div>
@@ -226,9 +226,9 @@ export default async function ReviewPage() {
                     <Link
                       key={node.id}
                       href={`/capture/${node.id}/review`}
-                      className="flex items-center justify-between bg-gray-900 border border-amber-900/30 rounded-lg p-2.5 hover:border-amber-800/50 transition-colors"
+                      className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-amber-900/30 rounded-lg p-2.5 hover:border-amber-800/50 transition-colors"
                     >
-                      <div className="text-xs text-gray-300 truncate">{node.title}</div>
+                      <div className="text-xs text-gray-700 dark:text-gray-300 truncate">{node.title}</div>
                       <span className="text-[9px] text-amber-500 shrink-0 ml-2">consider linking</span>
                     </Link>
                   ))}
@@ -253,12 +253,12 @@ export default async function ReviewPage() {
                   {tensions.map(alert => (
                     <div
                       key={alert.id}
-                      className={`bg-gray-900 border rounded-lg p-2.5 ${SEVERITY_COLORS[alert.severity] ?? 'border-gray-800'}`}
+                      className={`bg-gray-50 dark:bg-gray-900 border rounded-lg p-2.5 ${SEVERITY_COLORS[alert.severity] ?? 'border-gray-200 dark:border-gray-800'}`}
                     >
                       <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${SEVERITY_COLORS[alert.severity]?.split(' ')[0] ?? 'text-gray-500'}`}>
                         {alert.severity} · {alert.type.replace(/_/g, ' ')}
                       </div>
-                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2">
                         {alert.description}
                       </p>
                     </div>
@@ -275,9 +275,9 @@ export default async function ReviewPage() {
                 </h3>
                 <div className="space-y-1.5">
                   {stalled.map(node => (
-                    <div key={node.id} className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg p-2.5">
-                      <div className="text-xs text-gray-400 truncate">{node.title}</div>
-                      <span className="text-[9px] text-gray-600 shrink-0 ml-2">
+                    <div key={node.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-2.5">
+                      <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{node.title}</div>
+                      <span className="text-[9px] text-gray-500 dark:text-gray-600 shrink-0 ml-2">
                         {new Date(node.updated_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -294,9 +294,9 @@ export default async function ReviewPage() {
                 </h3>
                 <div className="space-y-1.5">
                   {commitments.map(node => (
-                    <div key={node.id} className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg p-2.5">
+                    <div key={node.id} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-2.5">
                       <div className="w-1.5 shrink-0 h-full self-stretch rounded-full bg-[#185FA5]" />
-                      <div className="text-xs text-gray-300 truncate flex-1">{node.title}</div>
+                      <div className="text-xs text-gray-700 dark:text-gray-300 truncate flex-1">{node.title}</div>
                     </div>
                   ))}
                 </div>

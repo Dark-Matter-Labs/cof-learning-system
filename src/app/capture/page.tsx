@@ -68,10 +68,10 @@ export default function CapturePage() {
 
   return (
     <div className="page-with-nav"><div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-lg font-bold text-gray-200 mb-6">Capture a Hunch</h1>
+      <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6">Capture a Hunch</h1>
       <QuickCaptureForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
       <div className="mt-10">
-        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">Recent Hunches</h2>
+        <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">Recent Hunches</h2>
         <HunchList nodes={nodes} />
       </div></div>
     </div>
