@@ -146,7 +146,7 @@ export function ReviewCard({ node, onPromote, onSaveDraft, onArchive, isSubmitti
       {/* Right: connections + actions */}
       <div className="w-80 space-y-4">
         <div>
-          <h3 className="text-xs text-gray-400 uppercase tracking-wide mb-2">Suggested Connections</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Suggested Connections</h3>
           <div className="space-y-2">
             {(extraction.suggested_connections ?? []).map((conn, i) => (
               <ConnectionSuggestion
@@ -160,12 +160,12 @@ export function ReviewCard({ node, onPromote, onSaveDraft, onArchive, isSubmitti
               />
             ))}
             {(extraction.suggested_connections ?? []).length === 0 && (
-              <p className="text-xs text-gray-600">No connections suggested</p>
+              <p className="text-xs text-gray-500 dark:text-gray-600">No connections suggested</p>
             )}
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-4 space-y-2">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-4 space-y-2">
           <button
             onClick={() => onPromote(buildReview())}
             disabled={isSubmitting}

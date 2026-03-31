@@ -128,7 +128,7 @@ export function InlineCaptureCard({
 
   return (
     <div
-      className="fixed z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 flex flex-col gap-3"
+      className="fixed z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 flex flex-col gap-3"
       style={{ left, top, width: cardW }}
       onClick={e => e.stopPropagation()}
     >
@@ -141,13 +141,13 @@ export function InlineCaptureCard({
         value={title}
         onChange={e => setTitle(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') handleCreate(); }}
-        className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500 w-full"
+        className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 w-full"
       />
 
       <select
         value={nodeType}
         onChange={e => setNodeType(e.target.value)}
-        className="bg-gray-800 border border-gray-700 rounded-md px-3 py-1.5 text-xs text-gray-400 focus:outline-none w-full"
+        className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-1.5 text-xs text-gray-600 dark:text-gray-400 focus:outline-none w-full"
       >
         {NODE_TYPES.map(t => (
           <option key={t.value} value={t.value}>{t.label}</option>
@@ -155,9 +155,9 @@ export function InlineCaptureCard({
       </select>
 
       {nodeType === 'trigger_outcome' && (
-        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-2 mt-2">
+        <div className="bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/80 dark:border-gray-700/50 rounded-lg p-2 mt-2">
           <label className="block text-[10px] text-[#085041] uppercase tracking-wide font-semibold mb-1">
-            Which goal space does this advance? <span className="text-gray-600 normal-case font-normal">(optional)</span>
+            Which goal space does this advance? <span className="text-gray-500 dark:text-gray-600 normal-case font-normal">(optional)</span>
           </label>
           {goalSpaces.length === 0 ? (
             <p className="text-[9px] text-gray-600 italic">No goal spaces yet — create one first.</p>
@@ -165,7 +165,7 @@ export function InlineCaptureCard({
             <select
               value={goalSpaceId}
               onChange={e => setGoalSpaceId(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-gray-600"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600"
             >
               <option value="">— None —</option>
               {goalSpaces.map(gs => (
@@ -177,9 +177,9 @@ export function InlineCaptureCard({
       )}
 
       {showOutcomeSection && (
-        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-2">
+        <div className="bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200/80 dark:border-gray-700/50 rounded-lg p-2">
           <label className="block text-[10px] text-[#085041] uppercase tracking-wide font-semibold mb-1">
-            Which outcome does this target? <span className="text-gray-600 normal-case font-normal">(optional)</span>
+            Which outcome does this target? <span className="text-gray-500 dark:text-gray-600 normal-case font-normal">(optional)</span>
           </label>
           {triggerOutcomes.length === 0 ? (
             <p className="text-[9px] text-gray-600 italic">No trigger outcomes yet — create one first.</p>
@@ -187,7 +187,7 @@ export function InlineCaptureCard({
             <select
               value={triggerOutcomeId}
               onChange={e => setTriggerOutcomeId(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-gray-600"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600"
             >
               <option value="">— None —</option>
               {triggerOutcomes.map(to => (
@@ -197,14 +197,14 @@ export function InlineCaptureCard({
           )}
 
           <label className="block text-[10px] text-[#085041] uppercase tracking-wide font-semibold mt-2 mb-1">
-            What signal would tell you this is working? <span className="text-gray-600 normal-case font-normal">(optional)</span>
+            What signal would tell you this is working? <span className="text-gray-500 dark:text-gray-600 normal-case font-normal">(optional)</span>
           </label>
           <input
             type="text"
             placeholder="e.g. investments increase by 20%"
             value={expectedSignals}
             onChange={e => setExpectedSignals(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500 w-full"
+            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 w-full"
           />
         </div>
       )}
@@ -219,7 +219,7 @@ export function InlineCaptureCard({
         </button>
         <button
           onClick={onClose}
-          className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         >
           Cancel
         </button>

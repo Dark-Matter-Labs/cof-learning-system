@@ -48,7 +48,7 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
   const windowButtonClass = (d: 30 | 60 | 90) =>
     days === d
       ? 'px-3 py-1 text-sm rounded bg-teal-600 text-white'
-      : 'px-3 py-1 text-sm rounded bg-gray-700 text-gray-300 hover:bg-gray-600';
+      : 'px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600';
 
   const handleAddDecision = () => {
     if (newDecisionText.trim()) {
@@ -98,7 +98,7 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
       {/* Section 1: Trajectory Overview */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-100">Trajectory Overview</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Trajectory Overview</h2>
           <div className="flex gap-2">
             <button className={windowButtonClass(30)} onClick={() => setDays(30)}>30d</button>
             <button className={windowButtonClass(60)} onClick={() => setDays(60)}>60d</button>
@@ -110,10 +110,10 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {goalSpaces.map(gs => (
-              <div key={gs.id} className="bg-gray-800 rounded p-4">
-                <p className="text-sm font-medium text-gray-200 mb-2">{gs.title}</p>
+              <div key={gs.id} className="bg-gray-100 dark:bg-gray-800 rounded p-4">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">{gs.title}</p>
                 <ConvergenceSparkline snapshots={sparklineData[gs.id]?.history ?? []} />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Score: {sparklineData[gs.id]?.latest?.score?.toFixed(1) ?? '---'}
                 </p>
               </div>
@@ -124,13 +124,13 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
 
       {/* Section 2: Guided Questions */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Reflection Questions</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Reflection Questions</h2>
         <div className="space-y-4">
           {REFLECTION_QUESTIONS.map(q => (
             <div key={q.id}>
-              <label className="block text-sm text-gray-300 mb-1">{q.text}</label>
+              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">{q.text}</label>
               <textarea
-                className="w-full bg-gray-800 border border-gray-600 rounded p-2 text-gray-100 min-h-[80px] focus:outline-none focus:border-teal-500"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-2 text-gray-900 dark:text-gray-100 min-h-[80px] focus:outline-none focus:border-teal-500"
                 value={answers[q.id] ?? ''}
                 onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
               />
@@ -141,12 +141,12 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
 
       {/* Section 3: Decisions Log */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Decisions</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Decisions</h2>
         {decisions.length > 0 && (
           <ul className="space-y-2 mb-4">
             {decisions.map((d, idx) => (
-              <li key={idx} className="flex items-start justify-between bg-gray-800 rounded p-3">
-                <span className="text-sm text-gray-200 flex-1">{d.text}</span>
+              <li key={idx} className="flex items-start justify-between bg-gray-100 dark:bg-gray-800 rounded p-3">
+                <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">{d.text}</span>
                 {d.node_id && (
                   <span className="text-xs text-teal-400 ml-2 shrink-0">node: {d.node_id}</span>
                 )}
@@ -165,13 +165,13 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
           <input
             type="text"
             placeholder="Record a decision..."
-            className="flex-1 bg-gray-800 border border-gray-600 rounded p-2 text-sm text-gray-100 focus:outline-none focus:border-teal-500"
+            className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
             value={newDecisionText}
             onChange={e => setNewDecisionText(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleAddDecision(); }}
           />
           <button
-            className="px-4 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm"
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
             onClick={handleAddDecision}
           >
             Add
