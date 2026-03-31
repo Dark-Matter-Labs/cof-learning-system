@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from 'react';
 import type { HunchType } from '@/lib/types/nodes';
+import { getPageTypes, type CaptureTypeId } from '@/lib/config/captureTypes';
 
 export interface CaptureFormData {
   readonly title: string;
   readonly description: string;
+  readonly node_type: string;
   readonly hunch_type: HunchType;
   readonly confidence_level: number;
   readonly external_link_url?: string;
@@ -33,6 +35,7 @@ const HUNCH_TYPES: { value: HunchType; label: string }[] = [
 ];
 
 export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptureFormProps) {
+  const [captureType, setCaptureType] = useState<CaptureTypeId>('hunch');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [hunchType, setHunchType] = useState<HunchType>('new');
@@ -40,6 +43,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
   const [linkUrl, setLinkUrl] = useState('');
   const [linkLabel, setLinkLabel] = useState('');
 
+  const selectedConfig = getPageTypes().find(t => t.id === captureType);
   const canSubmit = title.trim().length > 0 && !isSubmitting;
 
   const handleSubmit = (e: FormEvent) => {
@@ -49,11 +53,13 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
     onSubmit({
       title: title.trim(),
       description: description.trim(),
+      node_type: selectedConfig?.nodeType ?? 'hunch',
       hunch_type: hunchType,
       confidence_level: confidence,
       ...(linkUrl.trim() ? { external_link_url: linkUrl.trim(), external_link_label: linkLabel.trim() || linkUrl.trim() } : {}),
     });
 
+    setCaptureType('hunch');
     setTitle('');
     setDescription('');
     setHunchType('new');
@@ -64,6 +70,25 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="capture-type" className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
+          Capture type
+        </label>
+        <select
+          id="capture-type"
+          value={captureType}
+          onChange={e => setCaptureType(e.target.value as CaptureTypeId)}
+          className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-node-hunch"
+        >
+          {getPageTypes().map(t => (
+            <option key={t.id} value={t.id}>{t.label}</option>
+          ))}
+        </select>
+        {selectedConfig && (
+          <p className="mt-1 text-xs text-gray-500">{selectedConfig.description}</p>
+        )}
+      </div>
+
       <div>
         <label htmlFor="title" className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
           Title
@@ -92,10 +117,10 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
         />
       </div>
 
-      <div className="flex gap-4">
+      {selectedConfig?.fields.includes('hunch_type') && (
         <div className="flex-1">
           <label htmlFor="hunch-type" className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
-            Type
+            Hunch type
           </label>
           <select
             id="hunch-type"
@@ -108,8 +133,10 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
             ))}
           </select>
         </div>
+      )}
 
-        <div className="flex-1">
+      {selectedConfig?.fields.includes('confidence') && (
+        <div>
           <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
             Confidence
           </label>
@@ -131,29 +158,31 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
             ))}
           </div>
         </div>
-      </div>
+      )}
 
-      <details className="group">
-        <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
-          + Add external link
-        </summary>
-        <div className="mt-2 flex gap-2">
-          <input
-            type="url"
-            value={linkUrl}
-            onChange={e => setLinkUrl(e.target.value)}
-            placeholder="https://..."
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
-          />
-          <input
-            type="text"
-            value={linkLabel}
-            onChange={e => setLinkLabel(e.target.value)}
-            placeholder="Label"
-            className="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
-          />
-        </div>
-      </details>
+      {selectedConfig?.fields.includes('external_link') && (
+        <details className="group">
+          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
+            + Add external link
+          </summary>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="url"
+              value={linkUrl}
+              onChange={e => setLinkUrl(e.target.value)}
+              placeholder="https://..."
+              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+            />
+            <input
+              type="text"
+              value={linkLabel}
+              onChange={e => setLinkLabel(e.target.value)}
+              placeholder="Label"
+              className="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+            />
+          </div>
+        </details>
+      )}
 
       <button
         type="submit"

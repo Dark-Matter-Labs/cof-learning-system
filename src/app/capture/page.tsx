@@ -45,6 +45,7 @@ export default function CapturePage() {
         body: JSON.stringify({
           title: formData.title,
           description: formData.description,
+          node_type: formData.node_type,
           hunch_type: formData.hunch_type,
           confidence_level: formData.confidence_level,
           external_link: formData.external_link_url
@@ -68,7 +69,7 @@ export default function CapturePage() {
 
   return (
     <div className="page-with-nav"><div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-lg font-bold text-gray-200 mb-6">Capture a Hunch</h1>
+      <h1 className="text-lg font-bold text-gray-200 mb-6">Capture</h1>
       <QuickCaptureForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
       <div className="mt-10">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">Recent Hunches</h2>

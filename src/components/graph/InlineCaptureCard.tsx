@@ -2,19 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Node } from '@/lib/types/nodes';
-
-const NODE_TYPES = [
-  { value: 'hunch', label: 'Hunch' },
-  { value: 'assumption_background', label: 'Background Assumption' },
-  { value: 'assumption_foreground', label: 'Foreground Assumption' },
-  { value: 'test', label: 'Test' },
-  { value: 'learning', label: 'Learning' },
-  { value: 'option', label: 'Option' },
-  { value: 'commitment', label: 'Commitment' },
-  { value: 'signal', label: 'Signal' },
-  { value: 'goal_space', label: 'Goal space' },
-  { value: 'trigger_outcome', label: 'Trigger outcome' },
-];
+import { getInlineTypes } from '@/lib/config/captureTypes';
 
 const OUTCOME_NODE_TYPES = ['hunch', 'intervention', 'signal'];
 
@@ -149,8 +137,8 @@ export function InlineCaptureCard({
         onChange={e => setNodeType(e.target.value)}
         className="bg-gray-800 border border-gray-700 rounded-md px-3 py-1.5 text-xs text-gray-400 focus:outline-none w-full"
       >
-        {NODE_TYPES.map(t => (
-          <option key={t.value} value={t.value}>{t.label}</option>
+        {getInlineTypes().map(t => (
+          <option key={t.id} value={t.nodeType}>{t.label}</option>
         ))}
       </select>
 
