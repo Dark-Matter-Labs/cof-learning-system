@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-02-PLAN.md — /reflect page human-verified and complete
-last_updated: "2026-03-30T23:19:07.027Z"
+stopped_at: Completed 12-02-PLAN.md — person detection extraction agent complete
+last_updated: "2026-04-01T09:53:41.616Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 7
@@ -61,6 +61,7 @@ Progress: [█████░░░░░] 57%
 | Phase 06-reflection-agent P02 | 3 | 2 tasks | 3 files |
 | Phase 06-reflection-agent P03 | 45min | 4 tasks | 3 files |
 | Phase 07-reflection-session-page P02 | 3 | 3 tasks | 7 files |
+| Phase 12-people-participants P02 | 8min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 06-reflection-agent]: initialReport prop added to ReflectionPanel for test isolation — avoids mocking fetch/ReadableStream in unit tests while covering all rendering paths
 - [Phase 07-reflection-session-page]: NavBar Reflect link positioned between Review and Settings to frame /reflect as post-review ritual
 - [Phase 07-reflection-session-page]: ReflectClient pre-fills answers from lastSession.human_responses in useState initializer to avoid extra useEffect sync
+- [Phase 12-people-participants]: personNodes status filter uses promoted/human_reviewed matching the promote handler scope — person nodes follow same promotion pipeline
+- [Phase 12-people-participants]: formatEdgeType helper in ConnectionSuggestion renders mentioned_in as Mentioned in — display formatting decoupled from edge type value
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T23:08:44.132Z
-Stopped at: Completed 07-02-PLAN.md — /reflect page human-verified and complete
+Last session: 2026-04-01T09:53:41.613Z
+Stopped at: Completed 12-02-PLAN.md — person detection extraction agent complete
 Resume file: None
