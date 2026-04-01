@@ -47,6 +47,7 @@ describe('extraction agent', () => {
     const goalContext = {
       goalSpaces: [{ id: 'gs-1', title: 'Formation capital' }],
       triggerOutcomes: [{ id: 'to-1', title: 'Raise £10M' }],
+      personNodes: [],
     };
     const prompt = buildExtractionPrompt('My title', 'My description', goalContext);
     expect(prompt).toContain('Active goal spaces:');
@@ -58,10 +59,26 @@ describe('extraction agent', () => {
   });
 
   it('buildExtractionPrompt with empty goalContext arrays returns base prompt only', () => {
-    const goalContext = { goalSpaces: [], triggerOutcomes: [] };
+    const goalContext = { goalSpaces: [], triggerOutcomes: [], personNodes: [] };
     const prompt = buildExtractionPrompt('My title', 'My description', goalContext);
     expect(prompt).toBe('Title: My title\n\nDescription: My description');
     expect(prompt).not.toContain('Active goal spaces');
+  });
+
+  it('buildExtractionPrompt with personNodes includes known persons section', () => {
+    const goalContext = {
+      goalSpaces: [],
+      triggerOutcomes: [],
+      personNodes: [
+        { id: 'p-1', title: 'Robyn Munro' },
+        { id: 'p-2', title: 'Indy Johar' },
+      ],
+    };
+    const prompt = buildExtractionPrompt('My title', 'My description', goalContext);
+    expect(prompt).toContain('Known persons in the system:');
+    expect(prompt).toContain('Robyn Munro');
+    expect(prompt).toContain('Indy Johar');
+    expect(prompt).toContain('mentioned_in');
   });
 
   it('parseExtractionResponse accepts JSON with optional goal_relevance and expected_signals', () => {
@@ -128,6 +145,7 @@ describe('runExtraction with goalContext', () => {
     const goalContext = {
       goalSpaces: [{ id: 'gs-1', title: 'Formation capital' }],
       triggerOutcomes: [{ id: 'to-1', title: 'Raise £10M' }],
+      personNodes: [],
     };
 
     await runExtraction('Test title', 'Test description', goalContext);

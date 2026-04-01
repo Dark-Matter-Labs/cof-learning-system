@@ -9,6 +9,10 @@ interface ConnectionSuggestionProps {
   readonly onReject: () => void;
 }
 
+function formatEdgeType(edgeType: string): string {
+  return edgeType.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+}
+
 export function ConnectionSuggestion({
   targetTitle,
   edgeType,
@@ -26,7 +30,7 @@ export function ConnectionSuggestion({
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="text-sm text-gray-300">
-            → <span className="text-gray-400">{edgeType}</span> &quot;{targetTitle}&quot;
+            → <span className="text-gray-400">{formatEdgeType(edgeType)}</span> &quot;{targetTitle}&quot;
           </div>
           <div className="text-xs text-gray-500 mt-1">{rationale}</div>
         </div>

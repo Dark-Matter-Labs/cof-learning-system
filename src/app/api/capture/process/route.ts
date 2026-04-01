@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       { data: node, error: fetchError },
       { data: goalSpacesData },
       { data: triggerOutcomesData },
+      { data: personNodesData },
     ] = await Promise.all([
       supabase
         .from('nodes')
@@ -46,6 +47,11 @@ export async function POST(request: Request) {
         .select('id, title')
         .eq('node_type', 'trigger_outcome')
         .neq('status', 'archived'),
+      supabase
+        .from('nodes')
+        .select('id, title')
+        .eq('node_type', 'person')
+        .in('status', ['promoted', 'human_reviewed']),
     ]);
 
     if (fetchError || !node) {
@@ -55,6 +61,7 @@ export async function POST(request: Request) {
     const goalContext: GoalContext = {
       goalSpaces: goalSpacesData ?? [],
       triggerOutcomes: triggerOutcomesData ?? [],
+      personNodes: personNodesData ?? [],
     };
 
     const captureConfig = getCaptureType(node.node_type as Parameters<typeof getCaptureType>[0]);

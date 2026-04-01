@@ -35,6 +35,7 @@ Rules:
 export interface GoalContext {
   readonly goalSpaces: ReadonlyArray<{ readonly id: string; readonly title: string }>;
   readonly triggerOutcomes: ReadonlyArray<{ readonly id: string; readonly title: string }>;
+  readonly personNodes: ReadonlyArray<{ readonly id: string; readonly title: string }>;
 }
 
 const SYSTEM_PROMPT = `You are an extraction system for the Civilization Options Fund (COF), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
@@ -73,6 +74,7 @@ Rules for commitment_relevance:
 Rules for goal_relevance and expected_signals (only present when goal context is provided):
 11. GOAL_RELEVANCE: Which trigger outcomes does this node relate to? Only include outcomes from the provided list. Include outcome_id (exact ID from list), outcome_title, and a concise rationale. Omit if no clear relevance. This field is optional.
 12. EXPECTED_SIGNALS: What observable signals would indicate this hunch/intervention is working or this signal is meaningful? List 1-3 concrete, measurable signals. This field is optional.
+13. PERSON_DETECTION: If the text mentions any person from the known persons list below, add a suggested_connection with edge_type "mentioned_in", target_title set to the exact person name from the list, and a rationale explaining the mention. Only suggest connections for persons that are clearly referenced in the text. Do NOT fabricate person mentions.
 
 Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
 
@@ -85,8 +87,9 @@ export function buildExtractionPrompt(title: string, description: string, goalCo
 
   const hasGoalSpaces = goalContext.goalSpaces.length > 0;
   const hasTriggerOutcomes = goalContext.triggerOutcomes.length > 0;
+  const hasPersonNodes = goalContext.personNodes.length > 0;
 
-  if (!hasGoalSpaces && !hasTriggerOutcomes) {
+  if (!hasGoalSpaces && !hasTriggerOutcomes && !hasPersonNodes) {
     return base;
   }
 
@@ -107,8 +110,20 @@ export function buildExtractionPrompt(title: string, description: string, goalCo
     }
   }
 
-  sections.push('');
-  sections.push('If this node relates to any of the trigger outcomes above, include goal_relevance in your response using the exact outcome IDs provided.');
+  if (hasTriggerOutcomes || hasGoalSpaces) {
+    sections.push('');
+    sections.push('If this node relates to any of the trigger outcomes above, include goal_relevance in your response using the exact outcome IDs provided.');
+  }
+
+  if (hasPersonNodes) {
+    sections.push('');
+    sections.push('Known persons in the system:');
+    for (const p of goalContext.personNodes) {
+      sections.push(`- ${p.title} (id: ${p.id})`);
+    }
+    sections.push('');
+    sections.push('If this text mentions any of the persons above, include a suggested_connection with edge_type "mentioned_in" and target_title matching the exact name from this list.');
+  }
 
   return sections.join('\n');
 }

@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: UX Polish
 status: executing
-stopped_at: Completed 11-01-PLAN.md — insight_date capture + timeline view
-last_updated: "2026-04-01T09:49:08.415Z"
-last_activity: 2026-04-01 -- Phase 12 execution started
+stopped_at: Completed 12-02-PLAN.md — person detection extraction agent complete
+last_updated: "2026-04-01T09:53:41.616Z"
+last_activity: 2026-04-01
 progress:
   total_phases: 8
   completed_phases: 4
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 12 (people-participants) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 12
-Last activity: 2026-04-01 -- Phase 12 execution started
+Plan: 2 of 2 complete
+Status: Phase 12 plans complete, awaiting phase verification
+Last activity: 2026-04-01
 
 Progress: [███████░░░] 71%
 
@@ -60,6 +60,8 @@ Progress: [███████░░░] 71%
 | Phase 10-capture-foundation P01 | 10min | 2 tasks | 4 files |
 | Phase 10-capture-foundation P02 | 12min | 2 tasks | 6 files |
 | Phase 11-date-timeline P01 | 10min | 2 tasks | 6 files |
+| Phase 12-people-participants P01 | 20min | 2 tasks | 6 files |
+| Phase 12-people-participants P02 | 8min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -87,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 11-date-timeline]: insight_date is nullable TIMESTAMPTZ — existing nodes retain NULL and fall back to created_at in timeline
 - [Phase 11-date-timeline]: meeting_notes capture type excluded from insight_date field — meeting_date already serves this purpose; passed as insight_date at API level
 - [Phase 11-date-timeline]: getTimelineDate helper centralises insight_date ?? created_at fallback — single change point for future modifications
+- [Phase 12-people-participants]: personNodes status filter uses promoted/human_reviewed matching the promote handler scope — person nodes follow same promotion pipeline
+- [Phase 12-people-participants]: formatEdgeType helper in ConnectionSuggestion renders mentioned_in as "Mentioned in" — display formatting decoupled from edge type value
+- [Phase 12-people-participants]: participated_in edge type for manual participant tagging (semantically distinct from authored_by); mentioned_in for extraction-detected mentions
 
 ### Pending Todos
 
@@ -98,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T09:25:21.935Z
-Stopped at: Completed 11-01-PLAN.md — insight_date capture + timeline view
+Last session: 2026-04-01T09:53:41.613Z
+Stopped at: Completed 12-02-PLAN.md — person detection extraction agent complete
 Resume file: None

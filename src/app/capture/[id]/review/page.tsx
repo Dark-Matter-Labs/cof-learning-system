@@ -94,7 +94,9 @@ export default function ReviewPage() {
         })
         .eq('id', nodeId);
 
-      // Create edges for accepted connections by matching target titles to existing nodes
+      // Create edges for accepted connections by matching target titles to existing nodes.
+      // This includes mentioned_in edges from the extraction agent's person detection —
+      // they resolve through the same findBestMatch pipeline as other suggested_connections.
       if (review.connections_accepted.length > 0) {
         const accepted = review.connections_accepted.filter(c => c.target_title);
 
