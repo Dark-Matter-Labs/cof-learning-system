@@ -44,6 +44,9 @@ export default function CapturePage() {
       if (formData.participants) {
         content.participants = formData.participants.split(',').map(s => s.trim()).filter(Boolean);
       }
+      const participant_ids = formData.participant_ids && formData.participant_ids.length > 0
+        ? formData.participant_ids
+        : undefined;
 
       const insightDate = formData.insight_date
         ? new Date(formData.insight_date + 'T00:00:00').toISOString()
@@ -66,6 +69,7 @@ export default function CapturePage() {
             : undefined,
           content: Object.keys(content).length > 0 ? content : undefined,
           insight_date: insightDate ?? meetingAsInsight,
+          participant_ids,
         }),
       });
 

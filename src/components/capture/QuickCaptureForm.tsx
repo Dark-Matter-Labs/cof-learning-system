@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import type { HunchType } from '@/lib/types/nodes';
 import { getPageTypes, type CaptureTypeId } from '@/lib/config/captureTypes';
+import { PersonAutocomplete, type PersonOption } from './PersonAutocomplete';
 
 export interface CaptureFormData {
   readonly title: string;
@@ -14,6 +15,7 @@ export interface CaptureFormData {
   readonly external_link_label?: string;
   readonly meeting_date?: string;
   readonly participants?: string;
+  readonly participant_ids?: readonly string[];
   readonly insight_date?: string;
 }
 
@@ -47,6 +49,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
   const [linkLabel, setLinkLabel] = useState('');
   const [meetingDate, setMeetingDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [participants, setParticipants] = useState<string>('');
+  const [selectedPeople, setSelectedPeople] = useState<ReadonlyArray<PersonOption>>([]);
   const [insightDate, setInsightDate] = useState<string>(new Date().toISOString().slice(0, 10));
 
   const selectedConfig = getPageTypes().find(t => t.id === captureType);
@@ -64,7 +67,12 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
       confidence_level: confidence,
       ...(linkUrl.trim() ? { external_link_url: linkUrl.trim(), external_link_label: linkLabel.trim() || linkUrl.trim() } : {}),
       ...(meetingDate && selectedConfig?.fields.includes('meeting_date') ? { meeting_date: meetingDate } : {}),
-      ...(participants.trim() && selectedConfig?.fields.includes('participants') ? { participants: participants.trim() } : {}),
+      ...(selectedConfig?.fields.includes('participants') && selectedPeople.length > 0
+        ? {
+            participants: selectedPeople.map(p => p.title).join(', '),
+            participant_ids: selectedPeople.map(p => p.id),
+          }
+        : {}),
       ...(insightDate && selectedConfig?.fields.includes('insight_date') ? { insight_date: insightDate } : {}),
     });
 
@@ -77,6 +85,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
     setLinkLabel('');
     setMeetingDate(new Date().toISOString().slice(0, 10));
     setParticipants('');
+    setSelectedPeople([]);
     setInsightDate(new Date().toISOString().slice(0, 10));
   };
 
@@ -161,16 +170,12 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
 
       {selectedConfig?.fields.includes('participants') && (
         <div>
-          <label htmlFor="participants" className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
             Participants
           </label>
-          <input
-            id="participants"
-            type="text"
-            value={participants}
-            onChange={e => setParticipants(e.target.value)}
-            placeholder="Comma-separated names (e.g. Indy, Robyn, Martin)"
-            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+          <PersonAutocomplete
+            selectedPeople={selectedPeople}
+            onChange={setSelectedPeople}
           />
         </div>
       )}

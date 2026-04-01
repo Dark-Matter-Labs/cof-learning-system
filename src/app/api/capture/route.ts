@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link, content, insight_date } = body;
+  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link, content, insight_date, participant_ids } = body;
 
   if (!title || typeof title !== 'string' || title.trim().length === 0) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -49,6 +49,18 @@ export async function POST(request: Request) {
     target_node_id: node.id,
     details: { title: node.title, hunch_type: node.hunch_type },
   });
+
+  // Create participated_in edges for each selected person node
+  if (participant_ids && Array.isArray(participant_ids) && participant_ids.length > 0) {
+    const participantEdges = (participant_ids as string[]).map((personId: string) => ({
+      source_id: node.id,
+      target_id: personId,
+      edge_type: 'participated_in',
+      weight: 1,
+      author_id: user.id,
+    }));
+    await supabase.from('edges').insert(participantEdges);
+  }
 
   // Fire-and-forget: propagate signal if this is a signal node
   if (node_type === 'signal') {
