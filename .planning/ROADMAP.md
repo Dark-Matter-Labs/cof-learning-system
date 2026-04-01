@@ -176,7 +176,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The capture form shows a "When did this happen?" date field that defaults to today and is stored as `insight_date` on the node
   2. The timeline view positions nodes using `insight_date` when set, falling back to `created_at` — nodes entered today for events last month appear at last month's position
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
 - [ ] 11-01-PLAN.md — insight_date DB migration + capture form field + timeline view update
