@@ -331,6 +331,8 @@ export function GraphOSSurface() {
             setNodes(prev => prev.map(n => n.id === updatedNode.id ? updatedNode : n));
             setSelectedNode(updatedNode);
           }}
+          onEdgeAdded={edge => setEdges(prev => [...prev, edge])}
+          onEdgeRemoved={edgeId => setEdges(prev => prev.filter(e => e.id !== edgeId))}
         />
       )}
     </div>
