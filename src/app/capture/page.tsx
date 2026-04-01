@@ -45,6 +45,13 @@ export default function CapturePage() {
         content.participants = formData.participants.split(',').map(s => s.trim()).filter(Boolean);
       }
 
+      const insightDate = formData.insight_date
+        ? new Date(formData.insight_date + 'T00:00:00').toISOString()
+        : undefined;
+      const meetingAsInsight = formData.meeting_date
+        ? new Date(formData.meeting_date + 'T00:00:00').toISOString()
+        : undefined;
+
       const response = await fetch('/api/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,6 +65,7 @@ export default function CapturePage() {
             ? { url: formData.external_link_url, label: formData.external_link_label }
             : undefined,
           content: Object.keys(content).length > 0 ? content : undefined,
+          insight_date: insightDate ?? meetingAsInsight,
         }),
       });
 

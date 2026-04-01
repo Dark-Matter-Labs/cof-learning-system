@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link, content } = body;
+  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link, content, insight_date } = body;
 
   if (!title || typeof title !== 'string' || title.trim().length === 0) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       author_id: user.id,
       external_links: externalLinks,
       content: content ?? null,
+      insight_date: insight_date ?? null,
     })
     .select()
     .single();

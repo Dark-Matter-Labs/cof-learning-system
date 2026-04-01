@@ -20,6 +20,7 @@ function makeNode(overrides: Partial<Node>): Node {
     human_review: null,
     author_id: null,
     parent_node_id: null,
+    insight_date: null,
     domain_tags: [],
     external_links: [],
     attachments: [],

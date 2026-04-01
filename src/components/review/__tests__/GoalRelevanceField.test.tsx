@@ -152,6 +152,7 @@ const baseNode = {
   human_review: null,
   author_id: 'user-1',
   parent_node_id: null,
+  insight_date: null,
   domain_tags: [],
   external_links: [],
   attachments: [],

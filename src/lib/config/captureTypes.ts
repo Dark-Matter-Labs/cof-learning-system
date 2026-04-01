@@ -17,7 +17,8 @@ export type CaptureField =
   | 'external_link'
   | 'expected_signals'
   | 'meeting_date'
-  | 'participants';
+  | 'participants'
+  | 'insight_date';
 
 export interface CaptureTypeConfig {
   readonly id: CaptureTypeId;
@@ -35,7 +36,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Hunch',
     nodeType: 'hunch',
     description: 'A rough intuition or early signal worth tracking',
-    fields: ['hunch_type', 'confidence', 'external_link', 'expected_signals'],
+    fields: ['hunch_type', 'confidence', 'external_link', 'expected_signals', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -44,7 +45,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Background Assumption',
     nodeType: 'assumption_background',
     description: 'An assumption operating in the background',
-    fields: ['confidence'],
+    fields: ['confidence', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -53,7 +54,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Foreground Assumption',
     nodeType: 'assumption_foreground',
     description: 'An assumption actively being tested',
-    fields: ['confidence'],
+    fields: ['confidence', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -62,7 +63,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Test',
     nodeType: 'test',
     description: 'An experiment or test to validate an assumption',
-    fields: ['confidence'],
+    fields: ['confidence', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -71,7 +72,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Learning',
     nodeType: 'learning',
     description: 'A confirmed insight from a test or observation',
-    fields: ['confidence'],
+    fields: ['confidence', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -80,7 +81,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Option',
     nodeType: 'option',
     description: 'A potential path or opportunity being considered',
-    fields: ['confidence'],
+    fields: ['confidence', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -89,7 +90,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Commitment',
     nodeType: 'commitment',
     description: 'A resource allocation or delivery obligation',
-    fields: [],
+    fields: ['insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -98,7 +99,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Signal',
     nodeType: 'signal',
     description: 'An observable indicator of progress or change',
-    fields: ['confidence', 'expected_signals'],
+    fields: ['confidence', 'expected_signals', 'insight_date'],
     supportsExtraction: true,
     multiNodeExtraction: false,
   },
@@ -107,7 +108,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Goal Space',
     nodeType: 'goal_space',
     description: 'A high-level goal area the team is pursuing',
-    fields: [],
+    fields: ['insight_date'],
     supportsExtraction: false,
     multiNodeExtraction: false,
   },
@@ -116,7 +117,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     label: 'Trigger Outcome',
     nodeType: 'trigger_outcome',
     description: 'A measurable outcome that would indicate goal progress',
-    fields: [],
+    fields: ['insight_date'],
     supportsExtraction: false,
     multiNodeExtraction: false,
   },

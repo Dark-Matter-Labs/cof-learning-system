@@ -117,6 +117,7 @@ export interface Node {
   readonly human_review: HumanReview | null;
   readonly author_id: string | null;
   readonly parent_node_id: string | null;
+  readonly insight_date: string | null;
   readonly domain_tags: readonly string[];
   readonly external_links: readonly ExternalLink[];
   readonly attachments: readonly Attachment[];

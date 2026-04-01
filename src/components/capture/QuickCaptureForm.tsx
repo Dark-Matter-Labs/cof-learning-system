@@ -14,6 +14,7 @@ export interface CaptureFormData {
   readonly external_link_label?: string;
   readonly meeting_date?: string;
   readonly participants?: string;
+  readonly insight_date?: string;
 }
 
 interface QuickCaptureFormProps {
@@ -46,6 +47,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
   const [linkLabel, setLinkLabel] = useState('');
   const [meetingDate, setMeetingDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [participants, setParticipants] = useState<string>('');
+  const [insightDate, setInsightDate] = useState<string>(new Date().toISOString().slice(0, 10));
 
   const selectedConfig = getPageTypes().find(t => t.id === captureType);
   const canSubmit = title.trim().length > 0 && !isSubmitting;
@@ -63,6 +65,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
       ...(linkUrl.trim() ? { external_link_url: linkUrl.trim(), external_link_label: linkLabel.trim() || linkUrl.trim() } : {}),
       ...(meetingDate && selectedConfig?.fields.includes('meeting_date') ? { meeting_date: meetingDate } : {}),
       ...(participants.trim() && selectedConfig?.fields.includes('participants') ? { participants: participants.trim() } : {}),
+      ...(insightDate && selectedConfig?.fields.includes('insight_date') ? { insight_date: insightDate } : {}),
     });
 
     setCaptureType('hunch');
@@ -74,6 +77,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
     setLinkLabel('');
     setMeetingDate(new Date().toISOString().slice(0, 10));
     setParticipants('');
+    setInsightDate(new Date().toISOString().slice(0, 10));
   };
 
   return (
@@ -124,6 +128,21 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
           className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch resize-none"
         />
       </div>
+
+      {selectedConfig?.fields.includes('insight_date') && (
+        <div>
+          <label htmlFor="insight-date" className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+            When did this happen?
+          </label>
+          <input
+            id="insight-date"
+            type="date"
+            value={insightDate}
+            onChange={e => setInsightDate(e.target.value)}
+            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-node-hunch"
+          />
+        </div>
+      )}
 
       {selectedConfig?.fields.includes('meeting_date') && (
         <div>
