@@ -203,11 +203,11 @@ Plans:
   1. The node detail panel has an Edit button that switches to edit mode, allowing Robyn to change title, description, type, confidence, status, and domain tags and save
   2. The node detail panel lists all current connections with their edge type and connected node title, each with a Remove button that deletes the edge
   3. Robyn can add a new connection from the detail panel by searching existing nodes, picking an edge type and direction, and confirming
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 13-01-PLAN.md — Node edit mode (fields) in detail panel
-- [ ] 13-02-PLAN.md — Connection list with remove + add connection UI
+- [x] 13-02-PLAN.md — Connection list with remove + add connection UI
 
 ### Phase 14: Options Auto-Connect
 **Goal**: When an option node is created or text mentions an existing option node, the extraction agent proactively suggests connections so option nodes accumulate links automatically
@@ -254,6 +254,6 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14 → 
 | 10. Capture Foundation | v0.5 | 2/2 | Complete   | 2026-04-01 |
 | 11. Date & Timeline | v0.5 | 1/1 | Complete   | 2026-04-01 |
 | 12. People & Participants | v0.5 | 2/2 | Complete   | 2026-04-01 |
-| 13. Edit Nodes & Connections | v0.5 | 1/2 | In Progress|  |
+| 13. Edit Nodes & Connections | v0.5 | 2/2 | Complete   | 2026-04-01 |
 | 14. Options Auto-Connect | v0.5 | 0/1 | Not started | - |
 | 15. File Upload | v0.5 | 0/2 | Not started | - |
