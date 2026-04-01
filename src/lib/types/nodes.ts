@@ -47,6 +47,24 @@ export interface LlmExtraction {
   readonly expected_signals?: readonly string[];
 }
 
+export interface MeetingExtractedNode {
+  readonly node_type: 'hunch' | 'learning' | 'commitment' | 'signal' | 'option' | 'test';
+  readonly title: string;
+  readonly summary: string;
+  readonly category: 'insight' | 'action' | 'decision' | 'person_mention' | 'open_question';
+  readonly confidence_level: 1 | 2 | 3 | 4 | 5;
+  readonly domain_tags: readonly string[];
+  readonly rationale: string;
+}
+
+export interface MeetingExtraction {
+  readonly meeting_title: string;
+  readonly meeting_summary: string;
+  readonly extracted_nodes: readonly MeetingExtractedNode[];
+  readonly participants_detected: readonly string[];
+  readonly key_themes: readonly string[];
+}
+
 export interface HumanReview {
   readonly reviewed_at: string;
   readonly reviewer_id: string;

@@ -12,6 +12,8 @@ export interface CaptureFormData {
   readonly confidence_level: number;
   readonly external_link_url?: string;
   readonly external_link_label?: string;
+  readonly meeting_date?: string;
+  readonly participants?: string;
 }
 
 interface QuickCaptureFormProps {
@@ -42,6 +44,8 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
   const [confidence, setConfidence] = useState(3);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkLabel, setLinkLabel] = useState('');
+  const [meetingDate, setMeetingDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [participants, setParticipants] = useState<string>('');
 
   const selectedConfig = getPageTypes().find(t => t.id === captureType);
   const canSubmit = title.trim().length > 0 && !isSubmitting;
@@ -57,6 +61,8 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
       hunch_type: hunchType,
       confidence_level: confidence,
       ...(linkUrl.trim() ? { external_link_url: linkUrl.trim(), external_link_label: linkLabel.trim() || linkUrl.trim() } : {}),
+      ...(meetingDate && selectedConfig?.fields.includes('meeting_date') ? { meeting_date: meetingDate } : {}),
+      ...(participants.trim() && selectedConfig?.fields.includes('participants') ? { participants: participants.trim() } : {}),
     });
 
     setCaptureType('hunch');
@@ -66,6 +72,8 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
     setConfidence(3);
     setLinkUrl('');
     setLinkLabel('');
+    setMeetingDate(new Date().toISOString().slice(0, 10));
+    setParticipants('');
   };
 
   return (
@@ -111,11 +119,42 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false }: QuickCaptur
           id="description"
           value={description}
           onChange={e => setDescription(e.target.value)}
-          placeholder="Context, reasoning, source..."
-          rows={4}
+          placeholder={selectedConfig?.id === 'meeting_notes' ? 'Paste the meeting transcript or notes here...' : 'Context, reasoning, source...'}
+          rows={selectedConfig?.id === 'meeting_notes' ? 8 : 4}
           className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch resize-none"
         />
       </div>
+
+      {selectedConfig?.fields.includes('meeting_date') && (
+        <div>
+          <label htmlFor="meeting-date" className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+            Meeting Date
+          </label>
+          <input
+            id="meeting-date"
+            type="date"
+            value={meetingDate}
+            onChange={e => setMeetingDate(e.target.value)}
+            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-node-hunch"
+          />
+        </div>
+      )}
+
+      {selectedConfig?.fields.includes('participants') && (
+        <div>
+          <label htmlFor="participants" className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+            Participants
+          </label>
+          <input
+            id="participants"
+            type="text"
+            value={participants}
+            onChange={e => setParticipants(e.target.value)}
+            placeholder="Comma-separated names (e.g. Indy, Robyn, Martin)"
+            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+          />
+        </div>
+      )}
 
       {selectedConfig?.fields.includes('hunch_type') && (
         <div className="flex-1">

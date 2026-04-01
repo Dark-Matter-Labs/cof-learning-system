@@ -1,5 +1,36 @@
-import type { LlmExtraction } from '@/lib/types/nodes';
+import type { LlmExtraction, MeetingExtraction } from '@/lib/types/nodes';
 import { callLLM } from '@/lib/llm';
+
+const MEETING_SYSTEM_PROMPT = `You are an extraction system for the Civilization Options Fund (COF).
+
+Given a meeting transcript or notes, extract MULTIPLE distinct nodes from the content. Return ONLY valid JSON:
+
+{
+  "meeting_title": "Concise meeting title (max 10 words)",
+  "meeting_summary": "2-3 sentence summary of the meeting",
+  "extracted_nodes": [
+    {
+      "node_type": "hunch|learning|commitment|signal|option|test",
+      "title": "Concise title (max 10 words)",
+      "summary": "2-3 sentence description of this specific insight/action/decision",
+      "category": "insight|action|decision|person_mention|open_question",
+      "confidence_level": 1-5,
+      "domain_tags": ["relevant", "tags"],
+      "rationale": "Why this was extracted as a separate node"
+    }
+  ],
+  "participants_detected": ["Name1", "Name2"],
+  "key_themes": ["theme1", "theme2"]
+}
+
+Rules:
+1. Extract EVERY distinct insight, action item, decision, and open question as a separate node.
+2. Map categories to node_types: insight->hunch, action->commitment, decision->learning, open_question->hunch, person_mention->signal.
+3. Be thorough — a 30-minute meeting typically produces 5-15 nodes.
+4. Each node must stand alone with enough context to be understood without the full transcript.
+5. Domain tags should match COF domains: dartmoor, madrid, copenhagen, antarctica, capital_strategy, formation, demand_architecture, philanthropy, natural_assets, carbon, water.
+6. confidence_level: 1=vague mention, 2=discussed briefly, 3=discussed in detail, 4=agreed upon, 5=committed to.
+7. Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
 
 export interface GoalContext {
   readonly goalSpaces: ReadonlyArray<{ readonly id: string; readonly title: string }>;
@@ -107,4 +138,61 @@ export async function runExtraction(title: string, description: string, goalCont
   });
 
   return parseExtractionResponse(response.content);
+}
+
+export function buildMeetingExtractionPrompt(
+  title: string,
+  description: string,
+  meetingDate?: string,
+  participants?: readonly string[],
+  goalContext?: GoalContext,
+): string {
+  const sections: string[] = [`Meeting: ${title}`];
+  if (meetingDate) sections.push(`Date: ${meetingDate}`);
+  if (participants && participants.length > 0) sections.push(`Participants: ${participants.join(', ')}`);
+  sections.push('', 'Transcript/Notes:', description);
+
+  if (goalContext) {
+    const { goalSpaces, triggerOutcomes } = goalContext;
+    if (goalSpaces.length > 0) {
+      sections.push('', 'Active goal spaces:');
+      for (const gs of goalSpaces) sections.push(`- ${gs.title} (id: ${gs.id})`);
+    }
+    if (triggerOutcomes.length > 0) {
+      sections.push('', 'Active trigger outcomes:');
+      for (const to of triggerOutcomes) sections.push(`- ${to.title} (id: ${to.id})`);
+    }
+  }
+  return sections.join('\n');
+}
+
+export function parseMeetingExtractionResponse(content: string): MeetingExtraction {
+  const cleaned = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+  const parsed = JSON.parse(cleaned);
+  const required = ['meeting_title', 'meeting_summary', 'extracted_nodes'];
+  for (const field of required) {
+    if (!(field in parsed)) {
+      throw new Error(`Missing required field: ${field}`);
+    }
+  }
+  if (!Array.isArray(parsed.extracted_nodes) || parsed.extracted_nodes.length === 0) {
+    throw new Error('extracted_nodes must be a non-empty array');
+  }
+  return parsed as MeetingExtraction;
+}
+
+export async function runMeetingExtraction(
+  title: string,
+  description: string,
+  meetingDate?: string,
+  participants?: readonly string[],
+  goalContext?: GoalContext,
+): Promise<MeetingExtraction> {
+  const response = await callLLM('extraction', {
+    systemPrompt: MEETING_SYSTEM_PROMPT,
+    userMessage: buildMeetingExtractionPrompt(title, description, meetingDate, participants, goalContext),
+    maxTokens: 4096,
+    temperature: 0.3,
+  });
+  return parseMeetingExtractionResponse(response.content);
 }

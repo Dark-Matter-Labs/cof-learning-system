@@ -39,6 +39,12 @@ export default function CapturePage() {
   const handleSubmit = async (formData: CaptureFormData) => {
     setIsSubmitting(true);
     try {
+      const content: Record<string, unknown> = {};
+      if (formData.meeting_date) content.meeting_date = formData.meeting_date;
+      if (formData.participants) {
+        content.participants = formData.participants.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
       const response = await fetch('/api/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,6 +57,7 @@ export default function CapturePage() {
           external_link: formData.external_link_url
             ? { url: formData.external_link_url, label: formData.external_link_label }
             : undefined,
+          content: Object.keys(content).length > 0 ? content : undefined,
         }),
       });
 
