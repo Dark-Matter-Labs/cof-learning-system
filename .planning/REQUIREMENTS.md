@@ -21,8 +21,8 @@
 
 ### Capture Types
 
-- [ ] **CAPT-05**: Capture page title renamed from "Capture a Hunch" to "Capture"
-- [ ] **CAPT-06**: Shared `CAPTURE_TYPES` config (in `lib/config/captureTypes.ts`) used by both capture page and inline graph card
+- [x] **CAPT-05**: Capture page title renamed from "Capture a Hunch" to "Capture"
+- [x] **CAPT-06**: Shared `CAPTURE_TYPES` config (in `lib/config/captureTypes.ts`) used by both capture page and inline graph card
 - [x] **CAPT-07**: Meeting notes / call transcript is a selectable capture type showing title, date, and participants fields
 - [x] **CAPT-08**: Meeting transcript submission extracts and proposes multiple nodes (insights, actions, people, decisions, open questions)
 

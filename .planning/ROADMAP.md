@@ -251,7 +251,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14 → 
 | 7. Reflection Session Page | v0.4 | 2/2 | Complete | 2026-03-30 |
 | 8. Layout & Theme | v0.5 | 3/4 | In Progress|  |
 | 9. Review UX | v0.5 | 1/1 | Complete   | 2026-03-31 |
-| 10. Capture Foundation | v0.5 | 0/2 | Not started | - |
+| 10. Capture Foundation | v0.5 | 2/2 | Complete   | 2026-04-01 |
 | 11. Date & Timeline | v0.5 | 0/1 | Not started | - |
 | 12. People & Participants | v0.5 | 0/2 | Not started | - |
 | 13. Edit Nodes & Connections | v0.5 | 0/2 | Not started | - |
