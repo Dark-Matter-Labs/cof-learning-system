@@ -41,6 +41,8 @@ const EDGE_COLORS: Record<string, string> = {
   informs_reallocation:   '#D4537E',
   belongs_to_goalspace:   '#0F6E56',
   consumes_resource:      '#534AB7',
+  participated_in:        '#888780',
+  mentioned_in:           '#888780',
 };
 
 const HIGHLIGHT_EDGE_COLOR = '#F59E0B';
