@@ -28,8 +28,8 @@
 
 ### Date & People
 
-- [ ] **CAPT-09**: Insight date field on capture form ("When did this happen?", defaults to today), stored as `insight_date` on node
-- [ ] **CAPT-10**: Timeline view uses `insight_date` for node positioning when set, falling back to `created_at`
+- [x] **CAPT-09**: Insight date field on capture form ("When did this happen?", defaults to today), stored as `insight_date` on node
+- [x] **CAPT-10**: Timeline view uses `insight_date` for node positioning when set, falling back to `created_at`
 - [ ] **PEOP-01**: Capture form has people/participants field with autocomplete suggestions from existing person nodes
 - [ ] **PEOP-02**: Selected participants create `authored_by` or `connected_to` edges to person nodes on save
 - [ ] **PEOP-03**: Extraction agent detects people mentioned in text and suggests person node connections
@@ -97,8 +97,8 @@ Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extract
 | CAPT-06 | Phase 10 | Pending |
 | CAPT-07 | Phase 10 | Complete |
 | CAPT-08 | Phase 10 | Complete |
-| CAPT-09 | Phase 11 | Pending |
-| CAPT-10 | Phase 11 | Pending |
+| CAPT-09 | Phase 11 | Complete |
+| CAPT-10 | Phase 11 | Complete |
 | PEOP-01 | Phase 12 | Pending |
 | PEOP-02 | Phase 12 | Pending |
 | PEOP-03 | Phase 12 | Pending |

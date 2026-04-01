@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: UX Polish
-status: executing
-stopped_at: Completed 10-02-PLAN.md — meeting notes multi-node extraction complete
-last_updated: "2026-04-01T08:23:43Z"
+status: verifying
+stopped_at: Completed 11-01-PLAN.md — insight_date capture + timeline view
+last_updated: "2026-04-01T09:25:21.938Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 8
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 6
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
   percent: 71
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** The system must always tell you whether your exploration and your commitments are spiraling together toward your goals — or apart.
-**Current focus:** Phase 10 — capture-foundation
+**Current focus:** Phase 11 — date-timeline
 
 ## Current Position
 
-Phase: 10 (capture-foundation) — EXECUTING
-Plan: 2 of 2 complete
-Status: Phase 10 plans complete, awaiting phase verification
+Phase: 11 (date-timeline) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
 Progress: [███████░░░] 71%
@@ -59,6 +59,7 @@ Progress: [███████░░░] 71%
 | Phase 09-review-ux P01 | 40min | 3 tasks | 2 files |
 | Phase 10-capture-foundation P01 | 10min | 2 tasks | 4 files |
 | Phase 10-capture-foundation P02 | 12min | 2 tasks | 6 files |
+| Phase 11-date-timeline P01 | 10min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Recent decisions affecting current work:
 - [Phase 10-capture-foundation]: getCaptureType cast uses Parameters<typeof getCaptureType>[0] — keeps type safety without duplicating CaptureTypeId union
 - [Phase 10-capture-foundation]: Meeting child node llm_extraction mirrors LlmExtraction shape — child nodes flow through existing ReviewCard unchanged
 - [Phase 10-capture-foundation]: Review page shows child list only when meeting_notes AND children exist — gracefully handles still-processing state
+- [Phase 11-date-timeline]: insight_date is nullable TIMESTAMPTZ — existing nodes retain NULL and fall back to created_at in timeline
+- [Phase 11-date-timeline]: meeting_notes capture type excluded from insight_date field — meeting_date already serves this purpose; passed as insight_date at API level
+- [Phase 11-date-timeline]: getTimelineDate helper centralises insight_date ?? created_at fallback — single change point for future modifications
 
 ### Pending Todos
 
@@ -94,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T08:23:43Z
-Stopped at: Completed 10-02-PLAN.md — meeting notes multi-node extraction complete
+Last session: 2026-04-01T09:25:21.935Z
+Stopped at: Completed 11-01-PLAN.md — insight_date capture + timeline view
 Resume file: None

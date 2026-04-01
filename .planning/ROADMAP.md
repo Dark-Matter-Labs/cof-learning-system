@@ -176,10 +176,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The capture form shows a "When did this happen?" date field that defaults to today and is stored as `insight_date` on the node
   2. The timeline view positions nodes using `insight_date` when set, falling back to `created_at` — nodes entered today for events last month appear at last month's position
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 11-01-PLAN.md — insight_date DB migration + capture form field + timeline view update
+- [x] 11-01-PLAN.md — insight_date DB migration + capture form field + timeline view update
 
 ### Phase 12: People & Participants
 **Goal**: Robyn can tag people who participated in or are mentioned by a capture, with autocomplete from existing person nodes, and the extraction agent detects people from raw text automatically
@@ -252,7 +252,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14 → 
 | 8. Layout & Theme | v0.5 | 3/4 | In Progress|  |
 | 9. Review UX | v0.5 | 1/1 | Complete   | 2026-03-31 |
 | 10. Capture Foundation | v0.5 | 2/2 | Complete   | 2026-04-01 |
-| 11. Date & Timeline | v0.5 | 0/1 | Not started | - |
+| 11. Date & Timeline | v0.5 | 1/1 | Complete   | 2026-04-01 |
 | 12. People & Participants | v0.5 | 0/2 | Not started | - |
 | 13. Edit Nodes & Connections | v0.5 | 0/2 | Not started | - |
 | 14. Options Auto-Connect | v0.5 | 0/1 | Not started | - |
