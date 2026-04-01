@@ -189,7 +189,7 @@ Plans:
   1. The capture form has a participants field that autocompletes from existing person nodes as Robyn types
   2. Selecting a participant and saving the capture creates an edge linking the new node to that person node
   3. When Robyn submits text that mentions a person's name, the extraction agent surfaces a suggested connection to that person's node in the review card
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
 - [ ] 12-01-PLAN.md — Participants autocomplete field + edge creation on save
@@ -203,7 +203,7 @@ Plans:
   1. The node detail panel has an Edit button that switches to edit mode, allowing Robyn to change title, description, type, confidence, status, and domain tags and save
   2. The node detail panel lists all current connections with their edge type and connected node title, each with a Remove button that deletes the edge
   3. Robyn can add a new connection from the detail panel by searching existing nodes, picking an edge type and direction, and confirming
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
 - [ ] 13-01-PLAN.md — Node edit mode (fields) in detail panel
@@ -216,7 +216,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. When Robyn creates an option node, the extraction agent review card includes suggested `connected_to` edges to related existing nodes
   2. When Robyn submits any capture whose text mentions an option node by name, the review card includes a suggested edge to that option node
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
 - [ ] 14-01-PLAN.md — Extraction agent option-node connection suggestions
@@ -229,7 +229,7 @@ Plans:
   1. The capture page shows a file upload zone that accepts .pdf, .txt, and .md files
   2. Uploading a PDF extracts its text server-side and pre-populates the description field — Robyn does not need to copy-paste
   3. The original file is stored in Supabase Storage and its URL is saved on the node, so Robyn can retrieve the source file later
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
 - [ ] 15-01-PLAN.md — File upload zone + server-side PDF extraction
