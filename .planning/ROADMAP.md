@@ -163,11 +163,11 @@ Plans:
   2. Selecting the capture type in the inline graph card and the capture page both draw from the same `CAPTURE_TYPES` config — adding a new type in one place updates both
   3. Robyn can select "Meeting Notes / Transcript" as a capture type and sees title, date, and participants fields
   4. Submitting a meeting transcript proposes multiple nodes — insights, actions, people, decisions, and open questions — as separate review cards
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 10-01-PLAN.md — CAPTURE_TYPES shared config + capture page rename
-- [ ] 10-02-PLAN.md — Meeting notes capture type + multi-node extraction
+- [x] 10-01-PLAN.md — CAPTURE_TYPES shared config + capture page rename
+- [x] 10-02-PLAN.md — Meeting notes capture type + multi-node extraction
 
 ### Phase 11: Date & Timeline
 **Goal**: Nodes have an insight date distinct from their creation timestamp, and the timeline view positions nodes by when the insight occurred rather than when it was entered

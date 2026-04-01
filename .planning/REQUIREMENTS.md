@@ -23,8 +23,8 @@
 
 - [ ] **CAPT-05**: Capture page title renamed from "Capture a Hunch" to "Capture"
 - [ ] **CAPT-06**: Shared `CAPTURE_TYPES` config (in `lib/config/captureTypes.ts`) used by both capture page and inline graph card
-- [ ] **CAPT-07**: Meeting notes / call transcript is a selectable capture type showing title, date, and participants fields
-- [ ] **CAPT-08**: Meeting transcript submission extracts and proposes multiple nodes (insights, actions, people, decisions, open questions)
+- [x] **CAPT-07**: Meeting notes / call transcript is a selectable capture type showing title, date, and participants fields
+- [x] **CAPT-08**: Meeting transcript submission extracts and proposes multiple nodes (insights, actions, people, decisions, open questions)
 
 ### Date & People
 
@@ -95,8 +95,8 @@ Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extract
 | REVIEW-03 | Phase 9 | Complete |
 | CAPT-05 | Phase 10 | Pending |
 | CAPT-06 | Phase 10 | Pending |
-| CAPT-07 | Phase 10 | Pending |
-| CAPT-08 | Phase 10 | Pending |
+| CAPT-07 | Phase 10 | Complete |
+| CAPT-08 | Phase 10 | Complete |
 | CAPT-09 | Phase 11 | Pending |
 | CAPT-10 | Phase 11 | Pending |
 | PEOP-01 | Phase 12 | Pending |
