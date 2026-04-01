@@ -109,7 +109,13 @@ function computeTreeLayout(
   return positions;
 }
 
-/** Timeline: x = created_at date, y = node type row. */
+/** Returns the date to use for timeline positioning: insight_date if set, otherwise created_at. */
+function getTimelineDate(node: Node): number {
+  const dateStr = node.insight_date ?? node.created_at;
+  return new Date(dateStr).getTime();
+}
+
+/** Timeline: x = insight_date (falling back to created_at), y = node type row. */
 function computeTimelineLayout(
   gNodes: GraphNode[],
   width: number,
@@ -127,10 +133,10 @@ function computeTimelineLayout(
   const PAD_LEFT = 60, PAD_RIGHT = 60, PAD_TOP = 40;
 
   const sorted = [...gNodes].sort(
-    (a, b) => new Date(a.data.created_at).getTime() - new Date(b.data.created_at).getTime()
+    (a, b) => getTimelineDate(a.data) - getTimelineDate(b.data)
   );
-  const minT = new Date(sorted[0].data.created_at).getTime();
-  const maxT = new Date(sorted[sorted.length - 1].data.created_at).getTime();
+  const minT = getTimelineDate(sorted[0].data);
+  const maxT = getTimelineDate(sorted[sorted.length - 1].data);
   const tRange = maxT - minT || 1;
   const xRange = width - PAD_LEFT - PAD_RIGHT - CARD_WIDTH;
 
@@ -149,7 +155,7 @@ function computeTimelineLayout(
 
   rows.forEach(([, rowNodes], ri) => {
     rowNodes.forEach(n => {
-      const t = new Date(n.data.created_at).getTime();
+      const t = getTimelineDate(n.data);
       positions.set(n.id, {
         x: PAD_LEFT + ((t - minT) / tRange) * xRange,
         y: startY + ri * ROW_HEIGHT,
@@ -307,10 +313,10 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
     // Timeline: add date axis labels
     if (view === 'timeline' && graphNodes.length > 0) {
       const sorted = [...graphNodes].sort(
-        (a, b) => new Date(a.data.created_at).getTime() - new Date(b.data.created_at).getTime()
+        (a, b) => getTimelineDate(a.data) - getTimelineDate(b.data)
       );
-      const minT = new Date(sorted[0].data.created_at);
-      const maxT = new Date(sorted[sorted.length - 1].data.created_at);
+      const minT = new Date(getTimelineDate(sorted[0].data));
+      const maxT = new Date(getTimelineDate(sorted[sorted.length - 1].data));
       const xScale = d3.scaleTime().domain([minT, maxT]).range([60, width - 60 - CARD_WIDTH]);
       const axis = d3.axisTop(xScale).ticks(6).tickFormat(d => {
         const date = d as Date;
