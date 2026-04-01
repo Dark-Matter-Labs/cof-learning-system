@@ -327,6 +327,10 @@ export function GraphOSSurface() {
           edges={edges}
           allNodes={nodes}
           onClose={() => setSelectedNode(null)}
+          onNodeUpdated={(updatedNode) => {
+            setNodes(prev => prev.map(n => n.id === updatedNode.id ? updatedNode : n));
+            setSelectedNode(updatedNode);
+          }}
         />
       )}
     </div>
