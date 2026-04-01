@@ -189,10 +189,10 @@ Plans:
   1. The capture form has a participants field that autocompletes from existing person nodes as Robyn types
   2. Selecting a participant and saving the capture creates an edge linking the new node to that person node
   3. When Robyn submits text that mentions a person's name, the extraction agent surfaces a suggested connection to that person's node in the review card
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 12-01-PLAN.md — Participants autocomplete field + edge creation on save
+- [x] 12-01-PLAN.md — Participants autocomplete field + edge creation on save
 - [x] 12-02-PLAN.md — Extraction agent person detection + connection suggestions
 
 ### Phase 13: Edit Nodes & Connections
@@ -253,7 +253,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14 → 
 | 9. Review UX | v0.5 | 1/1 | Complete   | 2026-03-31 |
 | 10. Capture Foundation | v0.5 | 2/2 | Complete   | 2026-04-01 |
 | 11. Date & Timeline | v0.5 | 1/1 | Complete   | 2026-04-01 |
-| 12. People & Participants | v0.5 | 1/2 | In Progress | - |
+| 12. People & Participants | v0.5 | 2/2 | Complete   | 2026-04-01 |
 | 13. Edit Nodes & Connections | v0.5 | 0/2 | Not started | - |
 | 14. Options Auto-Connect | v0.5 | 0/1 | Not started | - |
 | 15. File Upload | v0.5 | 0/2 | Not started | - |
