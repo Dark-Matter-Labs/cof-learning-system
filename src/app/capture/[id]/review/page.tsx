@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ReviewCard } from '@/components/review/ReviewCard';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { Node, HumanReview } from '@/lib/types/nodes';
 
 const STOP_WORDS = new Set(['the', 'a', 'an', 'of', 'in', 'to', 'and', 'for', 'is', 'as', 'on', 'by', 'at', 'or', 'not']);
@@ -45,13 +47,14 @@ export default function ReviewPage() {
   const params = useParams();
   const router = useRouter();
   const [node, setNode] = useState<Node | null>(null);
+  const [childNodes, setChildNodes] = useState<Node[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [triggerOutcomes, setTriggerOutcomes] = useState<ReadonlyArray<{ readonly id: string; readonly title: string }>>([]);
 
   useEffect(() => {
     const fetchNode = async () => {
       const supabase = createClient();
-      const [{ data: nodeData }, { data: outcomesData }] = await Promise.all([
+      const [{ data: nodeData }, { data: outcomesData }, { data: childNodesData }] = await Promise.all([
         supabase
           .from('nodes')
           .select('*')
@@ -62,9 +65,15 @@ export default function ReviewPage() {
           .select('id, title')
           .eq('node_type', 'trigger_outcome')
           .neq('status', 'archived'),
+        supabase
+          .from('nodes')
+          .select('*')
+          .eq('parent_node_id', params.id as string)
+          .order('created_at', { ascending: true }),
       ]);
       if (nodeData) setNode(nodeData as unknown as Node);
       if (outcomesData) setTriggerOutcomes(outcomesData as { id: string; title: string }[]);
+      if (childNodesData) setChildNodes(childNodesData as unknown as Node[]);
     };
     fetchNode();
   }, [params.id]);
@@ -203,14 +212,48 @@ export default function ReviewPage() {
           <p className="mt-1 text-sm text-gray-500">{node.description}</p>
         )}
       </div>
-      <ReviewCard
-        node={node}
-        onPromote={handlePromote}
-        onSaveDraft={handleSaveDraft}
-        onArchive={handleArchive}
-        isSubmitting={isSubmitting}
-        triggerOutcomes={triggerOutcomes}
-      />
+      {node.node_type === 'meeting_notes' && childNodes.length > 0 ? (
+        <div className="space-y-4">
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-4">
+            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meeting Summary</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {((node.llm_extraction as unknown as Record<string, unknown> | null)?.meeting_summary as string | undefined) ?? 'No summary available'}
+            </p>
+            <div className="mt-2 text-[10px] text-gray-400">
+              {childNodes.length} node{childNodes.length !== 1 ? 's' : ''} extracted
+            </div>
+          </div>
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Extracted Nodes — Review Each
+          </h3>
+          <div className="space-y-2">
+            {childNodes.map(child => (
+              <Link
+                key={child.id}
+                href={`/capture/${child.id}/review`}
+                className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-3 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs text-gray-800 dark:text-gray-200 truncate">{child.title}</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-600 mt-0.5">
+                    {child.node_type} · {(child.content as Record<string, unknown> | null)?.category as string ?? 'extracted'}
+                  </div>
+                </div>
+                <StatusBadge status={child.status} />
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <ReviewCard
+          node={node}
+          onPromote={handlePromote}
+          onSaveDraft={handleSaveDraft}
+          onArchive={handleArchive}
+          isSubmitting={isSubmitting}
+          triggerOutcomes={triggerOutcomes}
+        />
+      )}
     </div>
   );
 }
