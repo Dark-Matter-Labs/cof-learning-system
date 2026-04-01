@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: UX Polish
 status: executing
-stopped_at: Completed 12-02-PLAN.md — person detection extraction agent complete
-last_updated: "2026-04-01T09:53:41.616Z"
+stopped_at: Completed 13-01-PLAN.md — NodeDetailPanel edit mode implemented and tested
+last_updated: "2026-04-01T10:19:09.963Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 8
+  completed_phases: 5
+  total_plans: 12
+  completed_plans: 11
   percent: 71
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** The system must always tell you whether your exploration and your commitments are spiraling together toward your goals — or apart.
-**Current focus:** Phase 12 — people-participants
+**Current focus:** Phase 13 — Edit Nodes & Connections
 
 ## Current Position
 
-Phase: 12 (people-participants) — EXECUTING
-Plan: 2 of 2 complete
-Status: Phase 12 plans complete, awaiting phase verification
+Phase: 13 (Edit Nodes & Connections) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-01
 
 Progress: [███████░░░] 71%
@@ -62,6 +62,7 @@ Progress: [███████░░░] 71%
 | Phase 11-date-timeline P01 | 10min | 2 tasks | 6 files |
 | Phase 12-people-participants P01 | 20min | 2 tasks | 6 files |
 | Phase 12-people-participants P02 | 8min | 2 tasks | 5 files |
+| Phase 13-edit-nodes-connections P13-01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions affecting current work:
 - [Phase 12-people-participants]: personNodes status filter uses promoted/human_reviewed matching the promote handler scope — person nodes follow same promotion pipeline
 - [Phase 12-people-participants]: formatEdgeType helper in ConnectionSuggestion renders mentioned_in as "Mentioned in" — display formatting decoupled from edge type value
 - [Phase 12-people-participants]: participated_in edge type for manual participant tagging (semantically distinct from authored_by); mentioned_in for extraction-detected mentions
+- [Phase 13-edit-nodes-connections]: Status select restricted to promoted/archived/falsified/suspended — system states hidden from users
+- [Phase 13-edit-nodes-connections]: NODE_TYPE_OPTIONS defined inline in NodeDetailPanel to keep component self-contained
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T09:53:41.613Z
-Stopped at: Completed 12-02-PLAN.md — person detection extraction agent complete
+Last session: 2026-04-01T10:19:09.961Z
+Stopped at: Completed 13-01-PLAN.md — NodeDetailPanel edit mode implemented and tested
 Resume file: None

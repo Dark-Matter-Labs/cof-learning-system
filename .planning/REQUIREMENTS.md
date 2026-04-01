@@ -36,7 +36,7 @@
 
 ### Edit Nodes & Connections
 
-- [ ] **EDIT-01**: Node detail panel has Edit button that switches to edit mode (title, description, type, confidence, status, domain tags)
+- [x] **EDIT-01**: Node detail panel has Edit button that switches to edit mode (title, description, type, confidence, status, domain tags)
 - [ ] **EDIT-02**: Node detail panel shows all current connections (edge type + connected node title) with a Remove button per connection
 - [ ] **EDIT-03**: User can add a new connection from the detail panel: search existing nodes, select edge type and direction, confirm
 
@@ -102,7 +102,7 @@ Key v0.4 completions: goal hierarchy, goal space panel, capture linking, extract
 | PEOP-01 | Phase 12 | Complete |
 | PEOP-02 | Phase 12 | Complete |
 | PEOP-03 | Phase 12 | Pending |
-| EDIT-01 | Phase 13 | Pending |
+| EDIT-01 | Phase 13 | Complete |
 | EDIT-02 | Phase 13 | Pending |
 | EDIT-03 | Phase 13 | Pending |
 | OPT-01 | Phase 14 | Pending |
