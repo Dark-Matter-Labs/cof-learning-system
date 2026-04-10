@@ -87,6 +87,13 @@ export async function PATCH(
     update.domain_tags = body.domain_tags;
   }
 
+  if ('content' in body) {
+    if (body.content !== null && (typeof body.content !== 'object' || Array.isArray(body.content))) {
+      return NextResponse.json({ error: 'content must be an object or null' }, { status: 400 });
+    }
+    update.content = body.content;
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'No updatable fields provided' }, { status: 400 });
   }

@@ -13,6 +13,7 @@ import { InlineCaptureCard } from './InlineCaptureCard';
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { GoalSpacePanel } from './GoalSpacePanel';
 import { CommitmentPanel } from '@/components/commitment/CommitmentPanel';
+import { ProcessFlow } from '@/components/process/ProcessFlow';
 
 const NODE_TYPE_OPTIONS = [
   { id: 'hunch',                   label: 'Hunch',                   color: '#7F77DD' },
@@ -83,6 +84,7 @@ export function GraphOSSurface() {
   const [capturePos, setCapturePos] = useState<{ x: number; y: number } | null>(null);
   const [captureDefaultType, setCaptureDefaultType] = useState('hunch');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [processFlowNode, setProcessFlowNode] = useState<Node | null>(null);
   const [currentView, setCurrentView] = useState<GraphView>('force');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -199,6 +201,10 @@ export function GraphOSSurface() {
     setSelectedNode(null);
     setCapturePos(null);
   }, [edges]);
+
+  const handleProcessThis = useCallback((node: Node) => {
+    setProcessFlowNode(node);
+  }, []);
 
   const handleAssumptionClick = useCallback((assumptionId: string) => {
     const tree = getAssumptionTree(assumptionId, edges);
@@ -333,6 +339,28 @@ export function GraphOSSurface() {
           }}
           onEdgeAdded={edge => setEdges(prev => [...prev, edge])}
           onEdgeRemoved={edgeId => setEdges(prev => prev.filter(e => e.id !== edgeId))}
+          onProcessThis={handleProcessThis}
+        />
+      )}
+
+      {processFlowNode !== null && (
+        <ProcessFlow
+          sourceNode={processFlowNode}
+          allNodes={nodes}
+          allEdges={edges}
+          onClose={() => setProcessFlowNode(null)}
+          onNodeCreated={(node) => {
+            setNodes(prev => [...prev, node]);
+          }}
+          onEdgeAdded={(edge) => {
+            setEdges(prev => [...prev, edge]);
+          }}
+          onNodeUpdated={(updatedNode) => {
+            setNodes(prev => prev.map(n => n.id === updatedNode.id ? updatedNode : n));
+            if (selectedNode?.id === updatedNode.id) {
+              setSelectedNode(updatedNode);
+            }
+          }}
         />
       )}
     </div>
