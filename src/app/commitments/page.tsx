@@ -67,7 +67,7 @@ export default async function CommitmentsPage({
       <div className="max-w-3xl mx-auto px-4 py-8">
         <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-8">Commitments</h1>
         <CommitmentsClient
-          commitments={commitmentsData as unknown as Node[]}
+          initialCommitments={commitmentsData as unknown as Node[]}
           goalSpaces={goalSpacesData as unknown as Node[]}
           triggerOutcomes={triggerOutcomesData as unknown as Node[]}
           allNodes={allNodesData as unknown as Node[]}
