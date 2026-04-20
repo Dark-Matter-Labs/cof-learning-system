@@ -110,7 +110,7 @@ export function CommitmentsClient({
         body: JSON.stringify({ title: trimmed, node_type: 'commitment' }),
       });
       if (!res.ok) throw new Error('Failed to add');
-      const { node } = await res.json() as { node: Node };
+      const { data: node } = await res.json() as { data: Node };
       setCommitments(prev => [node, ...prev]);
       setAddTitle('');
     } catch {
@@ -129,7 +129,7 @@ export function CommitmentsClient({
       }),
     });
     if (!res.ok) throw new Error('Failed to save');
-    const updated = await res.json() as Node;
+    const { data: updated } = await res.json() as { data: Node };
     setCommitments(prev => prev.map(c => c.id === id ? updated : c));
     setEditingId(null);
   }, []);
@@ -179,6 +179,9 @@ export function CommitmentsClient({
                 onSelectCommitment={() => {}}
                 onAssumptionClick={() => {}}
                 onEdit={setEditingId}
+                editingId={editingId}
+                onSave={handleSave}
+                onCancelEdit={() => setEditingId(null)}
               />
             </div>
           ))}

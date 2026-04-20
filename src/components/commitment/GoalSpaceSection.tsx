@@ -6,6 +6,7 @@ import type { Edge } from '@/lib/types/edges';
 import type { TensionAlert } from '@/lib/types/tension';
 import type { ConvergenceData } from '@/lib/types/convergence';
 import { CommitmentCard } from './CommitmentCard';
+import { CommitmentCardEditor, type CommitmentUpdates } from './CommitmentCardEditor';
 import { TrajectoryBadge, scoreToStatus } from './TrajectoryBadge';
 import { AllocationSummary } from './AllocationSummary';
 import { ConvergenceSparkline } from '@/components/graph/convergence/ConvergenceSparkline';
@@ -22,6 +23,9 @@ interface GoalSpaceSectionProps {
   readonly onSelectCommitment: (id: string) => void;
   readonly onAssumptionClick: (assumptionId: string) => void;
   readonly onEdit?: (id: string) => void;
+  readonly editingId?: string | null;
+  readonly onSave?: (id: string, updates: CommitmentUpdates) => Promise<void>;
+  readonly onCancelEdit?: () => void;
 }
 
 export function GoalSpaceSection({
@@ -36,6 +40,9 @@ export function GoalSpaceSection({
   onSelectCommitment,
   onAssumptionClick,
   onEdit,
+  editingId,
+  onSave,
+  onCancelEdit,
 }: GoalSpaceSectionProps) {
   const [expanded, setExpanded] = useState(true);
   const [convergenceData, setConvergenceData] = useState<ConvergenceData | null>(null);
@@ -114,16 +121,24 @@ export function GoalSpaceSection({
                   <div className="pl-6">
                     {outcomeCommitments.map(c => (
                       <div key={c.id} id={c.id}>
-                        <CommitmentCard
-                          commitment={c}
-                          allNodes={allNodes}
-                          edges={edges}
-                          tensions={tensions}
-                          isSelected={selectedCommitmentId === c.id}
-                          onSelect={onSelectCommitment}
-                          onAssumptionClick={onAssumptionClick}
-                          onEdit={onEdit ? () => onEdit(c.id) : undefined}
-                        />
+                        {editingId === c.id && onSave && onCancelEdit ? (
+                          <CommitmentCardEditor
+                            commitment={c}
+                            onSave={onSave}
+                            onCancel={onCancelEdit}
+                          />
+                        ) : (
+                          <CommitmentCard
+                            commitment={c}
+                            allNodes={allNodes}
+                            edges={edges}
+                            tensions={tensions}
+                            isSelected={selectedCommitmentId === c.id}
+                            onSelect={onSelectCommitment}
+                            onAssumptionClick={onAssumptionClick}
+                            onEdit={onEdit ? () => onEdit(c.id) : undefined}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -139,16 +154,24 @@ export function GoalSpaceSection({
             <div className="pl-6">
               {unlinkedCommitments.map(c => (
                 <div key={c.id} id={c.id}>
-                  <CommitmentCard
-                    commitment={c}
-                    allNodes={allNodes}
-                    edges={edges}
-                    tensions={tensions}
-                    isSelected={selectedCommitmentId === c.id}
-                    onSelect={onSelectCommitment}
-                    onAssumptionClick={onAssumptionClick}
-                    onEdit={onEdit ? () => onEdit(c.id) : undefined}
-                  />
+                  {editingId === c.id && onSave && onCancelEdit ? (
+                    <CommitmentCardEditor
+                      commitment={c}
+                      onSave={onSave}
+                      onCancel={onCancelEdit}
+                    />
+                  ) : (
+                    <CommitmentCard
+                      commitment={c}
+                      allNodes={allNodes}
+                      edges={edges}
+                      tensions={tensions}
+                      isSelected={selectedCommitmentId === c.id}
+                      onSelect={onSelectCommitment}
+                      onAssumptionClick={onAssumptionClick}
+                      onEdit={onEdit ? () => onEdit(c.id) : undefined}
+                    />
+                  )}
                 </div>
               ))}
             </div>

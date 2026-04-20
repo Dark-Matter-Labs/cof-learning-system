@@ -159,7 +159,7 @@ describe('CommitmentsClient', () => {
     const newNode = baseNode('c-new', 'My new commitment', 'commitment');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({ node: newNode }),
+      json: vi.fn().mockResolvedValue({ data: newNode }),
     }));
     render(<CommitmentsClient {...emptyProps} />);
     fireEvent.change(screen.getByPlaceholderText('New commitment…'), {
@@ -201,7 +201,7 @@ describe('CommitmentsClient', () => {
     const updatedNode = baseNode('c1', 'Updated title', 'commitment');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue(updatedNode),
+      json: vi.fn().mockResolvedValue({ data: updatedNode }),
     }));
     render(
       <CommitmentsClient
