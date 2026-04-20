@@ -115,6 +115,11 @@ export function GraphOSSurface() {
     setProcessFlowNode(node);
   }, []);
 
+  const handleSelectCommitment = useCallback(
+    (id: string) => router.push(`/commitments?id=${id}`),
+    [router]
+  );
+
   const goalSpaces = nodes.filter(n => n.node_type === 'goal_space');
   const triggerOutcomes = nodes.filter(n => n.node_type === 'trigger_outcome');
 
@@ -154,7 +159,7 @@ export function GraphOSSurface() {
         view={currentView}
         onSelectNode={handleSelectNode}
         onCanvasClick={handleCanvasClick}
-        onSelectCommitment={(id) => router.push(`/commitments?id=${id}`)}
+        onSelectCommitment={handleSelectCommitment}
       />
 
       <GraphTopBar

@@ -20,16 +20,16 @@ import { NavBar } from '../NavBar';
 describe('NavBar', () => {
   it('renders Graph link', () => {
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Graph')).toBeTruthy();
+    expect(screen.getByText('Graph')).toBeInTheDocument();
   });
 
   it('renders Commitments link', () => {
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Commitments')).toBeTruthy();
+    expect(screen.getByText('Commitments')).toBeInTheDocument();
   });
 
   it('renders Review link', () => {
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Review')).toBeTruthy();
+    expect(screen.getByText('Review')).toBeInTheDocument();
   });
 });
