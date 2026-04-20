@@ -1,12 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-
-interface FilterOption {
-  readonly id: string;
-  readonly label: string;
-  readonly type: 'site' | 'option' | 'goal_space';
-}
+import type { FilterOption } from '@/lib/types/filter';
 
 interface ReflectionSectionProps {
   readonly sites: readonly FilterOption[];

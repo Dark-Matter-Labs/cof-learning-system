@@ -3,14 +3,9 @@
 import { useState, useCallback } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
+import type { FilterOption } from '@/lib/types/filter';
 import { FlaggedItem } from '@/components/review/FlaggedItem';
 import { ReflectionSection } from '@/components/review/ReflectionSection';
-
-interface FilterOption {
-  readonly id: string;
-  readonly label: string;
-  readonly type: 'site' | 'option' | 'goal_space';
-}
 
 interface SystemHealthClientProps {
   readonly flagged: readonly Node[];
@@ -21,10 +16,10 @@ interface SystemHealthClientProps {
   readonly goalSpaces: readonly FilterOption[];
 }
 
-const SEVERITY_COLORS: Record<string, string> = {
-  high: 'text-red-400 border-red-900/50',
-  medium: 'text-amber-400 border-amber-900/50',
-  low: 'text-gray-500 border-gray-200 dark:border-gray-800',
+const SEVERITY_COLORS: Record<string, { readonly text: string; readonly border: string }> = {
+  high:   { text: 'text-red-400',   border: 'border-red-900/50' },
+  medium: { text: 'text-amber-400', border: 'border-amber-900/50' },
+  low:    { text: 'text-gray-500',  border: 'border-gray-200 dark:border-gray-800' },
 };
 
 export function SystemHealthClient({
@@ -39,27 +34,35 @@ export function SystemHealthClient({
   const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
 
   const handleAccept = useCallback(async (id: string) => {
-    const res = await fetch(`/api/nodes/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'promoted' }),
-    });
-    if (res.ok) {
-      setFlagged(prev => prev.filter(n => n.id !== id));
-    } else {
+    try {
+      const res = await fetch(`/api/nodes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'promoted' }),
+      });
+      if (res.ok) {
+        setFlagged(prev => prev.filter(n => n.id !== id));
+      } else {
+        setItemErrors(prev => ({ ...prev, [id]: 'Failed to accept — try again' }));
+      }
+    } catch {
       setItemErrors(prev => ({ ...prev, [id]: 'Failed to accept — try again' }));
     }
   }, []);
 
   const handleArchive = useCallback(async (id: string) => {
-    const res = await fetch(`/api/nodes/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'archived' }),
-    });
-    if (res.ok) {
-      setFlagged(prev => prev.filter(n => n.id !== id));
-    } else {
+    try {
+      const res = await fetch(`/api/nodes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archived' }),
+      });
+      if (res.ok) {
+        setFlagged(prev => prev.filter(n => n.id !== id));
+      } else {
+        setItemErrors(prev => ({ ...prev, [id]: 'Failed to archive — try again' }));
+      }
+    } catch {
       setItemErrors(prev => ({ ...prev, [id]: 'Failed to archive — try again' }));
     }
   }, []);
@@ -95,14 +98,13 @@ export function SystemHealthClient({
           </h2>
           <div className="space-y-2">
             {tensions.map(alert => {
-              const colorClass = SEVERITY_COLORS[alert.severity] ?? 'border-gray-200 dark:border-gray-800';
-              const textColorClass = colorClass.split(' ')[0] ?? 'text-gray-500';
+              const colors = SEVERITY_COLORS[alert.severity] ?? { text: 'text-gray-500', border: 'border-gray-200 dark:border-gray-800' };
               return (
                 <div
                   key={alert.id}
-                  className={`bg-gray-50 dark:bg-gray-900 border rounded-lg p-3 ${colorClass}`}
+                  className={`bg-gray-50 dark:bg-gray-900 border rounded-lg p-3 ${colors.border}`}
                 >
-                  <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${textColorClass}`}>
+                  <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${colors.text}`}>
                     {alert.severity} · {alert.type.replace(/_/g, ' ')}
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2">
