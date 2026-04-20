@@ -16,8 +16,7 @@ const FLAG_REASON_LABELS: Record<string, string> = {
 };
 
 export function FlaggedItem({ node, onAccept, onArchive }: FlaggedItemProps) {
-  const extraction = node.llm_extraction as (Record<string, unknown> | null);
-  const maturity = typeof extraction?.maturity === 'string' ? extraction.maturity : null;
+  const maturity = node.llm_extraction?.maturity ?? null;
   const reason = maturity ? (FLAG_REASON_LABELS[maturity] ?? maturity) : 'Flagged by LLM';
 
   return (
@@ -31,6 +30,7 @@ export function FlaggedItem({ node, onAccept, onArchive }: FlaggedItemProps) {
       </div>
       <div className="flex items-center gap-2 mt-2">
         <button
+          type="button"
           onClick={() => onAccept(node.id)}
           className="text-[10px] px-2 py-1 bg-teal-900/20 border border-teal-900/30 text-teal-400 rounded hover:bg-teal-900/40"
         >
@@ -43,6 +43,7 @@ export function FlaggedItem({ node, onAccept, onArchive }: FlaggedItemProps) {
           Edit & promote
         </Link>
         <button
+          type="button"
           onClick={() => onArchive(node.id)}
           className="text-[10px] px-2 py-1 text-gray-500 hover:text-gray-400"
         >
