@@ -5,6 +5,7 @@ import type { Edge } from '@/lib/types/edges';
 export const CARD_WIDTH = 200;
 export const CARD_HEIGHT = 80;
 export const CARD_COLLIDE_RADIUS = 120;
+export const COMMIT_SIZE = 80;
 
 export interface GraphNode extends SimulationNodeDatum {
   readonly id: string;

@@ -53,7 +53,10 @@ interface NodeDetailPanelProps {
   readonly onNodeUpdated?: (node: Node) => void;
   readonly onEdgeAdded?: (edge: Edge) => void;
   readonly onEdgeRemoved?: (edgeId: string) => void;
+  readonly onProcessThis?: (node: Node) => void;
 }
+
+const PROCESSABLE_TYPES = new Set(['learning', 'signal']);
 
 export function NodeDetailPanel({
   node,
@@ -63,6 +66,7 @@ export function NodeDetailPanel({
   onNodeUpdated,
   onEdgeAdded,
   onEdgeRemoved,
+  onProcessThis,
 }: NodeDetailPanelProps) {
   const connections = getNodeConnections(node.id, edges);
   const nodeMap = new Map(allNodes.map(n => [n.id, n]));
@@ -262,6 +266,15 @@ export function NodeDetailPanel({
       <div className="flex items-center justify-between mb-3">
         <NodeTypeBadge nodeType={isEditing ? editNodeType : node.node_type} />
         <div className="flex items-center gap-2">
+          {!isEditing && PROCESSABLE_TYPES.has(node.node_type) && onProcessThis && (
+            <button
+              onClick={() => onProcessThis(node)}
+              aria-label="Process this node"
+              className="text-xs text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 px-1.5 py-0.5 rounded border border-teal-300 dark:border-teal-700 hover:border-teal-500"
+            >
+              Process this
+            </button>
+          )}
           {!isEditing && (
             <button
               onClick={handleStartEdit}

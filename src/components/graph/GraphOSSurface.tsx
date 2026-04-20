@@ -1,18 +1,17 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
-import type { TensionAlert, TensionResolutionAction } from '@/lib/types/tension';
-import type { HighlightState } from '@/lib/types/highlight';
 import { GraphCanvas } from './GraphCanvas';
 import { GraphTopBar, type GraphView } from './GraphTopBar';
 import { DashboardSidebar } from './DashboardSidebar';
 import { InlineCaptureCard } from './InlineCaptureCard';
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { GoalSpacePanel } from './GoalSpacePanel';
-import { CommitmentPanel } from '@/components/commitment/CommitmentPanel';
+import { ProcessFlow } from '@/components/process/ProcessFlow';
 
 const NODE_TYPE_OPTIONS = [
   { id: 'hunch',                   label: 'Hunch',                   color: '#7F77DD' },
@@ -32,80 +31,32 @@ const NODE_TYPE_OPTIONS = [
 
 const ALL_TYPE_IDS = NODE_TYPE_OPTIONS.map(t => t.id);
 
-/** Compute which node IDs are connected to a commitment (1-hop). */
-function getCommitmentConnectedNodes(commitmentId: string, edges: readonly Edge[]): ReadonlySet<string> {
-  const ids = new Set<string>([commitmentId]);
-  for (const e of edges) {
-    if (e.source_id === commitmentId) ids.add(e.target_id);
-    if (e.target_id === commitmentId) ids.add(e.source_id);
-  }
-  return ids;
-}
-
-/** Compute the chain for a tension alert: signal → assumption → commitments */
-function getTensionChain(
-  alert: TensionAlert,
-  edges: readonly Edge[]
-): { nodeIds: ReadonlySet<string>; edgeIds: ReadonlySet<string> } {
-  const nodeIds = new Set<string>();
-  const edgeIds = new Set<string>();
-
-  if (alert.source_node_id) nodeIds.add(alert.source_node_id);
-  if (alert.affected_assumption_id) nodeIds.add(alert.affected_assumption_id);
-  for (const id of alert.affected_commitment_ids) nodeIds.add(id);
-
-  for (const e of edges) {
-    if (nodeIds.has(e.source_id) && nodeIds.has(e.target_id)) {
-      edgeIds.add(e.id);
-    }
-  }
-
-  return { nodeIds, edgeIds };
-}
-
-/** Get all nodes reachable from an assumption (for assumption pill click). */
-function getAssumptionTree(assumptionId: string, edges: readonly Edge[]): ReadonlySet<string> {
-  const ids = new Set<string>([assumptionId]);
-  // 1-hop connected
-  for (const e of edges) {
-    if (e.source_id === assumptionId) ids.add(e.target_id);
-    if (e.target_id === assumptionId) ids.add(e.source_id);
-  }
-  return ids;
-}
-
 export function GraphOSSurface() {
+  const router = useRouter();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-  const [tensions, setTensions] = useState<TensionAlert[]>([]);
   const [activeTypes, setActiveTypes] = useState<string[]>([...ALL_TYPE_IDS]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [capturePos, setCapturePos] = useState<{ x: number; y: number } | null>(null);
   const [captureDefaultType, setCaptureDefaultType] = useState('hunch');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [processFlowNode, setProcessFlowNode] = useState<Node | null>(null);
   const [currentView, setCurrentView] = useState<GraphView>('force');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [highlight, setHighlight] = useState<HighlightState>({ type: 'none' });
-  const [selectedCommitmentId, setSelectedCommitmentId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
 
     async function fetchData() {
       try {
-        const [nodesResult, edgesResult, tensionsResult] = await Promise.all([
+        const [nodesResult, edgesResult] = await Promise.all([
           supabase.from('nodes').select('*'),
           supabase.from('edges').select('*'),
-          supabase.from('tension_alerts').select('*').eq('status', 'active').order('created_at', { ascending: false }),
         ]);
 
         if (nodesResult.error) throw nodesResult.error;
         if (edgesResult.error) throw edgesResult.error;
-        // tension_alerts table may not exist yet — ignore error gracefully
-        if (!tensionsResult.error) {
-          setTensions((tensionsResult.data ?? []) as TensionAlert[]);
-        }
 
         setNodes(nodesResult.data ?? []);
         setEdges(edgesResult.data ?? []);
@@ -131,38 +82,14 @@ export function GraphOSSurface() {
       })
       .subscribe();
 
-    const tensionsChannel = supabase
-      .channel('tensions-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tension_alerts' }, payload => {
-        if (payload.eventType === 'INSERT') {
-          const alert = payload.new as TensionAlert;
-          if (alert.status === 'active') {
-            setTensions(prev => [alert, ...prev]);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const alert = payload.new as TensionAlert;
-          setTensions(prev =>
-            alert.status === 'active'
-              ? prev.map(t => (t.id === alert.id ? alert : t))
-              : prev.filter(t => t.id !== alert.id)
-          );
-        } else if (payload.eventType === 'DELETE') {
-          setTensions(prev => prev.filter(t => t.id !== (payload.old as { id: string }).id));
-        }
-      })
-      .subscribe();
-
     return () => {
       supabase.removeChannel(nodesChannel);
-      supabase.removeChannel(tensionsChannel);
     };
   }, []);
 
   const handleCanvasClick = useCallback(
     (screenX: number, screenY: number, _canvasX: number, _canvasY: number) => {
       setSelectedNode(null);
-      setHighlight({ type: 'none' });
-      setSelectedCommitmentId(null);
       setCaptureDefaultType('hunch');
       setCapturePos({ x: screenX, y: screenY });
     },
@@ -184,49 +111,15 @@ export function GraphOSSurface() {
     setCapturePos(null);
   }, []);
 
-  // Commitment panel interactions
-  const handleSelectCommitment = useCallback((id: string) => {
-    setSelectedCommitmentId(id);
-    const connected = getCommitmentConnectedNodes(id, edges);
-    setHighlight({ type: 'commitment', commitmentId: id, connectedNodeIds: connected });
-    setSelectedNode(null);
-    setCapturePos(null);
-  }, [edges]);
-
-  const handleSelectTension = useCallback((alert: TensionAlert) => {
-    const { nodeIds, edgeIds } = getTensionChain(alert, edges);
-    setHighlight({ type: 'tension', alertId: alert.id, chainNodeIds: nodeIds, chainEdgeIds: edgeIds });
-    setSelectedNode(null);
-    setCapturePos(null);
-  }, [edges]);
-
-  const handleAssumptionClick = useCallback((assumptionId: string) => {
-    const tree = getAssumptionTree(assumptionId, edges);
-    setHighlight({ type: 'assumption', assumptionId, treeNodeIds: tree });
-    setSelectedNode(null);
-    setCapturePos(null);
-  }, [edges]);
-
-  const handleAcknowledgeTension = useCallback(async (id: string) => {
-    const supabase = createClient();
-    await supabase.from('tension_alerts').update({ status: 'acknowledged' }).eq('id', id);
-    setTensions(prev => prev.filter(t => t.id !== id));
+  const handleProcessThis = useCallback((node: Node) => {
+    setProcessFlowNode(node);
   }, []);
 
-  const handleResolveTension = useCallback(async (
-    id: string,
-    _action: TensionResolutionAction,
-    resolvedAction: string
-  ) => {
-    const supabase = createClient();
-    await supabase
-      .from('tension_alerts')
-      .update({ status: 'resolved', resolved_action: resolvedAction, resolved_at: new Date().toISOString() })
-      .eq('id', id);
-    setTensions(prev => prev.filter(t => t.id !== id));
-  }, []);
+  const handleSelectCommitment = useCallback(
+    (id: string) => router.push(`/commitments?id=${id}`),
+    [router]
+  );
 
-  const commitments = nodes.filter(n => n.node_type === 'commitment');
   const goalSpaces = nodes.filter(n => n.node_type === 'goal_space');
   const triggerOutcomes = nodes.filter(n => n.node_type === 'trigger_outcome');
 
@@ -266,7 +159,7 @@ export function GraphOSSurface() {
         view={currentView}
         onSelectNode={handleSelectNode}
         onCanvasClick={handleCanvasClick}
-        highlight={highlight}
+        onSelectCommitment={handleSelectCommitment}
       />
 
       <GraphTopBar
@@ -281,25 +174,6 @@ export function GraphOSSurface() {
         stats={sidebarStats}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(prev => !prev)}
-      />
-
-      <CommitmentPanel
-        goalSpaces={goalSpaces}
-        triggerOutcomes={triggerOutcomes}
-        commitments={commitments}
-        allNodes={nodes}
-        edges={edges}
-        tensions={tensions}
-        selectedCommitmentId={selectedCommitmentId}
-        onSelectCommitment={handleSelectCommitment}
-        onSelectTension={handleSelectTension}
-        onAssumptionClick={handleAssumptionClick}
-        onAddCommitment={() => {
-          setCaptureDefaultType('commitment');
-          setCapturePos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-        }}
-        onAcknowledgeTension={handleAcknowledgeTension}
-        onResolveTension={handleResolveTension}
       />
 
       {capturePos !== null && (
@@ -333,6 +207,28 @@ export function GraphOSSurface() {
           }}
           onEdgeAdded={edge => setEdges(prev => [...prev, edge])}
           onEdgeRemoved={edgeId => setEdges(prev => prev.filter(e => e.id !== edgeId))}
+          onProcessThis={handleProcessThis}
+        />
+      )}
+
+      {processFlowNode !== null && (
+        <ProcessFlow
+          sourceNode={processFlowNode}
+          allNodes={nodes}
+          allEdges={edges}
+          onClose={() => setProcessFlowNode(null)}
+          onNodeCreated={(node) => {
+            setNodes(prev => [...prev, node]);
+          }}
+          onEdgeAdded={(edge) => {
+            setEdges(prev => [...prev, edge]);
+          }}
+          onNodeUpdated={(updatedNode) => {
+            setNodes(prev => prev.map(n => n.id === updatedNode.id ? updatedNode : n));
+            if (selectedNode?.id === updatedNode.id) {
+              setSelectedNode(updatedNode);
+            }
+          }}
         />
       )}
     </div>

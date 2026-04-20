@@ -111,16 +111,17 @@ export function GoalSpaceSection({
                 {outcomeCommitments.length > 0 ? (
                   <div className="pl-6">
                     {outcomeCommitments.map(c => (
-                      <CommitmentCard
-                        key={c.id}
-                        commitment={c}
-                        allNodes={allNodes}
-                        edges={edges}
-                        tensions={tensions}
-                        isSelected={selectedCommitmentId === c.id}
-                        onSelect={onSelectCommitment}
-                        onAssumptionClick={onAssumptionClick}
-                      />
+                      <div key={c.id} id={c.id}>
+                        <CommitmentCard
+                          commitment={c}
+                          allNodes={allNodes}
+                          edges={edges}
+                          tensions={tensions}
+                          isSelected={selectedCommitmentId === c.id}
+                          onSelect={onSelectCommitment}
+                          onAssumptionClick={onAssumptionClick}
+                        />
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -134,16 +135,17 @@ export function GoalSpaceSection({
           {unlinkedCommitments.length > 0 && (
             <div className="pl-6">
               {unlinkedCommitments.map(c => (
-                <CommitmentCard
-                  key={c.id}
-                  commitment={c}
-                  allNodes={allNodes}
-                  edges={edges}
-                  tensions={tensions}
-                  isSelected={selectedCommitmentId === c.id}
-                  onSelect={onSelectCommitment}
-                  onAssumptionClick={onAssumptionClick}
-                />
+                <div key={c.id} id={c.id}>
+                  <CommitmentCard
+                    commitment={c}
+                    allNodes={allNodes}
+                    edges={edges}
+                    tensions={tensions}
+                    isSelected={selectedCommitmentId === c.id}
+                    onSelect={onSelectCommitment}
+                    onAssumptionClick={onAssumptionClick}
+                  />
+                </div>
               ))}
             </div>
           )}

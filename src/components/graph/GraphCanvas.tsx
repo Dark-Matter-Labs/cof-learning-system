@@ -8,7 +8,7 @@ import type { HighlightState } from '@/lib/types/highlight';
 import type { GraphView } from './GraphTopBar';
 import {
   toGraphNode, toGraphLink, FORCE_CONFIG,
-  CARD_WIDTH, CARD_HEIGHT,
+  CARD_WIDTH, CARD_HEIGHT, COMMIT_SIZE,
   type GraphNode, type GraphLink,
 } from '@/lib/graph/layout';
 
@@ -18,6 +18,7 @@ interface GraphCanvasProps {
   readonly activeTypes: readonly string[];
   readonly view: GraphView;
   readonly onSelectNode: (node: Node | null) => void;
+  readonly onSelectCommitment?: (id: string) => void;
   readonly onCanvasClick?: (screenX: number, screenY: number, canvasX: number, canvasY: number) => void;
   readonly highlight?: HighlightState;
 }
@@ -256,7 +257,7 @@ function getHighlightedIds(highlight: HighlightState): {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onCanvasClick, highlight }: GraphCanvasProps) {
+export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onSelectCommitment, onCanvasClick, highlight }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null);
 
@@ -354,18 +355,38 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
       .data(graphNodes).join('g')
       .attr('class', d => `node-card node-${d.id}`)
       .attr('cursor', 'pointer')
-      .on('click', (ev, d) => { ev.stopPropagation(); onSelectNode(d.data); })
+      .on('click', (ev, d) => {
+        ev.stopPropagation();
+        if (d.data.node_type === 'commitment' && onSelectCommitment) {
+          onSelectCommitment(d.data.id);
+        } else {
+          onSelectNode(d.data);
+        }
+      })
       .call(view === 'force' ? drag : d3.drag<SVGGElement, GraphNode>());
 
-    cardG.append('rect').attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
+    // Standard card background — non-commitment nodes only
+    cardG.filter(d => d.data.node_type !== 'commitment')
+      .append('rect').attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
       .attr('rx', 8).attr('fill', NODE_CARD_BG).attr('stroke', NODE_CARD_BORDER).attr('stroke-width', 1);
-    cardG.append('rect').attr('width', 3).attr('height', CARD_HEIGHT).attr('rx', 2).attr('fill', d => d.color);
-    cardG.append('text').text(d => d.node_type.replace(/_/g, ' '))
+
+    // Left colour strip — non-commitment nodes only
+    cardG.filter(d => d.data.node_type !== 'commitment')
+      .append('rect').attr('width', 3).attr('height', CARD_HEIGHT).attr('rx', 2).attr('fill', d => d.color);
+
+    // Node type label — non-commitment nodes only
+    cardG.filter(d => d.data.node_type !== 'commitment')
+      .append('text').text(d => d.data.node_type.replace(/_/g, ' '))
       .attr('x', 12).attr('y', 20).attr('font-size', 9).attr('fill', d => d.color)
       .attr('font-weight', '600').attr('letter-spacing', '0.05em');
-    cardG.append('text').text(d => truncate(d.title, 28))
+
+    // Title — non-commitment nodes only
+    cardG.filter(d => d.data.node_type !== 'commitment')
+      .append('text').text(d => truncate(d.title, 28))
       .attr('x', 12).attr('y', 38).attr('font-size', 11).attr('fill', NODE_TITLE_FILL).attr('font-weight', '500');
-    cardG.each(function(d) {
+
+    // Confidence dots — non-commitment nodes only
+    cardG.filter(d => d.data.node_type !== 'commitment').each(function(d) {
       const level = d.data.confidence_level ?? 0;
       for (let i = 0; i < 5; i++) {
         d3.select(this).append('circle').attr('cx', 12 + i * 10).attr('cy', 60).attr('r', 3)
@@ -373,8 +394,21 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
       }
     });
 
+    // Commitment square background
+    cardG.filter(d => d.data.node_type === 'commitment')
+      .append('rect').attr('width', COMMIT_SIZE).attr('height', COMMIT_SIZE)
+      .attr('rx', 0).attr('fill', d => d.color);
+
+    // Commitment title — white, centred
+    cardG.filter(d => d.data.node_type === 'commitment')
+      .append('text').text(d => truncate(d.title, 14))
+      .attr('x', COMMIT_SIZE / 2).attr('y', COMMIT_SIZE / 2 - 4)
+      .attr('font-size', 10).attr('fill', 'white').attr('font-weight', '500')
+      .attr('text-anchor', 'middle');
+
     // Dual-model indicators
     cardG.each(function(d) {
+      if (d.data.node_type === 'commitment') return;
       const el = d3.select(this);
       const nt = d.data.node_type;
       if (nt === 'assumption_background' || nt === 'assumption_foreground') {
@@ -405,7 +439,8 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
         const p = posMap.get(d.id) ?? { x: 0, y: 0 };
         // Store for edge rendering
         d.x = p.x; d.y = p.y;
-        return `translate(${p.x - CARD_WIDTH / 2}, ${p.y - CARD_HEIGHT / 2})`;
+        const isCommit = d.data.node_type === 'commitment';
+        return `translate(${p.x - (isCommit ? COMMIT_SIZE : CARD_WIDTH) / 2}, ${p.y - (isCommit ? COMMIT_SIZE : CARD_HEIGHT) / 2})`;
       });
       link.attr('d', d => {
         const sx = (d.source as GraphNode).x ?? 0;
@@ -423,7 +458,12 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onC
         .force('center', d3.forceCenter(width / 2, height / 2).strength(FORCE_CONFIG.centerStrength))
         .force('collide', d3.forceCollide<GraphNode>().radius(FORCE_CONFIG.collideRadius))
         .on('tick', () => {
-          cardG.attr('transform', d => `translate(${(d.x ?? 0) - CARD_WIDTH / 2}, ${(d.y ?? 0) - CARD_HEIGHT / 2})`);
+          cardG.attr('transform', d => {
+            const isCommit = d.data.node_type === 'commitment';
+            const w = isCommit ? COMMIT_SIZE : CARD_WIDTH;
+            const h = isCommit ? COMMIT_SIZE : CARD_HEIGHT;
+            return `translate(${(d.x ?? 0) - w / 2}, ${(d.y ?? 0) - h / 2})`;
+          });
           link.attr('d', d => {
             const sx = (d.source as GraphNode).x ?? 0; const sy = (d.source as GraphNode).y ?? 0;
             const tx = (d.target as GraphNode).x ?? 0; const ty = (d.target as GraphNode).y ?? 0;

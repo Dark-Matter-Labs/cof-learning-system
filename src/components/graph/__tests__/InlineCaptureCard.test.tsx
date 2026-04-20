@@ -85,8 +85,6 @@ it('does not show goal space dropdown for non-trigger_outcome types', () => {
   expect(screen.queryByText(/which goal space/i)).not.toBeInTheDocument();
 });
 
-// Task 2 new tests: outcome dropdown
-
 it('renders outcome dropdown for hunch type when triggerOutcomes provided', () => {
   const triggerOutcomes = [
     mockNode({ id: 'to-1', title: 'Raise £10M', node_type: 'trigger_outcome' }),
@@ -133,7 +131,6 @@ it('when hunch with triggerOutcomeId selected, POSTs targets_outcome edge', asyn
   ];
   const createdNode = { id: 'new-id', title: 'Test' };
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
-  // First call: capture POST, second call: edge POST
   fetchMock
     .mockResolvedValueOnce({ ok: true, json: async () => ({ data: createdNode }) })
     .mockResolvedValueOnce({ ok: true, json: async () => ({}) });
@@ -141,7 +138,6 @@ it('when hunch with triggerOutcomeId selected, POSTs targets_outcome edge', asyn
   render(<InlineCaptureCard {...DEFAULT_PROPS} triggerOutcomes={triggerOutcomes} defaultNodeType="hunch" />);
   fireEvent.change(screen.getByPlaceholderText(/title/i), { target: { value: 'Test hunch' } });
 
-  // Select the outcome
   const outcomeSelect = screen.getByDisplayValue('— None —');
   fireEvent.change(outcomeSelect, { target: { value: 'to-1' } });
 
@@ -180,37 +176,9 @@ it('when signal with triggerOutcomeId selected, POSTs indicates_progress edge', 
   expect(edgeBody.edge_type).toBe('indicates_progress');
 });
 
-it('renders expected signals text field for hunch type', () => {
+it('does not render expected signals field (LLM handles this now)', () => {
   render(<InlineCaptureCard {...DEFAULT_PROPS} defaultNodeType="hunch" />);
-  expect(screen.getByText(/what signal would tell you this is working/i)).toBeInTheDocument();
-});
-
-it('renders expected signals text field for intervention type', () => {
-  render(<InlineCaptureCard {...DEFAULT_PROPS} defaultNodeType="intervention" />);
-  expect(screen.getByText(/what signal would tell you this is working/i)).toBeInTheDocument();
-});
-
-it('renders expected signals text field for signal type', () => {
-  render(<InlineCaptureCard {...DEFAULT_PROPS} defaultNodeType="signal" />);
-  expect(screen.getByText(/what signal would tell you this is working/i)).toBeInTheDocument();
-});
-
-it('includes content.expected_signals in capture POST when provided', async () => {
-  const createdNode = { id: 'new-id', title: 'Test' };
-  const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
-  fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: createdNode }) });
-
-  render(<InlineCaptureCard {...DEFAULT_PROPS} defaultNodeType="hunch" />);
-  fireEvent.change(screen.getByPlaceholderText(/title/i), { target: { value: 'Test hunch' } });
-
-  const signalInput = screen.getByPlaceholderText(/e\.g\. investments increase/i);
-  fireEvent.change(signalInput, { target: { value: 'Investor interest spikes' } });
-
-  fireEvent.click(screen.getByRole('button', { name: /create/i }));
-
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-  const captureBody = JSON.parse(fetchMock.mock.calls[0][1].body);
-  expect(captureBody.content).toEqual({ expected_signals: 'Investor interest spikes' });
+  expect(screen.queryByText(/what signal would tell you this is working/i)).not.toBeInTheDocument();
 });
 
 it('does not POST edge when no outcome selected', async () => {
@@ -223,7 +191,6 @@ it('does not POST edge when no outcome selected', async () => {
 
   render(<InlineCaptureCard {...DEFAULT_PROPS} triggerOutcomes={triggerOutcomes} defaultNodeType="hunch" />);
   fireEvent.change(screen.getByPlaceholderText(/title/i), { target: { value: 'Test hunch' } });
-  // Do NOT select any outcome
   fireEvent.click(screen.getByRole('button', { name: /create/i }));
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -233,4 +200,16 @@ it('does not POST edge when no outcome selected', async () => {
 it('shows empty state message when triggerOutcomes is empty array', () => {
   render(<InlineCaptureCard {...DEFAULT_PROPS} triggerOutcomes={[]} defaultNodeType="hunch" />);
   expect(screen.getByText(/no trigger outcomes yet/i)).toBeInTheDocument();
+});
+
+it('shows "Auto-detect" label for hunch type in type dropdown', () => {
+  render(<InlineCaptureCard {...DEFAULT_PROPS} />);
+  expect(screen.getByRole('option', { name: 'Auto-detect' })).toBeInTheDocument();
+});
+
+it('uses getStructuralTypes for type selector options', () => {
+  render(<InlineCaptureCard {...DEFAULT_PROPS} />);
+  // Goal Space and Trigger Outcome should appear as structural types
+  expect(screen.getByRole('option', { name: /goal space/i })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: /trigger outcome/i })).toBeInTheDocument();
 });

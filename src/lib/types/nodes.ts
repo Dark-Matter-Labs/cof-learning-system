@@ -45,6 +45,8 @@ export interface LlmExtraction {
     readonly rationale: string;
   }>;
   readonly expected_signals?: readonly string[];
+  readonly node_type?: string;       // LLM-classified type
+  readonly maturity?: 'ready_to_promote' | 'watch_closely' | 'needs_development' | 'cluster_dependent';
 }
 
 export interface MeetingExtractedNode {
@@ -98,7 +100,7 @@ export interface Attachment {
   readonly size: number;
 }
 
-export type NodeStatus = 'raw' | 'processing' | 'llm_reviewed' | 'human_reviewed' | 'promoted' | 'error' | 'archived' | 'falsified' | 'suspended';
+export type NodeStatus = 'raw' | 'processing' | 'llm_reviewed' | 'human_reviewed' | 'promoted' | 'error' | 'archived' | 'falsified' | 'suspended' | 'flagged_for_review';
 export type HunchType = 'new' | 'feedback' | 'test_result' | 'external_validation';
 export type ConfidenceBasis = 'intuition' | 'analogy' | 'observation' | 'early_evidence' | 'strong_evidence';
 

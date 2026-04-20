@@ -119,6 +119,85 @@ describe('extraction agent', () => {
   });
 });
 
+describe('SYSTEM_PROMPT node_type and maturity classification', () => {
+  it('SYSTEM_PROMPT includes CRITICAL node type classification instructions', async () => {
+    // Import the module to access SYSTEM_PROMPT indirectly via runExtraction
+    // We verify by checking that the system prompt passed to callLLM contains the critical instructions
+    vi.resetModules();
+
+    const mockCallLLM = vi.fn().mockResolvedValue({
+      content: JSON.stringify({
+        node_type: 'hunch',
+        maturity: 'watch_closely',
+        title: 'Test',
+        summary: 'Summary',
+        structured_claim: null,
+        assumption_type: null,
+        entities: [],
+        domain_tags: [],
+        suggested_connections: [],
+        confidence_assessment: { level: 2, basis: 'intuition' },
+        open_questions: [],
+      }),
+    });
+    vi.doMock('@/lib/llm', () => ({ callLLM: mockCallLLM }));
+
+    const { runExtraction } = await import('../extraction');
+    await runExtraction('Test title', 'Test description');
+
+    const callArgs = mockCallLLM.mock.calls[0][1];
+    expect(callArgs.systemPrompt).toContain('CRITICAL');
+    expect(callArgs.systemPrompt).toContain('node_type');
+    expect(callArgs.systemPrompt).toContain('maturity');
+    expect(callArgs.systemPrompt).toContain('ready_to_promote');
+    expect(callArgs.systemPrompt).toContain('watch_closely');
+    expect(callArgs.systemPrompt).toContain('needs_development');
+    expect(callArgs.systemPrompt).toContain('cluster_dependent');
+    expect(callArgs.systemPrompt).toContain('hunch');
+    expect(callArgs.systemPrompt).toContain('assumption_background');
+    expect(callArgs.systemPrompt).toContain('assumption_foreground');
+    expect(callArgs.systemPrompt).toContain('signal');
+    expect(callArgs.systemPrompt).toContain('learning');
+    expect(callArgs.systemPrompt).toContain('option');
+  });
+
+  it('parseExtractionResponse accepts node_type and maturity fields', () => {
+    const validResponse = JSON.stringify({
+      node_type: 'signal',
+      maturity: 'ready_to_promote',
+      title: 'Test signal',
+      summary: 'A summary',
+      structured_claim: null,
+      assumption_type: null,
+      entities: [],
+      domain_tags: [],
+      suggested_connections: [],
+      confidence_assessment: { level: 4, basis: 'early_evidence' },
+      open_questions: [],
+    });
+    const result = parseExtractionResponse(validResponse);
+    expect(result.node_type).toBe('signal');
+    expect(result.maturity).toBe('ready_to_promote');
+  });
+
+  it('parseExtractionResponse is backward compatible without node_type/maturity', () => {
+    const validResponse = JSON.stringify({
+      title: 'Test',
+      summary: 'Summary',
+      structured_claim: null,
+      assumption_type: null,
+      entities: [],
+      domain_tags: [],
+      suggested_connections: [],
+      confidence_assessment: { level: 2, basis: 'intuition' },
+      open_questions: [],
+    });
+    const result = parseExtractionResponse(validResponse);
+    expect(result.node_type).toBeUndefined();
+    expect(result.maturity).toBeUndefined();
+  });
+});
+
 describe('runExtraction with goalContext', () => {
   beforeEach(() => {
     vi.resetModules();

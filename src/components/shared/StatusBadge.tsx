@@ -10,6 +10,7 @@ const STATUS_STYLES: Record<NodeStatus, string> = {
   archived: 'bg-gray-700 text-gray-300',
   falsified: 'bg-node-assumption-fg text-white',
   suspended: 'bg-node-option text-white',
+  flagged_for_review: 'bg-amber-600 text-white',
 };
 
 interface StatusBadgeProps {
