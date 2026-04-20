@@ -51,7 +51,7 @@ export function ReflectionSection({ sites, options, goalSpaces }: ReflectionSect
       setSynthesis(json.synthesis ?? '');
       setStatus('done');
     } catch {
-      setErrorMsg('Failed to reach reflection service');
+      setErrorMsg('Reflection failed — try again');
       setStatus('error');
     }
   }
