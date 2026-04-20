@@ -90,19 +90,8 @@ export function CommitmentsClient({
 
   useEffect(() => {
     if (!highlightId) return;
-    // Try direct scroll first (unlinked commitment cards have this id)
-    const el = document.getElementById(highlightId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    // Fall back to scrolling to the containing goal space section
-    const containingGsId = Object.entries(commitmentsByGoalSpace)
-      .find(([, commits]) => commits.some(c => c.id === highlightId))?.[0];
-    if (containingGsId) {
-      document.getElementById(`gs-${containingGsId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [highlightId]); // eslint-disable-line react-hooks/exhaustive-deps
+    document.getElementById(highlightId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightId]);
 
   const isEmpty = goalSpaces.length === 0 && commitments.length === 0;
 
