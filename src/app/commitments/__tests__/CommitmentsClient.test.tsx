@@ -26,8 +26,33 @@ vi.mock('@/components/commitment/CommitmentCard', () => ({
 }));
 
 vi.mock('@/components/commitment/CommitmentCardEditor', () => ({
-  CommitmentCardEditor: ({ commitment }: { commitment: { title: string } }) =>
-    React.createElement('div', { 'data-testid': 'commitment-editor' }, commitment.title),
+  CommitmentCardEditor: ({
+    commitment,
+    onSave,
+    onCancel,
+  }: {
+    commitment: { title: string; id: string };
+    onSave: (id: string, updates: object) => Promise<void>;
+    onCancel: () => void;
+  }) =>
+    React.createElement(
+      'div',
+      { 'data-testid': 'commitment-editor' },
+      commitment.title,
+      React.createElement(
+        'button',
+        {
+          'data-testid': 'save-btn',
+          onClick: () => onSave(commitment.id, { title: commitment.title, description: null, content: { status: 'active', resource_allocation: null } }),
+        },
+        'Save',
+      ),
+      React.createElement(
+        'button',
+        { 'data-testid': 'cancel-btn', onClick: onCancel },
+        'Cancel',
+      ),
+    ),
 }));
 
 vi.mock('@/components/commitment/TensionAlertItem', () => ({
@@ -170,5 +195,39 @@ describe('CommitmentsClient', () => {
       expect(screen.getByTestId('commitment-editor')).toBeInTheDocument();
       expect(screen.queryByTestId('commitment-card')).toBeNull();
     });
+  });
+
+  it('successful save updates card and closes editor', async () => {
+    const updatedNode = baseNode('c1', 'Updated title', 'commitment');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(updatedNode),
+    }));
+    render(
+      <CommitmentsClient
+        {...emptyProps}
+        initialCommitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('edit-btn'));
+    await waitFor(() => expect(screen.getByTestId('commitment-editor')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('save-btn'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('commitment-editor')).toBeNull();
+      expect(screen.getByTestId('commitment-card')).toBeInTheDocument();
+    });
+  });
+
+  it('cancel edit closes editor without changing card', () => {
+    render(
+      <CommitmentsClient
+        {...emptyProps}
+        initialCommitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('edit-btn'));
+    fireEvent.click(screen.getByTestId('cancel-btn'));
+    expect(screen.getByTestId('commitment-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('commitment-editor')).toBeNull();
   });
 });
