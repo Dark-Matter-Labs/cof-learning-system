@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import type { Node } from '@/lib/types/nodes';
-import { getInlineTypes } from '@/lib/config/captureTypes';
+import { getStructuralTypes } from '@/lib/config/captureTypes';
 
 const OUTCOME_NODE_TYPES = ['hunch', 'intervention', 'signal'];
+
+const STRUCTURAL_TYPE_LABELS: Record<string, string> = {
+  hunch: 'Auto-detect',
+};
 
 interface InlineCaptureCardProps {
   /** Screen coordinates (viewport) where the card should appear */
@@ -29,7 +33,6 @@ export function InlineCaptureCard({
   const [nodeType, setNodeType] = useState(defaultNodeType);
   const [goalSpaceId, setGoalSpaceId] = useState('');
   const [triggerOutcomeId, setTriggerOutcomeId] = useState('');
-  const [expectedSignals, setExpectedSignals] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -42,21 +45,13 @@ export function InlineCaptureCard({
     if (!title.trim()) return;
     setIsSubmitting(true);
     try {
-      const captureBody: Record<string, unknown> = {
-        title: title.trim(),
-        node_type: nodeType,
-        hunch_type: 'new',
-        confidence_level: 3,
-      };
-
-      if (expectedSignals.trim()) {
-        captureBody.content = { expected_signals: expectedSignals.trim() };
-      }
-
       const res = await fetch('/api/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(captureBody),
+        body: JSON.stringify({
+          title: title.trim(),
+          node_type: nodeType,
+        }),
       });
       if (!res.ok) throw new Error('Failed');
       const { data } = await res.json();
@@ -98,7 +93,6 @@ export function InlineCaptureCard({
       setTitle('');
       setGoalSpaceId('');
       setTriggerOutcomeId('');
-      setExpectedSignals('');
       onCreated(data.id);
     } catch {
       // keep card open on error
@@ -113,6 +107,8 @@ export function InlineCaptureCard({
   const top = Math.min(position.y, window.innerHeight - cardH - 16);
 
   const showOutcomeSection = OUTCOME_NODE_TYPES.includes(nodeType);
+
+  const structuralTypes = getStructuralTypes();
 
   return (
     <div
@@ -137,8 +133,10 @@ export function InlineCaptureCard({
         onChange={e => setNodeType(e.target.value)}
         className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-1.5 text-xs text-gray-600 dark:text-gray-400 focus:outline-none w-full"
       >
-        {getInlineTypes().map(t => (
-          <option key={t.id} value={t.nodeType}>{t.label}</option>
+        {structuralTypes.map(t => (
+          <option key={t.id} value={t.nodeType}>
+            {STRUCTURAL_TYPE_LABELS[t.id] ?? t.label}
+          </option>
         ))}
       </select>
 
@@ -183,17 +181,6 @@ export function InlineCaptureCard({
               ))}
             </select>
           )}
-
-          <label className="block text-[10px] text-[#085041] uppercase tracking-wide font-semibold mt-2 mb-1">
-            What signal would tell you this is working? <span className="text-gray-500 dark:text-gray-600 normal-case font-normal">(optional)</span>
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. investments increase by 20%"
-            value={expectedSignals}
-            onChange={e => setExpectedSignals(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 w-full"
-          />
         </div>
       )}
 

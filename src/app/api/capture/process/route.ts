@@ -134,12 +134,29 @@ export async function POST(request: Request) {
       // Single-node extraction path
       const extraction = await runExtraction(node.title, node.description ?? '', goalContext);
 
-      // Update node with extraction results
+      // Determine node_type and confidence from extraction
+      const classifiedNodeType = extraction.node_type ?? node.node_type;
+      const confidenceLevel = extraction.confidence_assessment.level;
+      const confidenceBasis = extraction.confidence_assessment.basis;
+
+      // Determine status from maturity
+      const maturity = extraction.maturity;
+      const newStatus = maturity === 'ready_to_promote' ? 'promoted' : 'flagged_for_review';
+
+      // Update node with extraction results, classified type, and new status
       await supabase
         .from('nodes')
         .update({
           llm_extraction: extraction,
-          status: 'llm_reviewed',
+          status: newStatus,
+          node_type: classifiedNodeType,
+          confidence_level: confidenceLevel,
+          confidence_basis: confidenceBasis,
+          content: {
+            ...((node.content as Record<string, unknown>) ?? {}),
+            maturity,
+            process_status: newStatus,
+          },
         })
         .eq('id', node_id);
 
@@ -148,10 +165,10 @@ export async function POST(request: Request) {
         actor_id: user.id,
         action: 'reviewed',
         target_node_id: node_id,
-        details: { type: 'llm_extraction', model: 'extraction' },
+        details: { type: 'llm_extraction', model: 'extraction', classified_type: classifiedNodeType, maturity },
       });
 
-      return NextResponse.json({ data: { node_id, status: 'llm_reviewed' } });
+      return NextResponse.json({ data: { node_id, status: newStatus, node_type: classifiedNodeType, maturity } });
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

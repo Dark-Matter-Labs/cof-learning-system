@@ -145,3 +145,9 @@ export function getInlineTypes(): readonly CaptureTypeConfig[] {
 export function getPageTypes(): readonly CaptureTypeConfig[] {
   return CAPTURE_TYPES;
 }
+
+/** Structural node types used in the inline graph card */
+export function getStructuralTypes(): readonly CaptureTypeConfig[] {
+  const structuralIds: readonly CaptureTypeId[] = ['hunch', 'goal_space', 'trigger_outcome', 'commitment', 'entity' as CaptureTypeId];
+  return CAPTURE_TYPES.filter(t => structuralIds.includes(t.id));
+}

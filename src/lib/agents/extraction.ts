@@ -43,6 +43,8 @@ const SYSTEM_PROMPT = `You are an extraction system for the Civilization Options
 Given input text (which may be a rough note, call transcript, document excerpt, or transcribed audio), extract the following and return ONLY valid JSON with no other text:
 
 {
+  "node_type": "hunch|assumption_background|assumption_foreground|test|signal|learning|option",
+  "maturity": "ready_to_promote|watch_closely|needs_development|cluster_dependent",
   "title": "Concise title (max 10 words)",
   "summary": "2-3 sentence summary of the core insight or claim",
   "structured_claim": { "if": "condition", "then": "consequence", "because": "reasoning" } or null if no clear causal claim,
@@ -61,6 +63,21 @@ Given input text (which may be a rough note, call transcript, document excerpt, 
   "goal_relevance": [{ "outcome_id": "id of trigger outcome", "outcome_title": "title", "rationale": "why this node is relevant to this outcome" }],
   "expected_signals": ["signal that would indicate progress"]
 }
+
+CRITICAL — Node type and maturity classification:
+1. NODE_TYPE: Based on the content, classify as one of:
+   - hunch: A directional belief, emerging insight, or speculation about how things work
+   - assumption_background: A contextual claim treated as given (e.g. "3-4° warming is coming")
+   - assumption_foreground: An actively testable if/then proposition
+   - test: A specific probe or experiment being run
+   - signal: Feedback from reality — new data, a conversation result, external evidence
+   - learning: A conclusion drawn from tests or signals
+   - option: A potential path or strategic opportunity
+2. MATURITY: Classify as one of:
+   - ready_to_promote: Clear, well-supported, should go directly to the graph
+   - watch_closely: Plausible but needs more evidence before acting on it
+   - needs_development: Early-stage, needs further work before it's useful
+   - cluster_dependent: Only meaningful in relation to other entries in the same batch
 
 Rules for commitment_relevance:
 10. COMMITMENT_RELEVANCE: Does this hunch or signal relate to any existing commitments?
