@@ -31,6 +31,41 @@ function getInitialContent(node: Node): { status: string; resource_allocation: n
   return { status: 'active', resource_allocation: null };
 }
 
+interface ControlsRowProps {
+  readonly status: string;
+  readonly onStatusChange: (v: string) => void;
+  readonly allocation: string;
+  readonly onAllocationChange: (v: string) => void;
+}
+
+function ControlsRow({ status, onStatusChange, allocation, onAllocationChange }: ControlsRowProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        value={status}
+        onChange={e => onStatusChange(e.target.value)}
+        className="text-[10px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-[#185FA5]"
+      >
+        {STATUS_OPTIONS.map(s => (
+          <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+        ))}
+      </select>
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          min={0}
+          max={100}
+          value={allocation}
+          onChange={e => onAllocationChange(e.target.value)}
+          placeholder="0"
+          className="w-14 text-[10px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-[#185FA5]"
+        />
+        <span className="text-[10px] text-gray-500">%</span>
+      </div>
+    </div>
+  );
+}
+
 export function CommitmentCardEditor({ commitment, onSave, onCancel }: CommitmentCardEditorProps) {
   const initial = getInitialContent(commitment);
   const [title, setTitle] = useState(commitment.title);
@@ -58,6 +93,7 @@ export function CommitmentCardEditor({ commitment, onSave, onCancel }: Commitmen
       });
     } catch {
       setError('Failed to save');
+    } finally {
       setSaving(false);
     }
   }
@@ -80,29 +116,12 @@ export function CommitmentCardEditor({ commitment, onSave, onCancel }: Commitmen
         rows={3}
         className="w-full text-[10px] bg-transparent border border-gray-200 dark:border-gray-700 rounded text-gray-600 dark:text-gray-400 focus:outline-none focus:border-[#185FA5] p-1 resize-none"
       />
-      <div className="flex items-center gap-2">
-        <select
-          value={status}
-          onChange={e => setStatus(e.target.value)}
-          className="text-[10px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-[#185FA5]"
-        >
-          {STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
-        <div className="flex items-center gap-1">
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={allocation}
-            onChange={e => setAllocation(e.target.value)}
-            placeholder="0"
-            className="w-14 text-[10px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-[#185FA5]"
-          />
-          <span className="text-[10px] text-gray-500">%</span>
-        </div>
-      </div>
+      <ControlsRow
+        status={status}
+        onStatusChange={setStatus}
+        allocation={allocation}
+        onAllocationChange={setAllocation}
+      />
       {error && <p className="text-[10px] text-red-400">{error}</p>}
       <div className="flex items-center gap-2 pt-1">
         <button
