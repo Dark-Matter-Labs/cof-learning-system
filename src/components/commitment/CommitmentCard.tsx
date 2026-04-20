@@ -12,6 +12,7 @@ interface CommitmentCardProps {
   readonly isSelected: boolean;
   readonly onSelect: (id: string) => void;
   readonly onAssumptionClick: (assumptionId: string) => void;
+  readonly onEdit?: () => void;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -45,6 +46,7 @@ export function CommitmentCard({
   isSelected,
   onSelect,
   onAssumptionClick,
+  onEdit,
 }: CommitmentCardProps) {
   const status = getCommitmentStatus(commitment);
   const allocation = getResourceAllocation(commitment);
@@ -68,7 +70,7 @@ export function CommitmentCard({
       type="button"
       onClick={() => onSelect(commitment.id)}
       className={[
-        'w-full text-left border-l-[3px] border-[#185FA5] bg-gray-50 dark:bg-gray-900 rounded-r-md mb-2 overflow-hidden',
+        'w-full text-left border-l-[3px] border-[#185FA5] bg-gray-50 dark:bg-gray-900 rounded-r-md mb-2 overflow-hidden group',
         'hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors',
         isSelected ? 'ring-1 ring-[#185FA5]/60' : '',
       ].join(' ')}
@@ -78,6 +80,16 @@ export function CommitmentCard({
           <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 leading-snug flex-1 min-w-0">
             {commitment.title}
           </span>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onEdit(); }}
+              className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label="Edit commitment"
+            >
+              ✏
+            </button>
+          )}
           {commitment.author_id && (
             <span className="shrink-0 w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[9px] text-gray-600 dark:text-gray-400 font-bold">
               {commitment.author_id.slice(0, 2).toUpperCase()}

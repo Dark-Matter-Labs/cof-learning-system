@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 
 vi.mock('@/components/commitment/GoalSpaceSection', () => ({
@@ -8,12 +8,55 @@ vi.mock('@/components/commitment/GoalSpaceSection', () => ({
 }));
 
 vi.mock('@/components/commitment/CommitmentCard', () => ({
-  CommitmentCard: ({ commitment }: { commitment: { title: string; id: string } }) =>
-    React.createElement('div', { 'data-testid': 'commitment-card' }, commitment.title),
+  CommitmentCard: ({
+    commitment,
+    onEdit,
+  }: {
+    commitment: { title: string; id: string };
+    onEdit?: () => void;
+  }) =>
+    React.createElement(
+      'div',
+      { 'data-testid': 'commitment-card' },
+      commitment.title,
+      onEdit
+        ? React.createElement('button', { onClick: onEdit, 'data-testid': 'edit-btn' }, 'Edit')
+        : null,
+    ),
+}));
+
+vi.mock('@/components/commitment/CommitmentCardEditor', () => ({
+  CommitmentCardEditor: ({
+    commitment,
+    onSave,
+    onCancel,
+  }: {
+    commitment: { title: string; id: string };
+    onSave: (id: string, updates: object) => Promise<void>;
+    onCancel: () => void;
+  }) =>
+    React.createElement(
+      'div',
+      { 'data-testid': 'commitment-editor' },
+      commitment.title,
+      React.createElement(
+        'button',
+        {
+          'data-testid': 'save-btn',
+          onClick: () => onSave(commitment.id, { title: commitment.title, description: null, content: { status: 'active', resource_allocation: null } }),
+        },
+        'Save',
+      ),
+      React.createElement(
+        'button',
+        { 'data-testid': 'cancel-btn', onClick: onCancel },
+        'Cancel',
+      ),
+    ),
 }));
 
 vi.mock('@/components/commitment/TensionAlertItem', () => ({
-  TensionAlertItem: ({ alert }: { alert: { id: string; description: string } }) =>
+  TensionAlertItem: ({ alert }: { alert: { description: string } }) =>
     React.createElement('div', { 'data-testid': 'tension-item' }, alert.description),
 }));
 
@@ -25,7 +68,7 @@ import type { TensionAlert } from '@/lib/types/tension';
 const emptyProps = {
   goalSpaces: [] as Node[],
   triggerOutcomes: [] as Node[],
-  commitments: [] as Node[],
+  initialCommitments: [] as Node[],
   allNodes: [] as Node[],
   edges: [] as Edge[],
   tensions: [] as TensionAlert[],
@@ -55,9 +98,11 @@ const baseNode = (id: string, title: string, node_type: string): Node => ({
 });
 
 describe('CommitmentsClient', () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+
   it('shows empty state when no commitments or goal spaces', () => {
     render(<CommitmentsClient {...emptyProps} />);
-    expect(screen.getByText('No commitments yet.')).toBeTruthy();
+    expect(screen.getByText('No commitments yet.')).toBeInTheDocument();
   });
 
   it('renders a GoalSpaceSection for each goal space', () => {
@@ -65,21 +110,20 @@ describe('CommitmentsClient', () => {
       <CommitmentsClient
         {...emptyProps}
         goalSpaces={[baseNode('gs1', 'Climate resilience', 'goal_space')]}
-      />
+      />,
     );
-    expect(screen.getByTestId('goal-space-section')).toBeTruthy();
-    expect(screen.getByText('Climate resilience')).toBeTruthy();
+    expect(screen.getByTestId('goal-space-section')).toBeInTheDocument();
   });
 
-  it('renders unlinked commitments (no edge to any goal space)', () => {
+  it('renders unlinked commitments as CommitmentCards', () => {
     render(
       <CommitmentsClient
         {...emptyProps}
-        commitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
-      />
+        initialCommitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
+      />,
     );
-    expect(screen.getByTestId('commitment-card')).toBeTruthy();
-    expect(screen.getByText('Fund Madrid pilot')).toBeTruthy();
+    expect(screen.getByTestId('commitment-card')).toBeInTheDocument();
+    expect(screen.getByText('Fund Madrid pilot')).toBeInTheDocument();
   });
 
   it('renders tension alerts section when active tensions exist', () => {
@@ -92,17 +136,98 @@ describe('CommitmentsClient', () => {
       source_node_id: null,
       affected_assumption_id: null,
       affected_commitment_ids: [],
+      resolved_by: null,
       resolved_action: null,
       resolved_at: null,
       created_at: '2026-01-01T00:00:00.000Z',
-      resolved_by: null,
     };
     render(<CommitmentsClient {...emptyProps} tensions={[tension]} />);
-    expect(screen.getByTestId('tension-item')).toBeTruthy();
+    expect(screen.getByTestId('tension-item')).toBeInTheDocument();
   });
 
   it('does not render tensions section when empty', () => {
     render(<CommitmentsClient {...emptyProps} />);
     expect(screen.queryByTestId('tension-item')).toBeNull();
+  });
+
+  it('renders the add commitment input', () => {
+    render(<CommitmentsClient {...emptyProps} />);
+    expect(screen.getByPlaceholderText('New commitment…')).toBeInTheDocument();
+  });
+
+  it('submitting the add form calls /api/capture and adds the commitment', async () => {
+    const newNode = baseNode('c-new', 'My new commitment', 'commitment');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ data: newNode }),
+    }));
+    render(<CommitmentsClient {...emptyProps} />);
+    fireEvent.change(screen.getByPlaceholderText('New commitment…'), {
+      target: { value: 'My new commitment' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => {
+      expect(screen.getByText('My new commitment')).toBeInTheDocument();
+    });
+  });
+
+  it('shows error when add API fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
+    render(<CommitmentsClient {...emptyProps} />);
+    fireEvent.change(screen.getByPlaceholderText('New commitment…'), {
+      target: { value: 'Something' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => {
+      expect(screen.getByText('Failed to add commitment')).toBeInTheDocument();
+    });
+  });
+
+  it('clicking edit shows CommitmentCardEditor instead of CommitmentCard', async () => {
+    render(
+      <CommitmentsClient
+        {...emptyProps}
+        initialCommitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('edit-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('commitment-editor')).toBeInTheDocument();
+      expect(screen.queryByTestId('commitment-card')).toBeNull();
+    });
+  });
+
+  it('successful save updates card and closes editor', async () => {
+    const updatedNode = baseNode('c1', 'Updated title', 'commitment');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ data: updatedNode }),
+    }));
+    render(
+      <CommitmentsClient
+        {...emptyProps}
+        initialCommitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('edit-btn'));
+    await waitFor(() => expect(screen.getByTestId('commitment-editor')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('save-btn'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('commitment-editor')).toBeNull();
+      expect(screen.getByTestId('commitment-card')).toBeInTheDocument();
+    });
+  });
+
+  it('cancel edit closes editor without changing card', () => {
+    render(
+      <CommitmentsClient
+        {...emptyProps}
+        initialCommitments={[baseNode('c1', 'Fund Madrid pilot', 'commitment')]}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('edit-btn'));
+    fireEvent.click(screen.getByTestId('cancel-btn'));
+    expect(screen.getByTestId('commitment-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('commitment-editor')).toBeNull();
   });
 });

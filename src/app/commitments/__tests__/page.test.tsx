@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 vi.mock('@/app/commitments/CommitmentsClient', () => ({
   CommitmentsClient: (props: Record<string, unknown>) =>
     React.createElement('div', { 'data-testid': 'commitments-client' },
-      `commitments:${(props.commitments as unknown[]).length}`
+      `commitments:${(props.initialCommitments as unknown[]).length}`
     ),
 }));
 
