@@ -38,12 +38,17 @@ export default function CapturePage() {
   const handleSubmit = async (formData: CaptureFormData) => {
     setIsSubmitting(true);
     try {
+      const isCall = entryMode === 'call';
       const response = await fetch('/api/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: formData.title || undefined,
           description: formData.description,
+          node_type: isCall ? 'meeting_notes' : undefined,
+          content: isCall && formData.date
+            ? { meeting_date: new Date(formData.date + 'T00:00:00').toISOString() }
+            : undefined,
           insight_date: formData.date ? new Date(formData.date + 'T00:00:00').toISOString() : undefined,
           participant_ids: formData.participant_ids,
           external_link: formData.external_link_url
