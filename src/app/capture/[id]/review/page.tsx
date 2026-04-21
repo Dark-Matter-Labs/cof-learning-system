@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { ReviewCard } from '@/components/review/ReviewCard';
+import { SimpleReviewClient } from '@/components/review/SimpleReviewClient';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { Node, HumanReview } from '@/lib/types/nodes';
 
@@ -15,22 +15,15 @@ function getKeywords(text: string): string[] {
 }
 
 function findBestMatch(targetTitle: string, candidates: { id: string; title: string }[]): { id: string; title: string } | null {
-  // Exact match
   const exact = candidates.find(n => n.title === targetTitle);
   if (exact) return exact;
-
-  // Substring match
   const sub = candidates.find(n => n.title.toLowerCase().includes(targetTitle.toLowerCase()))
     ?? candidates.find(n => targetTitle.toLowerCase().includes(n.title.toLowerCase()));
   if (sub) return sub;
-
-  // Word overlap — match if ANY significant keyword overlaps
   const searchWords = getKeywords(targetTitle);
   if (searchWords.length === 0) return null;
-
   let bestScore = 0;
   let bestMatch: { id: string; title: string } | null = null;
-
   for (const candidate of candidates) {
     const candidateWords = getKeywords(candidate.title);
     const overlap = searchWords.filter(w => candidateWords.some(cw => cw.includes(w) || w.includes(cw))).length;
@@ -39,7 +32,6 @@ function findBestMatch(targetTitle: string, candidates: { id: string; title: str
       bestMatch = candidate;
     }
   }
-
   return bestMatch;
 }
 
@@ -49,22 +41,12 @@ export default function ReviewPage() {
   const [node, setNode] = useState<Node | null>(null);
   const [childNodes, setChildNodes] = useState<Node[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [triggerOutcomes, setTriggerOutcomes] = useState<ReadonlyArray<{ readonly id: string; readonly title: string }>>([]);
 
   useEffect(() => {
     const fetchNode = async () => {
       const supabase = createClient();
-      const [{ data: nodeData }, { data: outcomesData }, { data: childNodesData }] = await Promise.all([
-        supabase
-          .from('nodes')
-          .select('*')
-          .eq('id', params.id)
-          .single(),
-        supabase
-          .from('nodes')
-          .select('id, title')
-          .eq('node_type', 'trigger_outcome')
-          .neq('status', 'archived'),
+      const [{ data: nodeData }, { data: childNodesData }] = await Promise.all([
+        supabase.from('nodes').select('*').eq('id', params.id).single(),
         supabase
           .from('nodes')
           .select('*')
@@ -72,72 +54,62 @@ export default function ReviewPage() {
           .order('created_at', { ascending: true }),
       ]);
       if (nodeData) setNode(nodeData as unknown as Node);
-      if (outcomesData) setTriggerOutcomes(outcomesData as { id: string; title: string }[]);
       if (childNodesData) setChildNodes(childNodesData as unknown as Node[]);
     };
     fetchNode();
   }, [params.id]);
 
-  const handlePromote = async (review: HumanReview) => {
+  const handlePromote = async (note: string) => {
     setIsSubmitting(true);
     try {
       const supabase = createClient();
       const nodeId = params.id as string;
 
+      const humanReview: HumanReview = {
+        reviewed_at: new Date().toISOString(),
+        reviewer_id: node?.author_id ?? '',
+        note: note.trim() || undefined,
+        fields: {},
+        connections_accepted: [],
+        connections_rejected: [],
+        connections_added: [],
+      };
+
       await supabase
         .from('nodes')
-        .update({
-          human_review: review,
-          status: 'promoted',
-          confidence_level: review.fields.confidence?.final as number,
-          domain_tags: review.fields.domain_tags?.final as string[],
-        })
+        .update({ human_review: humanReview, status: 'promoted' })
         .eq('id', nodeId);
 
-      // Create edges for accepted connections by matching target titles to existing nodes.
-      // This includes mentioned_in edges from the extraction agent's person detection —
-      // they resolve through the same findBestMatch pipeline as other suggested_connections.
-      if (review.connections_accepted.length > 0) {
-        const accepted = review.connections_accepted.filter(c => c.target_title);
-
-        if (accepted.length > 0) {
-          const { data: allNodes } = await supabase
-            .from('nodes')
-            .select('id, title')
-            .in('status', ['promoted', 'human_reviewed'])
-            .neq('id', nodeId);
-
-          if (allNodes && allNodes.length > 0) {
-            const edges = accepted
-              .map(conn => {
-                const target = findBestMatch(conn.target_title, allNodes);
-                if (!target) return null;
-                return { source_id: nodeId, target_id: target.id, edge_type: conn.edge_type, weight: 1 };
-              })
-              .filter((e): e is NonNullable<typeof e> => e !== null);
-
-            if (edges.length > 0) {
-              await supabase.from('edges').insert(edges);
-            }
-          }
+      // Auto-accept all LLM-suggested connections
+      const suggested = node?.llm_extraction?.suggested_connections ?? [];
+      if (suggested.length > 0) {
+        const { data: allNodes } = await supabase
+          .from('nodes')
+          .select('id, title')
+          .in('status', ['promoted', 'human_reviewed'])
+          .neq('id', nodeId);
+        if (allNodes && allNodes.length > 0) {
+          const edges = suggested
+            .map(conn => {
+              const target = findBestMatch(conn.target_title, allNodes);
+              if (!target) return null;
+              return { source_id: nodeId, target_id: target.id, edge_type: conn.edge_type, weight: 1 };
+            })
+            .filter((e): e is NonNullable<typeof e> => e !== null);
+          if (edges.length > 0) await supabase.from('edges').insert(edges);
         }
       }
 
-      // Create targets_outcome edges for accepted/edited goal relevance suggestions
-      const goalRelevanceEdges = Object.entries(review.fields)
-        .filter(([key, field]) =>
-          key.startsWith('goal_relevance_') &&
-          (field.action === 'accepted' || field.action === 'edited')
-        )
-        .map(([, field]) => ({
+      // Auto-accept all goal relevance suggestions
+      const goalRelevance = node?.llm_extraction?.goal_relevance ?? [];
+      if (goalRelevance.length > 0) {
+        const goalEdges = goalRelevance.map(gr => ({
           source_id: nodeId,
-          target_id: field.final as string,
+          target_id: gr.outcome_id,
           edge_type: 'targets_outcome',
           weight: 1,
         }));
-
-      if (goalRelevanceEdges.length > 0) {
-        await supabase.from('edges').insert(goalRelevanceEdges);
+        await supabase.from('edges').insert(goalEdges);
       }
 
       await supabase.from('activity_log').insert({
@@ -152,34 +124,15 @@ export default function ReviewPage() {
     }
   };
 
-  const handleSaveDraft = async (review: HumanReview) => {
-    setIsSubmitting(true);
-    try {
-      const supabase = createClient();
-      await supabase
-        .from('nodes')
-        .update({ human_review: review, status: 'human_reviewed' })
-        .eq('id', params.id);
-      router.push('/capture');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleArchive = async () => {
     setIsSubmitting(true);
     try {
       const supabase = createClient();
-      await supabase
-        .from('nodes')
-        .update({ status: 'archived' })
-        .eq('id', params.id);
-
+      await supabase.from('nodes').update({ status: 'archived' }).eq('id', params.id);
       await supabase.from('activity_log').insert({
         action: 'archived',
         target_node_id: params.id as string,
       });
-
       router.push('/capture');
     } finally {
       setIsSubmitting(false);
@@ -199,15 +152,29 @@ export default function ReviewPage() {
 
   if (!node.llm_extraction || node.status === 'raw' || node.status === 'processing') {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-center">
-        <p className="text-gray-400">This hunch is still being processed by the AI.</p>
+      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+        <p className="text-gray-400">This entry is still being processed.</p>
         <p className="text-sm text-gray-600 mt-1">Check back in a moment.</p>
+        <Link href="/capture" className="text-sm text-[#185FA5] mt-3 inline-block">
+          Back to capture
+        </Link>
+      </div>
+    );
+  }
+
+  if (node.status === 'promoted' || node.status === 'archived') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+        <p className="text-gray-400">This entry has already been {node.status}.</p>
+        <Link href="/capture" className="text-sm text-[#185FA5] mt-2 inline-block">
+          Back to capture
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-lg font-bold text-gray-200">{node.title}</h1>
         {node.description && (
@@ -247,13 +214,11 @@ export default function ReviewPage() {
           </div>
         </div>
       ) : (
-        <ReviewCard
+        <SimpleReviewClient
           node={node}
           onPromote={handlePromote}
-          onSaveDraft={handleSaveDraft}
           onArchive={handleArchive}
           isSubmitting={isSubmitting}
-          triggerOutcomes={triggerOutcomes}
         />
       )}
     </div>
