@@ -10,9 +10,21 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { title, node_type = 'hunch', description, hunch_type, confidence_level, external_link, content, insight_date, participant_ids } = body;
+  const {
+    title,
+    node_type = 'hunch',
+    description,
+    hunch_type,
+    confidence_level,
+    external_link,
+    content,
+    insight_date,
+    participant_ids,
+    attachment,
+  } = body;
 
-  if (!title || typeof title !== 'string' || title.trim().length === 0) {
+  const hasAttachment = attachment && typeof attachment.storage_path === 'string';
+  if (!hasAttachment && (!title || typeof title !== 'string' || title.trim().length === 0)) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
 
@@ -24,7 +36,7 @@ export async function POST(request: Request) {
     .from('nodes')
     .insert({
       node_type,
-      title: title.trim(),
+      title: title?.trim() || '',
       description: description?.trim() || null,
       hunch_type: hunch_type || 'new',
       confidence_level: confidence_level || 3,
@@ -34,6 +46,7 @@ export async function POST(request: Request) {
       external_links: externalLinks,
       content: content ?? null,
       insight_date: insight_date ?? null,
+      attachments: attachment ? [attachment] : [],
     })
     .select()
     .single();
@@ -42,7 +55,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Log activity
   await supabase.from('activity_log').insert({
     actor_id: user.id,
     action: 'created_hunch',
@@ -50,7 +62,6 @@ export async function POST(request: Request) {
     details: { title: node.title, hunch_type: node.hunch_type },
   });
 
-  // Create participated_in edges for each selected person node
   if (participant_ids && Array.isArray(participant_ids) && participant_ids.length > 0) {
     const participantEdges = (participant_ids as string[]).map((personId: string) => ({
       source_id: node.id,
@@ -62,7 +73,6 @@ export async function POST(request: Request) {
     await supabase.from('edges').insert(participantEdges);
   }
 
-  // Fire-and-forget: propagate signal if this is a signal node
   if (node_type === 'signal') {
     const signalUrl = new URL('/api/signals', request.url);
     fetch(signalUrl.toString(), {
@@ -75,7 +85,6 @@ export async function POST(request: Request) {
     }).catch(() => {});
   }
 
-  // Fire-and-forget: trigger LLM extraction
   const processUrl = new URL('/api/capture/process', request.url);
   fetch(processUrl.toString(), {
     method: 'POST',
@@ -84,9 +93,7 @@ export async function POST(request: Request) {
       'Cookie': request.headers.get('cookie') ?? '',
     },
     body: JSON.stringify({ node_id: node.id }),
-  }).catch(() => {
-    // Fire-and-forget — errors handled by the process route
-  });
+  }).catch(() => {});
 
   return NextResponse.json({ data: node }, { status: 201 });
 }
