@@ -160,14 +160,13 @@ export function GraphOSSurface() {
         onSelectNode={handleSelectNode}
         onCanvasClick={handleCanvasClick}
         onSelectCommitment={handleSelectCommitment}
+        onChangeView={setCurrentView}
       />
 
       <GraphTopBar
         activeTypes={activeTypes}
         onToggleType={handleToggleType}
         nodeTypes={NODE_TYPE_OPTIONS}
-        currentView={currentView}
-        onChangeView={setCurrentView}
       />
 
       <DashboardSidebar
