@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import * as d3 from 'd3';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
@@ -10,7 +10,9 @@ import {
   toGraphNode, toGraphLink, FORCE_CONFIG,
   CARD_WIDTH, CARD_HEIGHT, COMMIT_SIZE,
   type GraphNode, type GraphLink,
+  computeGoalCentroids, buildClusterForce,
 } from '@/lib/graph/layout';
+import { GraphBottomBar } from './GraphBottomBar';
 
 interface GraphCanvasProps {
   readonly nodes: readonly Node[];
@@ -21,6 +23,7 @@ interface GraphCanvasProps {
   readonly onSelectCommitment?: (id: string) => void;
   readonly onCanvasClick?: (screenX: number, screenY: number, canvasX: number, canvasY: number) => void;
   readonly highlight?: HighlightState;
+  readonly onChangeView: (v: GraphView) => void;
 }
 
 function truncate(text: string, maxChars: number): string {
@@ -257,9 +260,12 @@ function getHighlightedIds(highlight: HighlightState): {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onSelectCommitment, onCanvasClick, highlight }: GraphCanvasProps) {
+export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onSelectCommitment, onCanvasClick, highlight, onChangeView }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const graphNodesRef = useRef<GraphNode[]>([]);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
 
   const filteredNodes = nodes.filter(n => activeTypes.includes(n.node_type));
   const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
@@ -268,8 +274,16 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
   const graphNodes = filteredNodes.map(toGraphNode);
   const graphLinks = filteredEdges.map(toGraphLink);
 
+  const nodeGoalMap = new Map<string, string>();
+  filteredEdges.forEach(e => {
+    if (e.edge_type === 'belongs_to_goalspace') {
+      nodeGoalMap.set(e.source_id, e.target_id);
+    }
+  });
+
   const handleCanvasClick = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
     if ((event.target as SVGElement).closest('.node-card')) return;
+    setFocusedNodeId(null);
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect || !onCanvasClick) return;
     const g = svgRef.current?.querySelector('g');
@@ -277,6 +291,29 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
     const [canvasX, canvasY] = transform.invert([event.clientX - rect.left, event.clientY - rect.top]);
     onCanvasClick(event.clientX, event.clientY, canvasX, canvasY);
   }, [onCanvasClick]);
+
+  const fitView = useCallback(() => {
+    if (!svgRef.current || !zoomRef.current) return;
+    const svg = d3.select(svgRef.current);
+    const width = svgRef.current.clientWidth;
+    const height = svgRef.current.clientHeight;
+    const currentNodes = graphNodesRef.current;
+    if (currentNodes.length === 0) return;
+    const padding = 60;
+    const xs = currentNodes.map(n => n.x ?? 0);
+    const ys = currentNodes.map(n => n.y ?? 0);
+    const minX = Math.min(...xs) - CARD_WIDTH / 2 - padding;
+    const maxX = Math.max(...xs) + CARD_WIDTH / 2 + padding;
+    const minY = Math.min(...ys) - CARD_HEIGHT / 2 - padding;
+    const maxY = Math.max(...ys) + CARD_HEIGHT / 2 + padding;
+    const scale = Math.min(width / (maxX - minX), height / (maxY - minY), 1.5);
+    const tx = (width - (maxX + minX) * scale) / 2;
+    const ty = (height - (maxY + minY) * scale) / 2;
+    svg.transition().duration(500).call(
+      zoomRef.current.transform,
+      d3.zoomIdentity.translate(tx, ty).scale(scale),
+    );
+  }, []);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -296,11 +333,11 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
     svg.selectAll('*').remove();
 
     const g = svg.append('g');
-    svg.call(
-      d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.1, 3])
-        .on('zoom', ev => g.attr('transform', ev.transform))
-    );
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 3])
+      .on('zoom', ev => g.attr('transform', ev.transform));
+    zoomRef.current = zoom;
+    svg.call(zoom);
 
     // Arrowhead markers
     const defs = svg.append('defs');
@@ -333,6 +370,25 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
         .call(ax => ax.selectAll('line').attr('stroke', AXIS_STROKE));
     }
 
+    // Goal space zone overlays (force view only) — rendered behind everything
+    if (view === 'force' && nodeGoalMap.size > 0) {
+      const goalCentroids = computeGoalCentroids(nodeGoalMap, width, height);
+      const zonesG = g.append('g').attr('class', 'zones');
+      for (const [, centroid] of goalCentroids) {
+        zonesG.append('ellipse')
+          .attr('cx', centroid.x)
+          .attr('cy', centroid.y)
+          .attr('rx', 130)
+          .attr('ry', 100)
+          .attr('fill', '#0F6E56')
+          .attr('fill-opacity', 0.04)
+          .attr('stroke', '#0F6E56')
+          .attr('stroke-opacity', 0.2)
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '6 4');
+      }
+    }
+
     // Links group (rendered before nodes)
     const link = g.append('g').attr('class', 'links')
       .selectAll<SVGPathElement, GraphLink>('path')
@@ -357,6 +413,7 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
       .attr('cursor', 'pointer')
       .on('click', (ev, d) => {
         ev.stopPropagation();
+        setFocusedNodeId(prev => prev === d.id ? null : d.id);
         if (d.data.node_type === 'commitment' && onSelectCommitment) {
           onSelectCommitment(d.data.id);
         } else {
@@ -449,15 +506,21 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
         const ty = (d.target as GraphNode).y ?? 0;
         return edgePath(sx, sy, tx, ty);
       });
+      graphNodesRef.current = graphNodes;
     }
 
     if (view === 'force') {
+      const goalCentroids = computeGoalCentroids(nodeGoalMap, width, height);
+      const clusterForce = buildClusterForce(nodeGoalMap, goalCentroids);
+
       const simulation = d3.forceSimulation(graphNodes)
         .force('link', d3.forceLink<GraphNode, GraphLink>(graphLinks).id(d => d.id).distance(FORCE_CONFIG.linkDistance))
         .force('charge', d3.forceManyBody().strength(FORCE_CONFIG.charge))
         .force('center', d3.forceCenter(width / 2, height / 2).strength(FORCE_CONFIG.centerStrength))
         .force('collide', d3.forceCollide<GraphNode>().radius(FORCE_CONFIG.collideRadius))
+        .force('cluster', clusterForce)
         .on('tick', () => {
+          graphNodesRef.current = simulation.nodes() as unknown as GraphNode[];
           cardG.attr('transform', d => {
             const isCommit = d.data.node_type === 'commitment';
             const w = isCommit ? COMMIT_SIZE : CARD_WIDTH;
@@ -513,7 +576,58 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
     });
   }, [highlight]);
 
+  // Focus mode effect
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const svg = d3.select(svgRef.current);
+
+    if (!focusedNodeId) {
+      svg.selectAll<SVGGElement, GraphNode>('.node-card').attr('opacity', null);
+      svg.selectAll<SVGPathElement, GraphLink>('.links path').attr('stroke-opacity', 0.6);
+      return;
+    }
+
+    const activeNodeIds = new Set<string>([focusedNodeId]);
+    for (const e of filteredEdges) {
+      if (e.source_id === focusedNodeId) activeNodeIds.add(e.target_id);
+      if (e.target_id === focusedNodeId) activeNodeIds.add(e.source_id);
+    }
+
+    svg.selectAll<SVGGElement, GraphNode>('.node-card')
+      .attr('opacity', d => activeNodeIds.has(d.id) ? 1 : 0.08);
+
+    svg.selectAll<SVGPathElement, GraphLink>('.links path')
+      .attr('stroke-opacity', d => {
+        const src = typeof d.source === 'object' ? (d.source as GraphNode).id : d.source as string;
+        const tgt = typeof d.target === 'object' ? (d.target as GraphNode).id : d.target as string;
+        return src === focusedNodeId || tgt === focusedNodeId ? 0.8 : 0.04;
+      });
+  }, [focusedNodeId, filteredEdges]);
+
   return (
-    <svg ref={svgRef} className="w-full h-full bg-gray-50 dark:bg-[#030712]" onClick={handleCanvasClick} />
+    <div className="relative w-full h-full">
+      <svg ref={svgRef} className="w-full h-full bg-gray-50 dark:bg-[#030712]" onClick={handleCanvasClick} />
+      <GraphBottomBar
+        onFitView={fitView}
+        view={view}
+        onChangeView={onChangeView}
+        nodes={graphNodes}
+        onFocusNode={(id) => {
+          setFocusedNodeId(id);
+          if (!svgRef.current || !zoomRef.current) return;
+          const node = graphNodesRef.current.find(n => n.id === id);
+          if (!node || node.x == null || node.y == null) return;
+          const w = svgRef.current.clientWidth;
+          const h = svgRef.current.clientHeight;
+          d3.select(svgRef.current)
+            .transition().duration(500)
+            .call(
+              zoomRef.current.transform,
+              d3.zoomIdentity
+                .translate(w / 2 - (node.x ?? 0), h / 2 - (node.y ?? 0))
+            );
+        }}
+      />
+    </div>
   );
 }
