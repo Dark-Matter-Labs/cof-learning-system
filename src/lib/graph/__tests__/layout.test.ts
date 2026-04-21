@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeGoalCentroids, buildClusterForce, CARD_WIDTH, CARD_HEIGHT, COMMIT_SIZE } from '../layout';
+import { computeGoalCentroids, buildClusterForce, CARD_WIDTH, CARD_HEIGHT, COMMIT_SIZE, CLUSTER_FORCE_STRENGTH } from '../layout';
 import type { GraphNode } from '../layout';
 
 function makeNode(id: string, node_type: string): GraphNode & { vx: number; vy: number; x: number; y: number } {
@@ -78,5 +78,23 @@ describe('buildClusterForce', () => {
 
     expect(n1.vx).toBe(0);
     expect(n1.vy).toBe(0);
+  });
+
+  it('applies TYPE_OFFSETS for node type (hunch pulls left/up from centroid)', () => {
+    const nodeGoalMap = new Map([['n1', 'gs1']]);
+    const goalCentroids = new Map([['gs1', { x: 400, y: 300 }]]);
+    const force = buildClusterForce(nodeGoalMap, goalCentroids);
+
+    const n1 = makeNode('n1', 'hunch');
+    // Place node exactly at centroid — without offset, vx/vy would be 0
+    n1.x = 400; n1.y = 300; n1.vx = 0; n1.vy = 0;
+
+    (force as typeof force & { initialize: (nodes: GraphNode[]) => void }).initialize([n1]);
+    force(1);
+
+    // hunch TYPE_OFFSET is { dx: -55, dy: -35 }, so target = (345, 265)
+    // node is at (400, 300) → should pull left (vx < 0) and up (vy < 0)
+    expect(n1.vx).toBeLessThan(0);
+    expect(n1.vy).toBeLessThan(0);
   });
 });

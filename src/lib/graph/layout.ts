@@ -79,6 +79,9 @@ export const FORCE_CONFIG = {
   centerStrength: 0.03,
 } as const;
 
+/** Cluster force strength — low enough to keep the organic feel while grouping nodes. */
+export const CLUSTER_FORCE_STRENGTH = 0.08;
+
 // ─── Cluster force ────────────────────────────────────────────────────────────
 
 const TYPE_OFFSETS: Record<string, { dx: number; dy: number }> = {
@@ -134,8 +137,8 @@ export function buildClusterForce(
       if (!c) continue;
       const off = TYPE_OFFSETS[n.node_type] ?? { dx: 0, dy: 0 };
       const mut = n as GraphNode & { vx: number; vy: number; x: number; y: number };
-      mut.vx += (c.x + off.dx - (mut.x ?? 0)) * alpha * 0.08;
-      mut.vy += (c.y + off.dy - (mut.y ?? 0)) * alpha * 0.08;
+      mut.vx += (c.x + off.dx - (mut.x ?? 0)) * alpha * CLUSTER_FORCE_STRENGTH;
+      mut.vy += (c.y + off.dy - (mut.y ?? 0)) * alpha * CLUSTER_FORCE_STRENGTH;
     }
   }
 
