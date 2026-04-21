@@ -1,6 +1,6 @@
 'use client';
 
-export type GraphView = 'force' | 'tree' | 'timeline' | 'workflow';
+export type GraphView = 'force' | 'tree' | 'timeline' | 'workflow' | 'flow';
 
 interface NodeTypeOption {
   readonly id: string;

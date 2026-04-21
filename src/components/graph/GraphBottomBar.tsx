@@ -14,6 +14,7 @@ interface GraphBottomBarProps {
 
 const VIEWS: { id: GraphView; label: string }[] = [
   { id: 'force',    label: 'Force' },
+  { id: 'flow',     label: 'Flow' },
   { id: 'timeline', label: 'Timeline' },
   { id: 'tree',     label: 'Tree' },
   { id: 'workflow', label: 'Workflow' },

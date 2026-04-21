@@ -121,6 +121,48 @@ function getTimelineDate(node: Node): number {
   return new Date(dateStr).getTime();
 }
 
+const FLOW_COLUMNS: Record<string, number> = {
+  hunch: 0,
+  assumption_background: 1,
+  assumption_foreground: 1,
+  signal: 1,
+  test: 2,
+  learning: 2,
+  commitment: 3,
+  goal_space: 3,
+};
+
+/** Flow: left-to-right by type — hunches → assumptions/signals → learnings/tests → commitments. */
+function computeFlowLayout(
+  gNodes: GraphNode[],
+  width: number,
+  height: number,
+): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>();
+  if (gNodes.length === 0) return positions;
+
+  const byCol = new Map<number, GraphNode[]>([[0, []], [1, []], [2, []], [3, []]]);
+  for (const n of gNodes) {
+    const col = FLOW_COLUMNS[n.node_type] ?? 1;
+    byCol.get(col)!.push(n);
+  }
+
+  const PAD_X = CARD_WIDTH / 2 + 40;
+  const PAD_Y = CARD_HEIGHT / 2 + 30;
+  const colXs = [PAD_X, width * 0.35, width * 0.65, width - PAD_X];
+
+  for (const [col, nodes] of byCol) {
+    if (nodes.length === 0) continue;
+    const x = colXs[col];
+    const rowH = Math.max((height - PAD_Y * 2) / nodes.length, CARD_HEIGHT + 24);
+    nodes.forEach((n, i) => {
+      positions.set(n.id, { x, y: PAD_Y + i * rowH + rowH / 2 });
+    });
+  }
+
+  return positions;
+}
+
 /** Timeline: x = insight_date (falling back to created_at), y = node type row. */
 function computeTimelineLayout(
   gNodes: GraphNode[],
@@ -266,13 +308,20 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const graphNodesRef = useRef<GraphNode[]>([]);
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+const [tooltip, setTooltip] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
+const setTooltipRef = useRef(setTooltip);
 
-  const filteredNodes = nodes.filter(n => activeTypes.includes(n.node_type));
-  const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
-  const filteredEdges = edges.filter(e => filteredNodeIds.has(e.source_id) && filteredNodeIds.has(e.target_id));
+  const filteredNodes = useMemo(
+    () => nodes.filter(n => activeTypes.includes(n.node_type)),
+    [nodes, activeTypes],
+  );
+  const filteredEdges = useMemo(() => {
+    const ids = new Set(filteredNodes.map(n => n.id));
+    return edges.filter(e => ids.has(e.source_id) && ids.has(e.target_id));
+  }, [edges, filteredNodes]);
 
-  const graphNodes = filteredNodes.map(toGraphNode);
-  const graphLinks = filteredEdges.map(toGraphLink);
+  const graphNodes = useMemo(() => filteredNodes.map(toGraphNode), [filteredNodes]);
+  const graphLinks = useMemo(() => filteredEdges.map(toGraphLink), [filteredEdges]);
 
   const nodeGoalMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -415,11 +464,13 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
       .on('click', (ev, d) => {
         ev.stopPropagation();
         setFocusedNodeId(prev => prev === d.id ? null : d.id);
-        if (d.data.node_type === 'commitment' && onSelectCommitment) {
-          onSelectCommitment(d.data.id);
-        } else {
-          onSelectNode(d.data);
-        }
+        onSelectNode(d.data);
+      })
+      .on('mouseover', (ev: MouseEvent, d) => {
+        setTooltipRef.current({ node: d, x: ev.clientX, y: ev.clientY });
+      })
+      .on('mouseout', () => {
+        setTooltipRef.current(null);
       })
       .call(view === 'force' ? drag : d3.drag<SVGGElement, GraphNode>());
 
@@ -544,6 +595,8 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
       applyStaticPositions(computeTimelineLayout(graphNodes, width, height));
     } else if (view === 'workflow') {
       applyStaticPositions(computeWorkflowLayout(graphNodes, graphLinks, width, height));
+    } else if (view === 'flow') {
+      applyStaticPositions(computeFlowLayout(graphNodes, width, height));
     }
 
     return () => {};
@@ -608,7 +661,7 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
   }, [focusedNodeId, filteredEdges]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="absolute inset-0">
       <svg ref={svgRef} className="w-full h-full bg-gray-50 dark:bg-[#030712]" onClick={handleCanvasClick} />
       <GraphBottomBar
         onFitView={fitView}
@@ -631,6 +684,20 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
             );
         }}
       />
+      {tooltip && (
+        <div
+          className="fixed z-50 pointer-events-none max-w-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl px-3 py-2"
+          style={{ left: tooltip.x + 14, top: tooltip.y - 8 }}
+        >
+          <p className="text-xs font-semibold text-white leading-snug mb-1">{tooltip.node.title}</p>
+          {tooltip.node.data.description && (
+            <p className="text-xs text-gray-400 leading-snug">{tooltip.node.data.description}</p>
+          )}
+          <p className="text-[10px] text-gray-600 mt-1 uppercase tracking-wide">
+            {tooltip.node.node_type.replace(/_/g, ' ')}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

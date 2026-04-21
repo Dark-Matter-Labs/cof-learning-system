@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
 import { GraphCanvas } from './GraphCanvas';
 import { GraphTopBar, type GraphView } from './GraphTopBar';
 import { DashboardSidebar } from './DashboardSidebar';
-import { InlineCaptureCard } from './InlineCaptureCard';
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { GoalSpacePanel } from './GoalSpacePanel';
 import { ProcessFlow } from '@/components/process/ProcessFlow';
@@ -32,13 +30,10 @@ const NODE_TYPE_OPTIONS = [
 const ALL_TYPE_IDS = NODE_TYPE_OPTIONS.map(t => t.id);
 
 export function GraphOSSurface() {
-  const router = useRouter();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [activeTypes, setActiveTypes] = useState<string[]>([...ALL_TYPE_IDS]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [capturePos, setCapturePos] = useState<{ x: number; y: number } | null>(null);
-  const [captureDefaultType, setCaptureDefaultType] = useState('hunch');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [processFlowNode, setProcessFlowNode] = useState<Node | null>(null);
   const [currentView, setCurrentView] = useState<GraphView>('force');
@@ -87,38 +82,19 @@ export function GraphOSSurface() {
     };
   }, []);
 
-  const handleCanvasClick = useCallback(
-    (screenX: number, screenY: number, _canvasX: number, _canvasY: number) => {
-      setSelectedNode(null);
-      setCaptureDefaultType('hunch');
-      setCapturePos({ x: screenX, y: screenY });
-    },
-    []
-  );
-
   const handleToggleType = useCallback((type: string) => {
     setActiveTypes(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
     );
   }, []);
 
-  const handleNodeCreated = useCallback((_nodeId: string) => {
-    setCapturePos(null);
-  }, []);
-
   const handleSelectNode = useCallback((node: Node | null) => {
     setSelectedNode(node);
-    setCapturePos(null);
   }, []);
 
   const handleProcessThis = useCallback((node: Node) => {
     setProcessFlowNode(node);
   }, []);
-
-  const handleSelectCommitment = useCallback(
-    (id: string) => router.push(`/commitments?id=${id}`),
-    [router]
-  );
 
   const goalSpaces = nodes.filter(n => n.node_type === 'goal_space');
   const triggerOutcomes = nodes.filter(n => n.node_type === 'trigger_outcome');
@@ -151,15 +127,13 @@ export function GraphOSSurface() {
   }
 
   return (
-    <div className="w-full h-screen relative overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div className="w-full h-full relative bg-gray-50 dark:bg-gray-950">
       <GraphCanvas
         nodes={nodes}
         edges={edges}
         activeTypes={activeTypes}
         view={currentView}
         onSelectNode={handleSelectNode}
-        onCanvasClick={handleCanvasClick}
-        onSelectCommitment={handleSelectCommitment}
         onChangeView={setCurrentView}
       />
 
@@ -174,17 +148,6 @@ export function GraphOSSurface() {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(prev => !prev)}
       />
-
-      {capturePos !== null && (
-        <InlineCaptureCard
-          position={capturePos}
-          defaultNodeType={captureDefaultType}
-          onClose={() => setCapturePos(null)}
-          onCreated={handleNodeCreated}
-          goalSpaces={goalSpaces}
-          triggerOutcomes={triggerOutcomes}
-        />
-      )}
 
       {selectedNode !== null && selectedNode.node_type === 'goal_space' && (
         <GoalSpacePanel
