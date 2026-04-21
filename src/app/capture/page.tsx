@@ -60,7 +60,7 @@ export default function CapturePage() {
 
       await fetchNodes();
     } catch (error) {
-      console.error('Capture failed:', error);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
