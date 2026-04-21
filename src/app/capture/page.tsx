@@ -113,7 +113,7 @@ export default function CapturePage() {
         </button>
       </div>
 
-      <QuickCaptureForm onSubmit={handleSubmit} isSubmitting={isSubmitting} entryMode={entryMode} />
+      <QuickCaptureForm key={entryMode ?? 'none'} onSubmit={handleSubmit} isSubmitting={isSubmitting} entryMode={entryMode} />
 
       <div className="mt-10">
         <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">Recent Captures</h2>

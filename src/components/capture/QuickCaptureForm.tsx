@@ -18,7 +18,7 @@ export interface CaptureFormData {
 export type EntryMode = 'thought' | 'call' | 'file' | null;
 
 interface QuickCaptureFormProps {
-  readonly onSubmit: (data: CaptureFormData) => void;
+  readonly onSubmit: (data: CaptureFormData) => Promise<void> | void;
   readonly isSubmitting?: boolean;
   readonly entryMode?: EntryMode;
 }
@@ -66,16 +66,20 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
         }
         const attachment = await res.json() as Attachment;
         setIsUploading(false);
-        onSubmit({
-          title: '',
-          description: '',
-          date: date || undefined,
-          participant_ids: selectedPeople.length > 0 ? selectedPeople.map(p => p.id) : undefined,
-          attachment,
-        });
-        setSelectedFile(null);
-        setDate(new Date().toISOString().slice(0, 10));
-        setSelectedPeople([]);
+        try {
+          await onSubmit({
+            title: '',
+            description: '',
+            date: date || undefined,
+            participant_ids: selectedPeople.length > 0 ? selectedPeople.map(p => p.id) : undefined,
+            attachment,
+          });
+          setSelectedFile(null);
+          setDate(new Date().toISOString().slice(0, 10));
+          setSelectedPeople([]);
+        } catch (captureErr) {
+          setUploadError(captureErr instanceof Error ? captureErr.message : 'Capture failed — try again');
+        }
       } catch (err) {
         setIsUploading(false);
         setUploadError(err instanceof Error ? err.message : 'Upload failed — try again');
