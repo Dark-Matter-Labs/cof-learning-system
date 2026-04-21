@@ -42,13 +42,14 @@ export default function CapturePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: formData.title,
+          title: formData.title || undefined,
           description: formData.description,
           insight_date: formData.date ? new Date(formData.date + 'T00:00:00').toISOString() : undefined,
           participant_ids: formData.participant_ids,
           external_link: formData.external_link_url
             ? { url: formData.external_link_url, label: formData.external_link_label ?? formData.external_link_url }
             : undefined,
+          attachment: formData.attachment,
         }),
       });
 
@@ -98,10 +99,18 @@ export default function CapturePage() {
           <div className="text-xs text-gray-500 dark:text-gray-400">Transcript or meeting notes</div>
         </button>
 
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left opacity-50 cursor-not-allowed">
+        <button
+          type="button"
+          onClick={() => setEntryMode(entryMode === 'file' ? null : 'file')}
+          className={`rounded-xl border p-4 text-left transition-colors ${
+            entryMode === 'file'
+              ? 'border-node-hunch bg-node-hunch/10 dark:bg-node-hunch/10'
+              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          }`}
+        >
           <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Upload a file</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Coming soon</div>
-        </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">PDF · DOCX · TXT</div>
+        </button>
       </div>
 
       <QuickCaptureForm onSubmit={handleSubmit} isSubmitting={isSubmitting} entryMode={entryMode} />
