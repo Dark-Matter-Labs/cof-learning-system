@@ -52,6 +52,7 @@ export function GraphBottomBar({ onFitView, view, onChangeView, nodes, onFocusNo
         <input
           type="text"
           placeholder="Find node..."
+          aria-label="Find node"
           onChange={handleSearch}
           className="w-36 pl-6 pr-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-indigo-400"
         />
@@ -65,6 +66,7 @@ export function GraphBottomBar({ onFitView, view, onChangeView, nodes, onFocusNo
             key={id}
             type="button"
             onClick={() => onChangeView(id)}
+            aria-pressed={view === id}
             className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${
               view === id
                 ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'

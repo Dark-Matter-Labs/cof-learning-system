@@ -3,9 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { GraphBottomBar } from '../GraphBottomBar';
 import type { GraphView } from '../GraphTopBar';
+import type { GraphNode } from '@/lib/graph/layout';
 
 const makeNode = (id: string, title: string) => ({
-  id, title, node_type: 'hunch', color: '#fff', radius: 14, data: {} as never,
+  id, title, node_type: 'hunch', color: '#fff', radius: 14, data: {} as unknown as GraphNode['data'],
 });
 
 describe('GraphBottomBar', () => {
@@ -103,6 +104,9 @@ describe('GraphBottomBar', () => {
       />
     );
     const timelineBtn = screen.getByRole('button', { name: 'Timeline' });
-    expect(timelineBtn.className).toContain('bg-gray-200');
+    expect(timelineBtn).toHaveAttribute('aria-pressed', 'true');
+    // Also check that a non-active button does NOT have aria-pressed=true
+    const forceBtn = screen.getByRole('button', { name: 'Force' });
+    expect(forceBtn).toHaveAttribute('aria-pressed', 'false');
   });
 });
