@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import type { GraphNode } from '@/lib/graph/layout';
 import type { GraphView } from './GraphTopBar';
 
@@ -19,11 +20,16 @@ const VIEWS: { id: GraphView; label: string }[] = [
 ];
 
 export function GraphBottomBar({ onFitView, view, onChangeView, nodes, onFocusNode }: GraphBottomBarProps) {
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const q = e.target.value.toLowerCase();
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
     if (!q) return;
-    const match = nodes.find(n => n.title.toLowerCase().includes(q));
-    if (match) onFocusNode(match.id);
+    debounceTimer.current = setTimeout(() => {
+      const match = nodes.find(n => n.title.toLowerCase().includes(q));
+      if (match) onFocusNode(match.id);
+    }, 250);
   }
 
   return (

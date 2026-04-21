@@ -552,6 +552,8 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
   // Highlight effect (independent of layout)
   useEffect(() => {
     if (!svgRef.current) return;
+    // Focus mode takes priority — don't touch opacities when a node is focused
+    if (focusedNodeId) return;
     const svg = d3.select(svgRef.current);
     const { nodeIds, edgeIds, isTension } = getHighlightedIds(highlight ?? { type: 'none' });
 
@@ -575,7 +577,7 @@ export function GraphCanvas({ nodes, edges, activeTypes, view, onSelectNode, onS
         el.attr('stroke', EDGE_COLORS[d.edge_type] ?? '#444').attr('stroke-opacity', 0.15).attr('stroke-width', 1).attr('marker-end', `url(#arrow-${d.edge_type})`);
       }
     });
-  }, [highlight]);
+  }, [highlight, focusedNodeId]);
 
   // Focus mode effect
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { GraphBottomBar } from '../GraphBottomBar';
@@ -10,6 +10,9 @@ const makeNode = (id: string, title: string) => ({
 });
 
 describe('GraphBottomBar', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   it('renders Fit view button', () => {
     render(
       <GraphBottomBar
@@ -52,6 +55,7 @@ describe('GraphBottomBar', () => {
       />
     );
     fireEvent.change(screen.getByPlaceholderText(/find node/i), { target: { value: 'pricing' } });
+    vi.runAllTimers();
     expect(onFocusNode).toHaveBeenCalledWith('abc');
   });
 
@@ -64,6 +68,7 @@ describe('GraphBottomBar', () => {
       />
     );
     fireEvent.change(screen.getByPlaceholderText(/find node/i), { target: { value: 'zzz' } });
+    vi.runAllTimers();
     expect(onFocusNode).not.toHaveBeenCalled();
   });
 
@@ -78,8 +83,10 @@ describe('GraphBottomBar', () => {
     );
     const input = screen.getByPlaceholderText(/find node/i);
     fireEvent.change(input, { target: { value: 'pricing' } });
+    vi.runAllTimers();
     expect(onFocusNode).toHaveBeenCalledOnce();
     fireEvent.change(input, { target: { value: '' } });
+    vi.runAllTimers();
     // clearing the input must not trigger a second call
     expect(onFocusNode).toHaveBeenCalledOnce();
   });
