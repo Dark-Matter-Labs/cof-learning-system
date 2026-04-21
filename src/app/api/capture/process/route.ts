@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { runExtraction, runMeetingExtraction, type GoalContext } from '@/lib/agents/extraction';
+import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
 import type { MeetingExtraction } from '@/lib/types/nodes';
 import { NextResponse } from 'next/server';
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
     ] = await Promise.all([
       supabase
         .from('nodes')
-        .select('title, description, node_type, content')
+        .select('title, description, node_type, content, attachments')
         .eq('id', node_id)
         .single(),
       supabase
@@ -132,7 +134,32 @@ export async function POST(request: Request) {
       });
     } else {
       // Single-node extraction path
-      const extraction = await runExtraction(node.title, node.description ?? '', goalContext);
+
+      // Read file attachment content if present
+      let attachmentContent: AttachmentContent | undefined;
+      const attachments = (node as unknown as { attachments?: Array<{ storage_path: string; mime_type: string }> }).attachments ?? [];
+
+      if (attachments.length > 0) {
+        const attachment = attachments[0];
+        const adminClient = createAdminClient();
+        const { data: fileData } = await adminClient.storage.from('attachments').download(attachment.storage_path);
+
+        if (fileData) {
+          const arrayBuffer = await fileData.arrayBuffer();
+
+          if (attachment.mime_type === 'text/plain') {
+            attachmentContent = { type: 'text', textContent: new TextDecoder().decode(arrayBuffer) };
+          } else if (attachment.mime_type === 'application/pdf') {
+            attachmentContent = { type: 'pdf', base64: Buffer.from(arrayBuffer).toString('base64') };
+          } else if (attachment.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            const mammoth = await import('mammoth');
+            const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
+            attachmentContent = { type: 'text', textContent: result.value };
+          }
+        }
+      }
+
+      const extraction = await runExtraction(node.title, node.description ?? '', goalContext, attachmentContent);
 
       // Determine node_type and confidence from extraction
       const classifiedNodeType = extraction.node_type ?? node.node_type;
@@ -143,10 +170,13 @@ export async function POST(request: Request) {
       const maturity = extraction.maturity;
       const newStatus = maturity === 'ready_to_promote' ? 'promoted' : 'flagged_for_review';
 
+      const titleUpdate = node.title === '' ? { title: extraction.title } : {};
+
       // Update node with extraction results, classified type, and new status
       await supabase
         .from('nodes')
         .update({
+          ...titleUpdate,
           llm_extraction: extraction,
           status: newStatus,
           node_type: classifiedNodeType,

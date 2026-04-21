@@ -10,6 +10,7 @@ export interface LLMRequest {
   readonly userMessage: string;
   readonly maxTokens?: number;
   readonly temperature?: number;
+  readonly pdfBase64?: string;
 }
 
 export interface LLMResponse {
