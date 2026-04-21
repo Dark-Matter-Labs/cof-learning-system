@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'File extension does not match file type' }, { status: 400 });
   }
 
-  const safeFilename = file.name.replace(/[/\\]/g, '_');
+  const safeFilename = file.name.replace(/[/\\]/g, '_').replace(/[\x00-\x1f\x7f]/g, '');
 
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: 'File must be under 10MB' }, { status: 400 });
