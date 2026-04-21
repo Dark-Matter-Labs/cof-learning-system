@@ -70,6 +70,7 @@ export interface MeetingExtraction {
 export interface HumanReview {
   readonly reviewed_at: string;
   readonly reviewer_id: string;
+  readonly note?: string;
   readonly fields: Readonly<Record<string, {
     readonly action: 'accepted' | 'rejected' | 'edited';
     readonly original: unknown;
