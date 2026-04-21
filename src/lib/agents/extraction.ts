@@ -38,6 +38,12 @@ export interface GoalContext {
   readonly personNodes: ReadonlyArray<{ readonly id: string; readonly title: string }>;
 }
 
+export interface AttachmentContent {
+  readonly type: 'text' | 'pdf';
+  readonly textContent?: string;
+  readonly base64?: string;
+}
+
 const SYSTEM_PROMPT = `You are an extraction system for the Civilization Options Fund (COF), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
 
 Given input text (which may be a rough note, call transcript, document excerpt, or transcribed audio), extract the following and return ONLY valid JSON with no other text:
@@ -95,8 +101,21 @@ Rules for goal_relevance and expected_signals (only present when goal context is
 
 Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
 
-export function buildExtractionPrompt(title: string, description: string, goalContext?: GoalContext): string {
-  const base = `Title: ${title}\n\nDescription: ${description}`;
+export function buildExtractionPrompt(
+  title: string,
+  description: string,
+  goalContext?: GoalContext,
+  textFileContent?: string,
+): string {
+  let base: string;
+  if (textFileContent) {
+    const docBlock = `<document>\n${textFileContent}\n</document>`;
+    base = title
+      ? `Title hint: ${title}\n\nGenerate a concise title for this document based on its content.\n\n${docBlock}`
+      : `Generate a concise title for this document based on its content.\n\n${docBlock}`;
+  } else {
+    base = `Title: ${title}\n\nDescription: ${description}`;
+  }
 
   if (!goalContext) {
     return base;
@@ -161,12 +180,22 @@ export function parseExtractionResponse(content: string): LlmExtraction {
   return parsed as LlmExtraction;
 }
 
-export async function runExtraction(title: string, description: string, goalContext?: GoalContext): Promise<LlmExtraction> {
+export async function runExtraction(
+  title: string,
+  description: string,
+  goalContext?: GoalContext,
+  attachmentContent?: AttachmentContent,
+): Promise<LlmExtraction> {
+  const promptText = attachmentContent?.type === 'text' && attachmentContent.textContent
+    ? buildExtractionPrompt(title, '', goalContext, attachmentContent.textContent)
+    : buildExtractionPrompt(title, description, goalContext);
+
   const response = await callLLM('extraction', {
     systemPrompt: SYSTEM_PROMPT,
-    userMessage: buildExtractionPrompt(title, description, goalContext),
+    userMessage: promptText,
     maxTokens: 2048,
     temperature: 0.3,
+    pdfBase64: attachmentContent?.type === 'pdf' ? attachmentContent.base64 : undefined,
   });
 
   return parseExtractionResponse(response.content);
