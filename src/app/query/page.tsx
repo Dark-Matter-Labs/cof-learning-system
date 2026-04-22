@@ -8,10 +8,14 @@ export default async function QueryPage() {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) redirect('/login');
 
-  const { data: nodesData } = await supabase
+  const { data: nodesData, error: nodesError } = await supabase
     .from('nodes')
     .select('id, node_type, title, description, status')
     .neq('status', 'archived');
+
+  if (nodesError) {
+    console.error('[QueryPage] Failed to fetch nodes:', nodesError.message);
+  }
 
   const nodes = (nodesData ?? []) as Pick<Node, 'id' | 'node_type' | 'title' | 'description' | 'status'>[];
 
