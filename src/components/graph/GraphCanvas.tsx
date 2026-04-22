@@ -8,7 +8,7 @@ import type { HighlightState } from '@/lib/types/highlight';
 import type { GraphView } from './GraphTopBar';
 import {
   toGraphNode, toGraphLink, FORCE_CONFIG,
-  CARD_WIDTH, CARD_HEIGHT, COMMIT_SIZE,
+  CARD_WIDTH, CARD_HEIGHT,
   type GraphNode, type GraphLink,
   computeGoalCentroids, buildClusterForce,
 } from '@/lib/graph/layout';
@@ -474,46 +474,30 @@ const setTooltipRef = useRef(setTooltip);
       })
       .call(view === 'force' ? drag : d3.drag<SVGGElement, GraphNode>());
 
-    // Standard card background — non-commitment nodes only
-    cardG.filter(d => d.data.node_type !== 'commitment')
-      .append('rect').attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
+    // Standard card background — all nodes
+    cardG.append('rect').attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
       .attr('rx', 8).attr('fill', NODE_CARD_BG).attr('stroke', NODE_CARD_BORDER).attr('stroke-width', 1);
 
-    // Left colour strip — non-commitment nodes only
-    cardG.filter(d => d.data.node_type !== 'commitment')
-      .append('rect').attr('width', 3).attr('height', CARD_HEIGHT).attr('rx', 2).attr('fill', d => d.color);
+    // Left colour strip — all nodes
+    cardG.append('rect').attr('width', 3).attr('height', CARD_HEIGHT).attr('rx', 2).attr('fill', d => d.color);
 
-    // Node type label — non-commitment nodes only
-    cardG.filter(d => d.data.node_type !== 'commitment')
-      .append('text').text(d => d.data.node_type.replace(/_/g, ' '))
+    // Node type label — all nodes
+    cardG.append('text').text(d => d.data.node_type.replace(/_/g, ' '))
       .attr('x', 12).attr('y', 20).attr('font-size', 9).attr('fill', d => d.color)
       .attr('font-weight', '600').attr('letter-spacing', '0.05em');
 
-    // Title — non-commitment nodes only
-    cardG.filter(d => d.data.node_type !== 'commitment')
-      .append('text').text(d => truncate(d.title, 28))
+    // Title — all nodes
+    cardG.append('text').text(d => truncate(d.title, 28))
       .attr('x', 12).attr('y', 38).attr('font-size', 11).attr('fill', NODE_TITLE_FILL).attr('font-weight', '500');
 
-    // Confidence dots — non-commitment nodes only
-    cardG.filter(d => d.data.node_type !== 'commitment').each(function(d) {
+    // Confidence dots — all nodes
+    cardG.each(function(d) {
       const level = d.data.confidence_level ?? 0;
       for (let i = 0; i < 5; i++) {
         d3.select(this).append('circle').attr('cx', 12 + i * 10).attr('cy', 60).attr('r', 3)
           .attr('fill', i < level ? d.color : NODE_DOTS_EMPTY);
       }
     });
-
-    // Commitment square background
-    cardG.filter(d => d.data.node_type === 'commitment')
-      .append('rect').attr('width', COMMIT_SIZE).attr('height', COMMIT_SIZE)
-      .attr('rx', 0).attr('fill', d => d.color);
-
-    // Commitment title — white, centred
-    cardG.filter(d => d.data.node_type === 'commitment')
-      .append('text').text(d => truncate(d.title, 14))
-      .attr('x', COMMIT_SIZE / 2).attr('y', COMMIT_SIZE / 2 - 4)
-      .attr('font-size', 10).attr('fill', 'white').attr('font-weight', '500')
-      .attr('text-anchor', 'middle');
 
     // Dual-model indicators
     cardG.each(function(d) {
@@ -548,8 +532,7 @@ const setTooltipRef = useRef(setTooltip);
         const p = posMap.get(d.id) ?? { x: 0, y: 0 };
         // Store for edge rendering
         d.x = p.x; d.y = p.y;
-        const isCommit = d.data.node_type === 'commitment';
-        return `translate(${p.x - (isCommit ? COMMIT_SIZE : CARD_WIDTH) / 2}, ${p.y - (isCommit ? COMMIT_SIZE : CARD_HEIGHT) / 2})`;
+        return `translate(${p.x - CARD_WIDTH / 2}, ${p.y - CARD_HEIGHT / 2})`;
       });
       link.attr('d', d => {
         const sx = (d.source as GraphNode).x ?? 0;
@@ -574,10 +557,7 @@ const setTooltipRef = useRef(setTooltip);
         .on('tick', () => {
           graphNodesRef.current = simulation.nodes() as unknown as GraphNode[];
           cardG.attr('transform', d => {
-            const isCommit = d.data.node_type === 'commitment';
-            const w = isCommit ? COMMIT_SIZE : CARD_WIDTH;
-            const h = isCommit ? COMMIT_SIZE : CARD_HEIGHT;
-            return `translate(${(d.x ?? 0) - w / 2}, ${(d.y ?? 0) - h / 2})`;
+            return `translate(${(d.x ?? 0) - CARD_WIDTH / 2}, ${(d.y ?? 0) - CARD_HEIGHT / 2})`;
           });
           link.attr('d', d => {
             const sx = (d.source as GraphNode).x ?? 0; const sy = (d.source as GraphNode).y ?? 0;
