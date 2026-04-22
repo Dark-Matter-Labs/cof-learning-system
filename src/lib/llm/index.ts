@@ -19,7 +19,7 @@ export interface LLMResponse {
   readonly usage?: { readonly input_tokens: number; readonly output_tokens: number };
 }
 
-type AgentName = 'extraction' | 'review' | 'create' | 'reflection' | 'process';
+type AgentName = 'extraction' | 'review' | 'create' | 'reflection' | 'process' | 'setup';
 
 function getAgentConfig(agent: AgentName): LLMConfig {
   const prefix = agent.toUpperCase();
