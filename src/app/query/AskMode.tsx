@@ -97,10 +97,13 @@ export function AskMode({ allNodes }: AskModeProps) {
   }
 
   // Group nodes by type
-  const nodesByType = referencedNodes.reduce<Record<string, typeof referencedNodes>>((acc, n) => {
-    const key = n.node_type.replace(/_/g, ' ');
-    return { ...acc, [key]: [...(acc[key] ?? []), n] };
-  }, {});
+  const nodesByType = useMemo(
+    () => referencedNodes.reduce<Record<string, typeof referencedNodes>>((acc, n) => {
+      const key = n.node_type.replace(/_/g, ' ');
+      return { ...acc, [key]: [...(acc[key] ?? []), n] };
+    }, {}),
+    [referencedNodes]
+  );
 
   return (
     <div className="flex gap-4 h-[calc(100vh-160px)]">
