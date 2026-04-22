@@ -1,12 +1,22 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { buildQuerySystemPrompt, serializeNodesForQuery } from '@/lib/agents/query';
 import type { QuerySerializedNode } from '@/lib/agents/query';
 
-interface QueryBody {
-  query: string;
-  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
-}
+const QueryBodySchema = z.object({
+  query: z.string().trim().min(1, 'Query is required').max(2000),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().max(2000),
+      })
+    )
+    .max(20)
+    .optional()
+    .default([]),
+});
 
 interface EdgeRow {
   source_id: string;
@@ -20,18 +30,18 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: QueryBody;
+  let body: z.infer<typeof QueryBodySchema>;
   try {
-    body = await request.json() as QueryBody;
+    const raw = await request.json();
+    const parsed = QueryBodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return Response.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
-  const { query, history: rawHistory = [] } = body;
-  const history = rawHistory.slice(-20); // cap at 20 exchanges
-
-  if (!query || typeof query !== 'string' || query.trim().length === 0) {
-    return Response.json({ error: 'Query is required' }, { status: 400 });
-  }
+  const { query, history } = body;
 
   const { data: profile } = await supabase
     .from('profiles')
