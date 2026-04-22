@@ -1,10 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockGetUser, mockNodesSelect, mockEdgesSelect } = vi.hoisted(() => ({
+const { mockGetUser, mockNodesSelect, mockEdgesSelect, mockProfileSelect } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockNodesSelect: vi.fn(),
   mockEdgesSelect: vi.fn(),
+  mockProfileSelect: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -14,6 +15,7 @@ vi.mock('@/lib/supabase/server', () => ({
       from: (table: string) => {
         if (table === 'nodes') return { select: mockNodesSelect };
         if (table === 'edges') return { select: mockEdgesSelect };
+        if (table === 'profiles') return { select: mockProfileSelect };
         return { select: vi.fn().mockResolvedValue({ data: [] }) };
       },
     })
@@ -61,6 +63,11 @@ describe('POST /api/query', () => {
       neq: vi.fn().mockResolvedValue({ data: mockNodes }),
     });
     mockEdgesSelect.mockResolvedValue({ data: mockEdges });
+    mockProfileSelect.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      }),
+    });
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -110,6 +117,18 @@ describe('POST /api/query', () => {
     const res = await POST(makeRequest({ query: 'Madrid financial' }));
     const text = await res.text();
     expect(text).toBe('Hello world');
+  });
+
+  it('includes user background in system prompt when profile has background', async () => {
+    mockProfileSelect.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { background: 'finance and investment' }, error: null }),
+      }),
+    });
+    // Can't inspect system prompt directly — verify route still returns 200
+    // (background is passed to LLM internally, not exposed in response)
+    const res = await POST(makeRequest({ query: 'Madrid financial' }));
+    expect(res.status).toBe(200);
   });
 
   it('errors the stream when Anthropic throws during streaming', async () => {

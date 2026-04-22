@@ -33,6 +33,14 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Query is required' }, { status: 400 });
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('background')
+    .eq('id', user.id)
+    .single();
+
+  const userBackground = profile?.background ?? undefined;
+
   const [{ data: nodesData }, { data: edgesData }] = await Promise.all([
     supabase.from('nodes').select('id, node_type, title, description, status').neq('status', 'archived'),
     supabase.from('edges').select('source_id, target_id'),
@@ -62,7 +70,7 @@ export async function POST(request: Request): Promise<Response> {
   const contextNodeIds = contextNodes.map(n => n.id);
   const serialized = serializeNodesForQuery(contextNodes);
 
-  const systemPrompt = buildQuerySystemPrompt();
+  const systemPrompt = buildQuerySystemPrompt(userBackground);
   const contextMessage = serialized
     ? `Knowledge graph context:\n${serialized}\n\nAnswer the following question:`
     : 'Answer the following question (the knowledge graph is currently empty):';
