@@ -3,6 +3,14 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { processSeedChat } from '@/lib/agents/setup';
 
+const ALLOWED_SEED_NODE_TYPES = new Set([
+  'hunch',
+  'assumption_background',
+  'assumption_foreground',
+  'learning',
+  'signal',
+]);
+
 const chatSchema = z.object({
   mode: z.literal('chat'),
   message: z.string().min(1),
@@ -21,31 +29,46 @@ export async function POST(request: Request) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (body.mode === 'chat') {
+  if ((body as { mode?: string }).mode === 'chat') {
     const parsed = chatSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
-    const result = await processSeedChat(parsed.data);
+    let result: Awaited<ReturnType<typeof processSeedChat>>;
+    try {
+      result = await processSeedChat(parsed.data);
+    } catch {
+      return NextResponse.json({ error: 'Failed to process message' }, { status: 500 });
+    }
 
     if (result.extracted.length > 0) {
-      const nodes = result.extracted.map(e => ({
-        node_type: e.node_type,
-        title: e.title,
-        status: 'promoted',
-        confidence_level: 2,
-        confidence_basis: 'intuition',
-        hunch_type: 'new',
-        author_id: user.id,
-      }));
-      await supabase.from('nodes').insert(nodes);
+      const nodes = result.extracted
+        .filter(e => ALLOWED_SEED_NODE_TYPES.has(e.node_type))
+        .map(e => ({
+          node_type: e.node_type,
+          title: e.title,
+          status: 'promoted',
+          confidence_level: 2,
+          confidence_basis: 'intuition',
+          hunch_type: 'new',
+          author_id: user.id,
+        }));
+      if (nodes.length > 0) {
+        const { error: insertError } = await supabase.from('nodes').insert(nodes);
+        if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ reply: result.reply, extracted: result.extracted }, { status: 200 });
   }
 
-  if (body.mode === 'write') {
+  if ((body as { mode?: string }).mode === 'write') {
     const parsed = writeSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
