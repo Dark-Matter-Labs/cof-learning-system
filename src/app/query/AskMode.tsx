@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import { NodeCard } from './NodeCard';
 
 interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  nodeIds: string[];
+  readonly id: number;
+  readonly role: 'user' | 'assistant';
+  readonly content: string;
+  readonly nodeIds: readonly string[];
 }
 
 interface AskModeProps {
@@ -15,25 +16,32 @@ interface AskModeProps {
 }
 
 export function AskMode({ allNodes }: AskModeProps) {
+  const nextId = useRef(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const referencedNodeIds = new Set(messages.flatMap(m => m.nodeIds));
-  const referencedNodes = allNodes.filter(n => referencedNodeIds.has(n.id));
+  const referencedNodeIds = useMemo(
+    () => new Set(messages.flatMap(m => m.nodeIds)),
+    [messages]
+  );
+  const referencedNodes = useMemo(
+    () => allNodes.filter(n => referencedNodeIds.has(n.id)),
+    [allNodes, referencedNodeIds]
+  );
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const query = input.trim();
     if (!query || isStreaming) return;
 
     const history = messages.map(m => ({ role: m.role, content: m.content }));
-    setMessages(prev => [...prev, { role: 'user', content: query, nodeIds: [] }]);
+    setMessages(prev => [...prev, { id: nextId.current++, role: 'user', content: query, nodeIds: [] }]);
     setInput('');
     setIsStreaming(true);
-    setMessages(prev => [...prev, { role: 'assistant', content: '', nodeIds: [] }]);
+    setMessages(prev => [...prev, { id: nextId.current++, role: 'assistant', content: '', nodeIds: [] }]);
 
     try {
       const res = await fetch('/api/query', {
@@ -44,28 +52,39 @@ export function AskMode({ allNodes }: AskModeProps) {
 
       if (!res.ok) throw new Error('Query failed');
 
-      const contextNodeIds = JSON.parse(res.headers.get('X-Context-Nodes') ?? '[]') as string[];
+      let contextNodeIds: string[] = [];
+      try {
+        contextNodeIds = JSON.parse(res.headers.get('X-Context-Nodes') ?? '[]') as string[];
+      } catch {
+        // non-fatal: proceed without node references
+      }
+
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       if (!reader) throw new Error('No response body');
 
-      let accumulated = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-        const current = accumulated;
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: 'assistant', content: current, nodeIds: contextNodeIds };
-          return updated;
-        });
+      try {
+        let accumulated = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulated += decoder.decode(value, { stream: true });
+          const current = accumulated;
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...updated[updated.length - 1], content: current, nodeIds: contextNodeIds };
+            return updated;
+          });
+        }
+      } catch (streamErr) {
+        reader.cancel();
+        throw streamErr;
       }
     } catch {
       setMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1] = {
-          role: 'assistant',
+          ...updated[updated.length - 1],
           content: 'Something went wrong. Please try again.',
           nodeIds: [],
         };
@@ -75,7 +94,13 @@ export function AskMode({ allNodes }: AskModeProps) {
       setIsStreaming(false);
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [input, isStreaming, messages]);
+  }
+
+  // Group nodes by type
+  const nodesByType = referencedNodes.reduce<Record<string, typeof referencedNodes>>((acc, n) => {
+    const key = n.node_type.replace(/_/g, ' ');
+    return { ...acc, [key]: [...(acc[key] ?? []), n] };
+  }, {});
 
   return (
     <div className="flex gap-4 h-[calc(100vh-160px)]">
@@ -86,8 +111,8 @@ export function AskMode({ allNodes }: AskModeProps) {
               Ask anything about the knowledge graph
             </p>
           )}
-          {messages.map((msg, i) => (
-            <div key={i} className={msg.role === 'user' ? 'flex justify-end' : ''}>
+          {messages.map((msg) => (
+            <div key={msg.id} className={msg.role === 'user' ? 'flex justify-end' : ''}>
               {msg.role === 'user' ? (
                 <div className="max-w-sm bg-node-hunch/10 border border-node-hunch/20 rounded-xl px-4 py-2 text-sm text-gray-800 dark:text-gray-200">
                   {msg.content}
@@ -95,7 +120,7 @@ export function AskMode({ allNodes }: AskModeProps) {
               ) : (
                 <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                   {msg.content}
-                  {isStreaming && i === messages.length - 1 && (
+                  {isStreaming && msg.id === messages[messages.length - 1]?.id && (
                     <span className="animate-pulse">▋</span>
                   )}
                 </div>
@@ -139,8 +164,13 @@ export function AskMode({ allNodes }: AskModeProps) {
             </button>
           </div>
           <div className="space-y-2">
-            {referencedNodes.map(n => (
-              <NodeCard key={n.id} node={n} />
+            {Object.entries(nodesByType).map(([type, nodes]) => (
+              <div key={type}>
+                <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">{type}</p>
+                <div className="space-y-1">
+                  {nodes.map(n => <NodeCard key={n.id} node={n} />)}
+                </div>
+              </div>
             ))}
           </div>
         </div>

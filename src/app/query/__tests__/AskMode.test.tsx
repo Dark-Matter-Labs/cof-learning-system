@@ -99,4 +99,38 @@ describe('AskMode', () => {
       expect(input.value).toBe('');
     });
   });
+
+  it('shows error message when fetch fails', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    render(<AskMode allNodes={mockNodes} />);
+    const input = screen.getByPlaceholderText('Ask a question…');
+    fireEvent.change(input, { target: { value: 'My question' } });
+    fireEvent.submit(input.closest('form')!);
+    await waitFor(() => {
+      expect(screen.getByText('Something went wrong. Please try again.')).toBeDefined();
+    });
+  });
+
+  it('sends full history on follow-up questions', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeStreamResponse('Answer.', []));
+    global.fetch = fetchMock;
+    render(<AskMode allNodes={mockNodes} />);
+
+    // First question
+    const input = screen.getByPlaceholderText('Ask a question…');
+    fireEvent.change(input, { target: { value: 'First question' } });
+    fireEvent.submit(input.closest('form')!);
+    await waitFor(() => expect(screen.getByText('First question')).toBeDefined());
+
+    // Second question
+    fireEvent.change(input, { target: { value: 'Follow up' } });
+    fireEvent.submit(input.closest('form')!);
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      const secondCall = fetchMock.mock.calls[1][1] as { body: string };
+      const body = JSON.parse(secondCall.body) as { query: string; history: Array<{ role: string; content: string }> };
+      expect(body.history.length).toBeGreaterThan(0);
+      expect(body.query).toBe('Follow up');
+    });
+  });
 });
