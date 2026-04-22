@@ -27,6 +27,11 @@ describe('serializeNodesForQuery', () => {
   it('returns empty string for empty array', () => {
     expect(serializeNodesForQuery([])).toBe('');
   });
+
+  it('replaces newlines in title and description with spaces', () => {
+    const nodes = [{ id: 'x', node_type: 'hunch', title: 'Line one\nLine two', description: 'desc\nmore', status: 'raw' }];
+    expect(serializeNodesForQuery(nodes)).toBe('[hunch] Line one Line two: desc more (id: x)');
+  });
 });
 
 describe('buildQuerySystemPrompt', () => {

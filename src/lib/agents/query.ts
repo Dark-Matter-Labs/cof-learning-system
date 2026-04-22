@@ -21,8 +21,9 @@ const BASE_SYSTEM_PROMPT = `You are a knowledge graph assistant for a learning o
 Answer the user's question based on the graph context provided. Be specific — reference node titles directly. Keep answers to 2–4 paragraphs. Write in plain language.`;
 
 export function serializeNodesForQuery(nodes: QuerySerializedNode[]): string {
+  const clean = (s: string) => s.replace(/\n/g, ' ');
   return nodes
-    .map(n => `[${n.node_type}] ${n.title}${n.description ? `: ${n.description}` : ''} (id: ${n.id})`)
+    .map(n => `[${clean(n.node_type)}] ${clean(n.title)}${n.description ? `: ${clean(n.description)}` : ''} (id: ${n.id})`)
     .join('\n');
 }
 
