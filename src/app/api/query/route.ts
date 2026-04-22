@@ -20,8 +20,14 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json() as QueryBody;
-  const { query, history = [] } = body;
+  let body: QueryBody;
+  try {
+    body = await request.json() as QueryBody;
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  const { query, history: rawHistory = [] } = body;
+  const history = rawHistory.slice(-20); // cap at 20 exchanges
 
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return Response.json({ error: 'Query is required' }, { status: 400 });
@@ -66,25 +72,34 @@ export async function POST(request: Request): Promise<Response> {
     { role: 'user', content: `${contextMessage}\n\n${query}` },
   ];
 
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return Response.json({ error: 'Server misconfiguration' }, { status: 500 });
+  }
+
   const encoder = new TextEncoder();
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const anthropic = new Anthropic({ apiKey });
 
   const stream = new ReadableStream({
     async start(controller) {
-      const messageStream = anthropic.messages.stream({
-        model: process.env.QUERY_LLM_MODEL ?? 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages,
-      });
+      try {
+        const messageStream = anthropic.messages.stream({
+          model: process.env.QUERY_LLM_MODEL ?? 'claude-sonnet-4-6',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages,
+        });
 
-      for await (const chunk of messageStream) {
-        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          controller.enqueue(encoder.encode(chunk.delta.text));
+        for await (const chunk of messageStream) {
+          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            controller.enqueue(encoder.encode(chunk.delta.text));
+          }
         }
-      }
 
-      controller.close();
+        controller.close();
+      } catch (err) {
+        controller.error(err);
+      }
     },
   });
 
