@@ -24,6 +24,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
     { href: '/', label: 'Graph' },
     { href: '/capture', label: 'Capture' },
     { href: '/commitments', label: 'Commitments' },
+    { href: '/query', label: 'Query' },
     { href: '/review', label: 'Review' },
     { href: '/reflect', label: 'Reflect' },
     { href: '/settings', label: 'Settings' },
