@@ -1,0 +1,46 @@
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { checkHunchPromotion } from '@/lib/lifecycle/autoPromote';
+
+export async function POST(): Promise<Response> {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: hunches, error } = await supabase
+    .from('nodes')
+    .select('id, lifecycle_stage')
+    .eq('node_type', 'hunch')
+    .not('lifecycle_stage', 'in', '("execution","archived")');
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const promoted: string[] = [];
+
+  for (const hunch of (hunches ?? [])) {
+    const decision = await checkHunchPromotion(hunch.id as string);
+    if (!decision.advance || !decision.newStage) continue;
+
+    const { error: updateError } = await supabase
+      .from('nodes')
+      .update({
+        lifecycle_stage: decision.newStage,
+        stage_transitioned_at: new Date().toISOString(),
+        stage_transition_reason: decision.reason ?? null,
+      })
+      .eq('id', hunch.id);
+
+    if (updateError) continue;
+
+    await supabase.from('activity_log').insert({
+      actor_id: user.id,
+      action: 'lifecycle_promoted',
+      target_node_id: hunch.id,
+      details: { from: hunch.lifecycle_stage, to: decision.newStage, reason: decision.reason },
+    });
+
+    promoted.push(hunch.id as string);
+  }
+
+  return NextResponse.json({ data: { promoted: promoted.length, ids: promoted } });
+}
