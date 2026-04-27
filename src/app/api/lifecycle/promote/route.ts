@@ -18,7 +18,8 @@ export async function POST(): Promise<Response> {
   const promoted: string[] = [];
 
   for (const hunch of (hunches ?? [])) {
-    const decision = await checkHunchPromotion(hunch.id as string);
+    if (!hunch.id) continue;
+    const decision = await checkHunchPromotion(hunch.id);
     if (!decision.advance || !decision.newStage) continue;
 
     const { error: updateError } = await supabase
@@ -39,7 +40,7 @@ export async function POST(): Promise<Response> {
       details: { from: hunch.lifecycle_stage, to: decision.newStage, reason: decision.reason },
     });
 
-    promoted.push(hunch.id as string);
+    promoted.push(hunch.id);
   }
 
   return NextResponse.json({ data: { promoted: promoted.length, ids: promoted } });
