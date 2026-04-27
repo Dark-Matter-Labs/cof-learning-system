@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 
 export default async function GraphPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) redirect('/login');
   return <GraphOSSurface />;
 }

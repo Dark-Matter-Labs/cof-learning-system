@@ -24,7 +24,13 @@ export function FocusToday({ items }: FocusTodayProps) {
 
   useEffect(() => {
     const raw = localStorage.getItem(getDismissKey());
-    if (raw) setDismissedIds(new Set(JSON.parse(raw) as string[]));
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) setDismissedIds(new Set(parsed as string[]));
+    } catch {
+      // ignore malformed localStorage data
+    }
   }, []);
 
   const dismiss = (id: string) => {

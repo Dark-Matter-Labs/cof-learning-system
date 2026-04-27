@@ -28,8 +28,8 @@ function todayLabel(): string {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) redirect('/login');
 
   const { data: goalSpaceCheck } = await supabase
     .from('nodes').select('id').eq('node_type', 'goal_space').neq('status', 'archived').limit(1);
