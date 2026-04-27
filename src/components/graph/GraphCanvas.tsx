@@ -13,6 +13,7 @@ import {
   computeGoalCentroids, buildClusterForce,
 } from '@/lib/graph/layout';
 import { GraphBottomBar } from './GraphBottomBar';
+import { STAGE_X_POSITIONS } from './LifecycleBands';
 
 interface GraphCanvasProps {
   readonly nodes: readonly Node[];
@@ -132,7 +133,17 @@ const FLOW_COLUMNS: Record<string, number> = {
   goal_space: 3,
 };
 
-/** Flow: left-to-right by type — hunches → assumptions/signals → learnings/tests → commitments. */
+const FLOW_BAND_COLORS: Record<string, string> = {
+  divergence: '#9ca3af',
+  attractor:  '#7F77DD',
+  convergence: '#1D9E75',
+  execution:  '#185FA5',
+};
+
+const LIFECYCLE_BAND_LABELS = ['Divergence', 'Attractor', 'Convergence', 'Execution'] as const;
+
+/** Flow: left-to-right by type — hunches → assumptions/signals → learnings/tests → commitments.
+ *  Hunch nodes are additionally positioned by lifecycle_stage within the canvas width. */
 function computeFlowLayout(
   gNodes: GraphNode[],
   width: number,
@@ -148,14 +159,20 @@ function computeFlowLayout(
   }
 
   const PAD_X = CARD_WIDTH / 2 + 40;
-  const PAD_Y = CARD_HEIGHT / 2 + 30;
+  const PAD_Y = CARD_HEIGHT / 2 + 48; // extra top padding for band header
   const colXs = [PAD_X, width * 0.35, width * 0.65, width - PAD_X];
 
   for (const [col, nodes] of byCol) {
     if (nodes.length === 0) continue;
-    const x = colXs[col];
+    const defaultX = colXs[col];
     const rowH = Math.max((height - PAD_Y * 2) / nodes.length, CARD_HEIGHT + 24);
     nodes.forEach((n, i) => {
+      // Hunch nodes: override x based on lifecycle_stage when available
+      let x = defaultX;
+      if (n.node_type === 'hunch' && n.data.lifecycle_stage) {
+        const fraction = STAGE_X_POSITIONS[n.data.lifecycle_stage];
+        if (fraction !== undefined) x = fraction * width;
+      }
       positions.set(n.id, { x, y: PAD_Y + i * rowH + rowH / 2 });
     });
   }
@@ -437,6 +454,39 @@ const setTooltipRef = useRef(setTooltip);
           .attr('stroke-width', 1)
           .attr('stroke-dasharray', '6 4');
       }
+    }
+
+    // Flow: lifecycle band column labels (rendered behind links and nodes)
+    if (view === 'flow') {
+      const BAND_HEIGHT = 32;
+      const bandWidth = width / 4;
+      const bandStages = ['divergence', 'attractor', 'convergence', 'execution'];
+      const bandsG = g.append('g').attr('class', 'lifecycle-bands');
+
+      bandStages.forEach((stage, i) => {
+        const bx = bandWidth * i;
+        // Vertical divider (skip the first)
+        if (i > 0) {
+          bandsG.append('line')
+            .attr('x1', bx).attr('y1', 0)
+            .attr('x2', bx).attr('y2', height)
+            .attr('stroke', isDark ? '#374151' : '#e5e7eb')
+            .attr('stroke-width', 1)
+            .attr('stroke-dasharray', '4 4')
+            .attr('opacity', 0.5);
+        }
+        // Band label
+        bandsG.append('text')
+          .text(LIFECYCLE_BAND_LABELS[i])
+          .attr('x', bx + bandWidth / 2)
+          .attr('y', BAND_HEIGHT / 2 + 4)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', 9)
+          .attr('font-weight', '600')
+          .attr('letter-spacing', '0.1em')
+          .attr('fill', FLOW_BAND_COLORS[stage] ?? AXIS_TEXT_FILL)
+          .attr('opacity', 0.55);
+      });
     }
 
     // Links group (rendered before nodes)
