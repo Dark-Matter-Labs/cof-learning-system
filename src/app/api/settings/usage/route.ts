@@ -50,7 +50,7 @@ export async function GET(): Promise<Response> {
       cacheHitRate: totalCalls > 0 ? Math.round((cachedCalls / totalCalls) * 100) : 0,
       totalInputTokens,
       totalOutputTokens,
-      estimatedCostCents: Math.round(estimatedCostMicroCents / 100),
+      estimatedCostCents: Math.round(estimatedCostMicroCents / 1000),
       byAgent,
     },
   });

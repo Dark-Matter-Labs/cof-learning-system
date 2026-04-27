@@ -12,17 +12,16 @@ const CACHE_TTL_MS: Record<string, number | null> = {
   review: null,
   process: null,
   reflection: 7 * 24 * 60 * 60 * 1000,
-  create: 24 * 60 * 60 * 1000,
   setup: 24 * 60 * 60 * 1000,
-  query: 24 * 60 * 60 * 1000,
 };
 
 const CACHED_AGENTS = new Set(['extraction', 'review', 'process', 'reflection', 'setup']);
 
-export function hashRequest(agent: string, systemPrompt: string, userMessage: string): string {
-  return createHash('sha256')
-    .update(`${agent}:${systemPrompt}:${userMessage}`)
-    .digest('hex');
+export function hashRequest(agent: string, systemPrompt: string, userMessage: string, pdfBase64?: string): string {
+  const material = pdfBase64
+    ? `${agent}:${systemPrompt}:${userMessage}:${pdfBase64}`
+    : `${agent}:${systemPrompt}:${userMessage}`;
+  return createHash('sha256').update(material).digest('hex');
 }
 
 export function isExpired(expiresAt: string | null): boolean {

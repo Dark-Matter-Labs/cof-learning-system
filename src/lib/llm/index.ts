@@ -64,7 +64,7 @@ export async function callLLM(agent: AgentName, request: LLMRequest): Promise<LL
   const config = getAgentConfig(agent);
 
   if (shouldCache(agent)) {
-    const cacheKey = hashRequest(agent, request.systemPrompt, request.userMessage);
+    const cacheKey = hashRequest(agent, request.systemPrompt, request.userMessage, request.pdfBase64);
     const cached = await getCached(cacheKey);
     if (cached) {
       await logUsage(agent, config.model, cached, true);
