@@ -1,3 +1,5 @@
+import type { LifecycleStage } from '@/lib/lifecycle/autoPromote';
+
 export interface NodeType {
   readonly id: string;
   readonly label: string;
@@ -124,7 +126,7 @@ export interface Node {
   readonly domain_tags: readonly string[];
   readonly external_links: readonly ExternalLink[];
   readonly attachments: readonly Attachment[];
-  readonly lifecycle_stage: string | null;
+  readonly lifecycle_stage: LifecycleStage | null;
   readonly stage_transitioned_at: string | null;
   readonly stage_transition_reason: string | null;
   readonly created_at: string;

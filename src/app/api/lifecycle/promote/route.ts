@@ -16,6 +16,7 @@ export async function POST(): Promise<Response> {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const promoted: string[] = [];
+  const failed: string[] = [];
 
   for (const hunch of (hunches ?? [])) {
     if (!hunch.id) continue;
@@ -31,7 +32,10 @@ export async function POST(): Promise<Response> {
       })
       .eq('id', hunch.id);
 
-    if (updateError) continue;
+    if (updateError) {
+      failed.push(hunch.id);
+      continue;
+    }
 
     await supabase.from('activity_log').insert({
       actor_id: user.id,
@@ -43,5 +47,5 @@ export async function POST(): Promise<Response> {
     promoted.push(hunch.id);
   }
 
-  return NextResponse.json({ data: { promoted: promoted.length, ids: promoted } });
+  return NextResponse.json({ data: { promoted: promoted.length, ids: promoted, failed: failed.length } });
 }

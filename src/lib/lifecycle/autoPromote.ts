@@ -82,6 +82,25 @@ export async function checkHunchPromotion(nodeId: string): Promise<StageDecision
     const { count: reinforcedEdges } = await supabase.from('edges').select('id', { count: 'exact', head: true })
       .eq('source_id', nodeId).eq('path_status', 'reinforced');
 
+    let testsWithSignals = 0;
+    if (edgesFromHunch?.length) {
+      const tids = edgesFromHunch.map(e => e.target_id as string);
+      const { data: testNodes } = await supabase.from('nodes')
+        .select('id').in('id', tids).eq('node_type', 'test');
+      if (testNodes?.length) {
+        const testIds = testNodes.map(t => t.id as string);
+        const { data: signalEdges } = await supabase.from('edges')
+          .select('source_id').in('target_id', testIds);
+        if (signalEdges?.length) {
+          const sourceIds = [...new Set(signalEdges.map(e => e.source_id as string))];
+          const { count } = await supabase.from('nodes')
+            .select('id', { count: 'exact', head: true })
+            .in('id', sourceIds).eq('node_type', 'signal');
+          testsWithSignals = count ?? 0;
+        }
+      }
+    }
+
     const VALID_STAGES: readonly LifecycleStage[] = ['divergence', 'attractor', 'convergence', 'execution', 'archived'];
     const rawStage = node.lifecycle_stage as string;
     const currentStage: LifecycleStage = VALID_STAGES.includes(rawStage as LifecycleStage) ? (rawStage as LifecycleStage) : 'divergence';
@@ -93,7 +112,7 @@ export async function checkHunchPromotion(nodeId: string): Promise<StageDecision
       reinforcedEdges: reinforcedEdges ?? 0,
       linkedCommitments,
       activeCommitments,
-      testsWithSignals: 0,
+      testsWithSignals,
     };
 
     return evaluateStagePromotion(stats);

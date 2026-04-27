@@ -561,7 +561,7 @@ export function NodeDetailPanel({
 
           {node.node_type === 'hunch' && node.lifecycle_stage && (
             <LifecyclePrompt
-              stage={node.lifecycle_stage as LifecycleStage}
+              stage={node.lifecycle_stage}
               nodeId={node.id}
               daysSinceTransition={
                 node.stage_transitioned_at
