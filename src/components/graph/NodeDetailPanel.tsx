@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
+import type { LifecycleStage } from '@/lib/lifecycle/autoPromote';
 import { NodeTypeBadge } from '@/components/shared/NodeTypeBadge';
 import { NodeSearchAutocomplete, type NodeOption } from '@/components/shared/NodeSearchAutocomplete';
 import { getNodeConnections } from '@/lib/graph/queries';
@@ -57,6 +58,63 @@ interface NodeDetailPanelProps {
 }
 
 const PROCESSABLE_TYPES = new Set(['learning', 'signal']);
+
+interface LifecyclePromptProps {
+  readonly stage: LifecycleStage;
+  readonly nodeId: string;
+  readonly daysSinceTransition: number;
+}
+
+function LifecyclePrompt({ stage, nodeId, daysSinceTransition }: LifecyclePromptProps) {
+  const prompts: Partial<Record<LifecycleStage, { threshold: number; text: string; actions: readonly { label: string; href: string }[] }>> = {
+    divergence: {
+      threshold: 7,
+      text: `This hunch has been sitting for ${daysSinceTransition} days.`,
+      actions: [
+        { label: 'Connect an assumption', href: `/capture/${nodeId}` },
+        { label: 'Archive it', href: `/capture/${nodeId}` },
+      ],
+    },
+    attractor: {
+      threshold: 14,
+      text: 'This has assumptions but no reinforced evidence yet.',
+      actions: [{ label: 'Design a test', href: `/capture/${nodeId}` }],
+    },
+    convergence: {
+      threshold: 14,
+      text: 'Resources committed but no recent signals.',
+      actions: [
+        { label: 'Log a signal', href: `/capture` },
+        { label: 'Update commitment', href: `/commitments` },
+      ],
+    },
+    execution: {
+      threshold: 0,
+      text: 'This is now executing.',
+      actions: [{ label: 'Capture an outcome', href: `/capture` }],
+    },
+  };
+
+  const prompt = prompts[stage];
+  if (!prompt || daysSinceTransition < prompt.threshold) return null;
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{prompt.text}</p>
+      <div className="flex flex-wrap gap-2">
+        {prompt.actions.map(action => (
+          <a
+            key={action.label}
+            href={action.href}
+            className="text-xs text-node-hunch border border-node-hunch/30 rounded px-2 py-1 hover:bg-node-hunch/5 transition-colors"
+          >
+            {action.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function NodeDetailPanel({
   node,
@@ -500,6 +558,18 @@ export function NodeDetailPanel({
               {new Date(node.created_at).toLocaleDateString()}
             </div>
           </div>
+
+          {node.node_type === 'hunch' && node.lifecycle_stage && (
+            <LifecyclePrompt
+              stage={node.lifecycle_stage as LifecycleStage}
+              nodeId={node.id}
+              daysSinceTransition={
+                node.stage_transitioned_at
+                  ? Math.floor((Date.now() - new Date(node.stage_transitioned_at).getTime()) / (24 * 60 * 60 * 1000))
+                  : Math.floor((Date.now() - new Date(node.created_at).getTime()) / (24 * 60 * 60 * 1000))
+              }
+            />
+          )}
         </>
       )}
 
