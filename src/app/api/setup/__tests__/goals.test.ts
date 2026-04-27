@@ -1,0 +1,53 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mockSelect = vi.fn();
+const mockInsert = vi.fn();
+const mockGetUser = vi.fn();
+const mockFrom = vi.fn();
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(() => ({ auth: { getUser: mockGetUser }, from: mockFrom })),
+}));
+
+import { POST } from '../goals/route';
+
+describe('POST /api/setup/goals', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+    mockSelect.mockResolvedValue({ data: [{ id: 'g-1' }], error: null });
+    mockInsert.mockReturnValue({ select: mockSelect });
+    mockFrom.mockReturnValue({ insert: mockInsert });
+  });
+
+  it('creates goal_space nodes', async () => {
+    const req = new Request('http://localhost/api/setup/goals', {
+      method: 'POST',
+      body: JSON.stringify({ goals: [{ title: 'Establish capital model', description: 'Success is...' }] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ node_type: 'goal_space', title: 'Establish capital model' })])
+    );
+  });
+
+  it('returns 400 for empty goals', async () => {
+    const req = new Request('http://localhost/api/setup/goals', {
+      method: 'POST',
+      body: JSON.stringify({ goals: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 401 when not authenticated', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error('auth') });
+    const req = new Request('http://localhost/api/setup/goals', {
+      method: 'POST',
+      body: JSON.stringify({ goals: [{ title: 'Test' }] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(401);
+  });
+});
