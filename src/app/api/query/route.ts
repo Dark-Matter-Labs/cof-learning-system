@@ -10,7 +10,7 @@ const QueryBodySchema = z.object({
     .array(
       z.object({
         role: z.enum(['user', 'assistant']),
-        content: z.string().max(2000),
+        content: z.string().max(32000),
       })
     )
     .max(20)
