@@ -115,7 +115,10 @@ export function buildExtractionPrompt(
       ? `Title hint: ${title}\n\nGenerate a concise title for this document based on its content.\n\n${docBlock}`
       : `Generate a concise title for this document based on its content.\n\n${docBlock}`;
   } else {
-    base = `Title: ${title}\n\nDescription: ${description}`;
+    const truncated = description.length > 4000
+      ? description.slice(0, 4000) + '\n\n[truncated for extraction]'
+      : description;
+    base = `Title: ${title}\n\nDescription: ${truncated}`;
   }
 
   if (!goalContext) {
@@ -166,7 +169,7 @@ export function buildExtractionPrompt(
   if (hasExistingNodes) {
     sections.push('');
     sections.push('Existing nodes in the graph (use these exact titles in suggested_connections where relevant):');
-    for (const n of goalContext.existingNodes!) {
+    for (const n of goalContext.existingNodes!.slice(0, 20)) {
       sections.push(`- [${n.node_type}] ${n.title}`);
     }
     sections.push('');
@@ -223,7 +226,10 @@ export function buildMeetingExtractionPrompt(
   const sections: string[] = [`Meeting: ${title}`];
   if (meetingDate) sections.push(`Date: ${meetingDate}`);
   if (participants && participants.length > 0) sections.push(`Participants: ${participants.join(', ')}`);
-  sections.push('', 'Transcript/Notes:', description);
+  const truncatedDesc = description.length > 8000
+    ? description.slice(0, 8000) + '\n\n[truncated for extraction]'
+    : description;
+  sections.push('', 'Transcript/Notes:', truncatedDesc);
 
   if (goalContext) {
     const { goalSpaces, triggerOutcomes } = goalContext;
