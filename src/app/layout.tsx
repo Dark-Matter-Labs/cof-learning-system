@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/layout/AuthProvider';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { NavBar } from '@/components/layout/NavBar';
 import { createClient } from '@/lib/supabase/server';
 
@@ -59,9 +60,10 @@ export default async function RootLayout({
       >
         <AuthProvider initialUser={user}>
           {user && <NavBar reviewCount={reviewCount} />}
-          <main className="h-screen overflow-y-auto pt-[49px]">
+          <main className="h-screen overflow-y-auto pt-[49px] pb-16 lg:pb-0">
             {children}
           </main>
+          {user && <MobileNav />}
         </AuthProvider>
       </body>
     </html>
