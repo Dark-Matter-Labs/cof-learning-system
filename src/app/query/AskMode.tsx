@@ -23,6 +23,7 @@ interface SaveState {
   readonly title: string;
   readonly nodeType: SaveNodeType;
   readonly saving: boolean;
+  readonly saveError: string | null;
 }
 
 export function AskMode({ allNodes }: AskModeProps) {
@@ -112,32 +113,35 @@ export function AskMode({ allNodes }: AskModeProps) {
 
   function openSaveForm(message: Message) {
     const firstLine = message.content.split('\n')[0].trim().slice(0, 150);
-    setSaveState({ messageId: message.id, title: firstLine, nodeType: 'learning', saving: false });
+    setSaveState({ messageId: message.id, title: firstLine || 'New learning', nodeType: 'learning', saving: false, saveError: null });
   }
 
   async function handleSave(message: Message) {
-    if (!saveState) return;
-    setSaveState(s => s ? { ...s, saving: true } : null);
+    const snapshot = saveState;
+    if (!snapshot) return;
+    setSaveState(s => s ? { ...s, saving: true, saveError: null } : null);
 
     try {
       const res = await fetch('/api/query/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: saveState.title,
+          title: snapshot.title,
           content: message.content,
-          node_type: saveState.nodeType,
+          node_type: snapshot.nodeType,
           context_node_ids: [...message.nodeIds],
         }),
       });
       if (!res.ok) throw new Error('Save failed');
-      const { data } = await res.json() as { data: { node: { id: string } } };
+      const body = await res.json() as { data?: { node?: { id?: string } } };
+      const nodeId = body.data?.node?.id;
+      if (!nodeId) throw new Error('Unexpected response');
       setMessages(prev => prev.map(m =>
-        m.id === message.id ? { ...m, savedNodeId: data.node.id } : m
+        m.id === message.id ? { ...m, savedNodeId: nodeId } : m
       ));
       setSaveState(null);
     } catch {
-      setSaveState(s => s ? { ...s, saving: false } : null);
+      setSaveState(s => s ? { ...s, saving: false, saveError: 'Save failed — please try again.' } : null);
     }
   }
 
@@ -187,7 +191,7 @@ export function AskMode({ allNodes }: AskModeProps) {
                           <input
                             type="text"
                             value={saveState.title}
-                            onChange={e => setSaveState(s => s ? { ...s, title: e.target.value } : null)}
+                            onChange={e => setSaveState(s => s ? { ...s, title: e.target.value, saveError: null } : null)}
                             placeholder="Node title…"
                             className="text-xs bg-cof-bg-elevated border border-cof-border rounded px-2 py-1 text-cof-text-primary w-56 focus:outline-none focus:border-node-hunch"
                           />
@@ -218,6 +222,9 @@ export function AskMode({ allNodes }: AskModeProps) {
                           >
                             Cancel
                           </button>
+                          {saveState.saveError && (
+                            <p className="text-xs text-red-500 w-full mt-1">{saveState.saveError}</p>
+                          )}
                         </div>
                       ) : (
                         <button

@@ -190,4 +190,21 @@ describe('AskMode — save to graph', () => {
     expect(body.node_type).toBe('learning');
     expect(body.context_node_ids).toContain('n1');
   });
+
+  it('shows error message when save API returns non-ok', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(makeStreamResponse('The answer is 42', ['n1']))
+      .mockResolvedValueOnce({ ok: false });
+    global.fetch = fetchMock;
+    render(
+      <AskMode allNodes={[{ id: 'n1', node_type: 'hunch', title: 'Test node', description: null, status: 'promoted' as const }]} />
+    );
+    fireEvent.change(screen.getByPlaceholderText('Ask a question…'), { target: { value: 'What is the key tension?' } });
+    fireEvent.submit(screen.getByPlaceholderText('Ask a question…').closest('form')!);
+    await waitFor(() => screen.getByText('Save to graph'));
+    fireEvent.click(screen.getByText('Save to graph'));
+    await waitFor(() => screen.getByPlaceholderText('Node title…'));
+    fireEvent.click(screen.getByText('Save'));
+    await waitFor(() => expect(screen.getByText('Save failed — please try again.')).toBeDefined());
+  });
 });
