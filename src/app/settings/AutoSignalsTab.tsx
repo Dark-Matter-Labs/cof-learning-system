@@ -34,14 +34,19 @@ export function AutoSignalsTab() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, enabled }),
-    }).then(() => load()).catch(() => {});
+    })
+      .then(r => { if (!r.ok) throw new Error('Toggle failed'); return load(); })
+      .catch(() => {});
   };
 
   const runScan = () => {
     setScanning(true);
     setScanError(null);
     fetch('/api/signals/scan', { method: 'POST' })
-      .then(r => r.json() as Promise<{ data?: { created: number; skipped: number } }>)
+      .then(r => {
+        if (!r.ok) throw new Error('Scan failed');
+        return r.json() as Promise<{ data?: { created: number; skipped: number } }>;
+      })
       .then(body => setLastScanResult(body.data ?? null))
       .catch(() => setScanError('Scan failed — check server logs'))
       .finally(() => setScanning(false));

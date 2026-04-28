@@ -1,6 +1,6 @@
 const MIN_KEYWORD_LENGTH = 4;
 
-export function extractKeywords(...titles: string[]): string[] {
+export function extractKeywords(titles: string[]): string[] {
   return [...new Set(
     titles
       .join(' ')

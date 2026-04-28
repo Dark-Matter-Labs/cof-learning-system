@@ -11,9 +11,10 @@ export async function POST(): Promise<Response> {
     .from('nodes')
     .select('id, lifecycle_stage')
     .eq('node_type', 'hunch')
+    .eq('author_id', user.id)
     .not('lifecycle_stage', 'in', '("execution","archived")');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Failed to load hunches' }, { status: 500 });
 
   const promoted: string[] = [];
   const failed: string[] = [];
@@ -30,7 +31,8 @@ export async function POST(): Promise<Response> {
         stage_transitioned_at: new Date().toISOString(),
         stage_transition_reason: decision.reason ?? null,
       })
-      .eq('id', hunch.id);
+      .eq('id', hunch.id)
+      .eq('author_id', user.id);
 
     if (updateError) {
       failed.push(hunch.id);

@@ -116,7 +116,8 @@ export async function checkHunchPromotion(nodeId: string): Promise<StageDecision
     };
 
     return evaluateStagePromotion(stats);
-  } catch {
+  } catch (err) {
+    process.stderr.write(`[lifecycle] checkHunchPromotion error for ${nodeId}: ${String(err)}\n`);
     return { advance: false };
   }
 }

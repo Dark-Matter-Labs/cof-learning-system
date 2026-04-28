@@ -3,7 +3,7 @@ import { extractKeywords, isRelevant, scoreRelevance } from '../relevanceFilter'
 
 describe('extractKeywords', () => {
   it('splits title into lowercase words, filters short words', () => {
-    const keywords = extractKeywords('Formation Capital Strategy');
+    const keywords = extractKeywords(['Formation Capital Strategy']);
     expect(keywords).toContain('formation');
     expect(keywords).toContain('capital');
     expect(keywords).toContain('strategy');
@@ -11,7 +11,7 @@ describe('extractKeywords', () => {
   });
 
   it('handles multiple topics', () => {
-    const keywords = extractKeywords('Dartmoor Rewilding Project', 'Natural Assets Fund');
+    const keywords = extractKeywords(['Dartmoor Rewilding Project', 'Natural Assets Fund']);
     expect(keywords).toContain('dartmoor');
     expect(keywords).toContain('rewilding');
     expect(keywords).toContain('natural');

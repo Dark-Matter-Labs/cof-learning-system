@@ -1,6 +1,13 @@
 import { extractKeywords, filterRelevant } from './relevanceFilter';
 import { ingestSignals, type SignalInput } from './signalIngestor';
 import { callLLM } from '@/lib/llm';
+import { z } from 'zod';
+
+const extractedSignalSchema = z.object({
+  title: z.string().min(1).max(500).trim(),
+  summary: z.string().min(1).max(2000).trim(),
+});
+const extractionOutputSchema = z.object({ signals: z.array(extractedSignalSchema).optional() });
 
 interface BraveResult {
   readonly title: string;
@@ -45,7 +52,7 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
     .neq('status', 'archived');
 
   const topics = (topicNodes ?? []) as ActiveTopic[];
-  const keywords = extractKeywords(...topics.map(t => t.title));
+  const keywords = extractKeywords(topics.map(t => t.title));
 
   const allSignals: SignalInput[] = [];
   const errors: string[] = [];
@@ -56,10 +63,15 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
     const query = rawQuery ?? topics.find(t => t.id === source.topic_node_id)?.title ?? '';
     if (!query) continue;
 
+    let sourceScanSucceeded = false;
+
     try {
       const res = await fetch(
         `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=10`,
-        { headers: { 'X-Subscription-Token': apiKey, 'Accept': 'application/json' } }
+        {
+          headers: { 'X-Subscription-Token': apiKey, 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(8000),
+        }
       );
       if (!res.ok) {
         process.stderr.write(`[signals] Brave search failed for "${query}": ${res.status}\n`);
@@ -79,11 +91,19 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
       const unseenResults = results.filter(r => !seenSet.has(r.url));
 
       const relevant = filterRelevant(unseenResults, r => `${r.title} ${r.description}`, keywords, 5);
-      if (!relevant.length) continue;
+      if (!relevant.length) {
+        sourceScanSucceeded = true;
+        continue;
+      }
 
-      await supabase.from('seen_external_urls').insert(
+      const { error: seenInsertError } = await supabase.from('seen_external_urls').insert(
         relevant.map(r => ({ url: r.url, source_type: 'web', topic_node_id: source.topic_node_id }))
       );
+      if (seenInsertError) {
+        process.stderr.write(`[signals] Failed to record seen URLs for "${query}": ${seenInsertError.message}\n`);
+        errors.push(`Deduplication failed for a source — skipping to avoid reprocessing`);
+        continue;
+      }
 
       const batchContent = relevant.map((r, i) => `[${i + 1}] ${r.title}\n${r.description}\nURL: ${r.url}`).join('\n\n');
       const extractionResult = await callLLM('extraction', {
@@ -92,13 +112,12 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
         maxTokens: 1024,
       });
 
-      type ExtractionOutput = { signals?: { title: string; summary: string }[] };
-      let extracted: { title: string; summary: string }[] = [];
+      let extracted: z.infer<typeof extractedSignalSchema>[] = [];
       try {
-        const parsed = JSON.parse(extractionResult.content) as ExtractionOutput;
+        const parsed = extractionOutputSchema.parse(JSON.parse(extractionResult.content));
         extracted = parsed.signals ?? [];
       } catch {
-        // non-fatal: malformed JSON from LLM
+        // non-fatal: malformed or schema-invalid LLM output
       }
 
       const attributionUrl = relevant.map(r => r.url).join('; ');
@@ -112,12 +131,16 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
           authorId: userId,
         });
       }
+
+      sourceScanSucceeded = true;
     } catch (err) {
       process.stderr.write(`[signals] Web scan error for "${query}": ${String(err)}\n`);
       errors.push(`Scan failed for source (see server logs)`);
     }
 
-    await supabase.from('auto_signal_sources').update({ last_run_at: new Date().toISOString() }).eq('id', source.id);
+    if (sourceScanSucceeded) {
+      await supabase.from('auto_signal_sources').update({ last_run_at: new Date().toISOString() }).eq('id', source.id);
+    }
   }
 
   const result = await ingestSignals(allSignals);
