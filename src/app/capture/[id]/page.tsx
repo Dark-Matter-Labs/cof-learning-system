@@ -13,6 +13,8 @@ export default function HunchDetailPage() {
   const router = useRouter();
   const [node, setNode] = useState<Node | null>(null);
   const [processingTooLong, setProcessingTooLong] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -50,13 +52,22 @@ export default function HunchDetailPage() {
   }, [node?.status]);
 
   const handleRetry = async () => {
-    const response = await fetch('/api/capture/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ node_id: params.id }),
-    });
-    if (response.ok) {
-      router.refresh();
+    setRetrying(true);
+    setRetryError(null);
+    try {
+      const response = await fetch('/api/capture/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node_id: params.id }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as { error?: string };
+        setRetryError(body.error ?? `Server error (${response.status})`);
+      }
+    } catch {
+      setRetryError('Network error — check your connection');
+    } finally {
+      setRetrying(false);
     }
   };
 
@@ -92,16 +103,17 @@ export default function HunchDetailPage() {
 
       {node.status === 'processing' && (
         <div className="bg-node-option/10 border border-node-option/30 rounded-lg p-4 text-center">
-          <p className="text-sm text-node-option">Processing with AI...</p>
+          <p className="text-sm text-node-option">{retrying ? 'Retrying…' : 'Processing with AI...'}</p>
           <div className="mt-2 w-full bg-gray-800 rounded-full h-1">
             <div className="bg-node-option h-1 rounded-full animate-pulse w-2/3" />
           </div>
-          {processingTooLong && (
+          {retryError && <p className="mt-2 text-xs text-red-400">{retryError}</p>}
+          {(processingTooLong || retryError) && !retrying && (
             <button
               onClick={handleRetry}
-              className="mt-3 text-xs text-node-option underline hover:no-underline"
+              className="mt-3 text-xs text-node-option underline hover:no-underline disabled:opacity-50"
             >
-              Taking longer than expected — retry
+              {retryError ? 'Try again' : 'Taking longer than expected — retry'}
             </button>
           )}
         </div>
@@ -110,14 +122,16 @@ export default function HunchDetailPage() {
       {node.status === 'error' && (
         <div className="bg-red-900/20 border border-red-800 rounded-lg p-4">
           <p className="text-sm text-red-400">Processing failed</p>
+          {retryError && <p className="text-xs text-red-500 mt-1">{retryError}</p>}
           {node.llm_extraction && typeof node.llm_extraction === 'object' && 'error' in node.llm_extraction && (
             <p className="text-xs text-red-500 mt-1">{String((node.llm_extraction as Record<string, unknown>).error)}</p>
           )}
           <button
             onClick={handleRetry}
-            className="mt-3 bg-red-600 text-white text-sm px-4 py-1.5 rounded hover:bg-red-500"
+            disabled={retrying}
+            className="mt-3 bg-red-600 text-white text-sm px-4 py-1.5 rounded hover:bg-red-500 disabled:opacity-50"
           >
-            Retry Processing
+            {retrying ? 'Retrying…' : 'Retry Processing'}
           </button>
         </div>
       )}
