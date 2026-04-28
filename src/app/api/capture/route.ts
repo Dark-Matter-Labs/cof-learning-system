@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -85,15 +85,16 @@ export async function POST(request: Request) {
     }).catch(() => {});
   }
 
-  const processUrl = new URL('/api/capture/process', request.url);
-  fetch(processUrl.toString(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Cookie': request.headers.get('cookie') ?? '',
-    },
-    body: JSON.stringify({ node_id: node.id }),
-  }).catch(() => {});
+  const processUrl = new URL('/api/capture/process', request.url).toString();
+  const processCookie = request.headers.get('cookie') ?? '';
+  const processBody = JSON.stringify({ node_id: node.id });
+  after(async () => {
+    await fetch(processUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': processCookie },
+      body: processBody,
+    }).catch(() => {});
+  });
 
   return NextResponse.json({ data: node }, { status: 201 });
 }

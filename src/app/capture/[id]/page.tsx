@@ -12,6 +12,7 @@ export default function HunchDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [node, setNode] = useState<Node | null>(null);
+  const [processingTooLong, setProcessingTooLong] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -41,6 +42,12 @@ export default function HunchDetailPage() {
 
     return () => { supabase.removeChannel(channel); };
   }, [params.id]);
+
+  useEffect(() => {
+    if (node?.status !== 'processing') { setProcessingTooLong(false); return; }
+    const timer = setTimeout(() => setProcessingTooLong(true), 30000);
+    return () => clearTimeout(timer);
+  }, [node?.status]);
 
   const handleRetry = async () => {
     const response = await fetch('/api/capture/process', {
@@ -89,6 +96,14 @@ export default function HunchDetailPage() {
           <div className="mt-2 w-full bg-gray-800 rounded-full h-1">
             <div className="bg-node-option h-1 rounded-full animate-pulse w-2/3" />
           </div>
+          {processingTooLong && (
+            <button
+              onClick={handleRetry}
+              className="mt-3 text-xs text-node-option underline hover:no-underline"
+            >
+              Taking longer than expected — retry
+            </button>
+          )}
         </div>
       )}
 
