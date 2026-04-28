@@ -36,6 +36,7 @@ export interface GoalContext {
   readonly goalSpaces: ReadonlyArray<{ readonly id: string; readonly title: string }>;
   readonly triggerOutcomes: ReadonlyArray<{ readonly id: string; readonly title: string }>;
   readonly personNodes: ReadonlyArray<{ readonly id: string; readonly title: string }>;
+  readonly existingNodes?: ReadonlyArray<{ readonly id: string; readonly title: string; readonly node_type: string }>;
 }
 
 export interface AttachmentContent {
@@ -124,8 +125,9 @@ export function buildExtractionPrompt(
   const hasGoalSpaces = goalContext.goalSpaces.length > 0;
   const hasTriggerOutcomes = goalContext.triggerOutcomes.length > 0;
   const hasPersonNodes = goalContext.personNodes.length > 0;
+  const hasExistingNodes = (goalContext.existingNodes?.length ?? 0) > 0;
 
-  if (!hasGoalSpaces && !hasTriggerOutcomes && !hasPersonNodes) {
+  if (!hasGoalSpaces && !hasTriggerOutcomes && !hasPersonNodes && !hasExistingNodes) {
     return base;
   }
 
@@ -159,6 +161,16 @@ export function buildExtractionPrompt(
     }
     sections.push('');
     sections.push('If this text mentions any of the persons above, include a suggested_connection with edge_type "mentioned_in" and target_title matching the exact name from this list.');
+  }
+
+  if (hasExistingNodes) {
+    sections.push('');
+    sections.push('Existing nodes in the graph (use these exact titles in suggested_connections where relevant):');
+    for (const n of goalContext.existingNodes!) {
+      sections.push(`- [${n.node_type}] ${n.title}`);
+    }
+    sections.push('');
+    sections.push('When this note connects to any node listed above, add it to suggested_connections using the EXACT title shown.');
   }
 
   return sections.join('\n');

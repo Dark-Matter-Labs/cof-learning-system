@@ -237,3 +237,39 @@ describe('runExtraction with goalContext', () => {
     expect(callArgs.userMessage).toContain('Raise £10M');
   });
 });
+
+describe('buildExtractionPrompt — existingNodes', () => {
+  it('includes existing nodes section when existingNodes is provided', () => {
+    const prompt = buildExtractionPrompt('My hunch', 'Some text', {
+      goalSpaces: [],
+      triggerOutcomes: [],
+      personNodes: [],
+      existingNodes: [
+        { id: 'n1', title: 'Formation capital strategy', node_type: 'hunch' },
+        { id: 'n2', title: 'Natural assets fund', node_type: 'learning' },
+      ],
+    });
+    expect(prompt).toContain('Existing nodes in the graph');
+    expect(prompt).toContain('[hunch] Formation capital strategy');
+    expect(prompt).toContain('[learning] Natural assets fund');
+  });
+
+  it('omits existing nodes section when existingNodes is empty', () => {
+    const prompt = buildExtractionPrompt('My hunch', 'Some text', {
+      goalSpaces: [],
+      triggerOutcomes: [],
+      personNodes: [],
+      existingNodes: [],
+    });
+    expect(prompt).not.toContain('Existing nodes in the graph');
+  });
+
+  it('omits existing nodes section when existingNodes is undefined', () => {
+    const prompt = buildExtractionPrompt('My hunch', 'Some text', {
+      goalSpaces: [],
+      triggerOutcomes: [],
+      personNodes: [],
+    });
+    expect(prompt).not.toContain('Existing nodes in the graph');
+  });
+});
