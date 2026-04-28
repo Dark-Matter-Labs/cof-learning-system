@@ -52,31 +52,38 @@ export function buildSignalNode(input: SignalInput): SignalNodeRow {
 export async function ingestSignals(signals: SignalInput[]): Promise<{ created: number; skipped: number }> {
   if (signals.length === 0) return { created: 0, skipped: 0 };
 
-  const { createClient } = await import('@/lib/supabase/server');
-  const supabase = await createClient();
+  try {
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
 
-  const today = new Date().toISOString().slice(0, 10);
-  const { data: quotaRow } = await supabase
-    .from('auto_signal_quota')
-    .select('signals_created')
-    .eq('quota_date', today)
-    .single();
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: quotaRow, error: quotaError } = await supabase
+      .from('auto_signal_quota')
+      .select('signals_created')
+      .eq('quota_date', today)
+      .single();
 
-  const currentCount = quotaRow?.signals_created ?? 0;
-  const remaining = DAILY_CAP - currentCount;
+    // If error is not PGRST116 (not found), it's a real DB error — safe to continue with 0 as default
+    const currentCount = (!quotaError || quotaError.code === 'PGRST116') ? (quotaRow?.signals_created ?? 0) : 0;
+    const remaining = DAILY_CAP - currentCount;
 
-  if (remaining <= 0) return { created: 0, skipped: signals.length };
+    if (remaining <= 0) return { created: 0, skipped: signals.length };
 
-  const toProcess = signals.slice(0, remaining);
-  const nodes = toProcess.map(buildSignalNode);
+    const toProcess = signals.slice(0, remaining);
+    const nodes = toProcess.map(buildSignalNode);
 
-  const { error } = await supabase.from('nodes').insert(nodes);
-  if (error) return { created: 0, skipped: signals.length };
+    const { error } = await supabase.from('nodes').insert(nodes);
+    if (error) return { created: 0, skipped: signals.length };
 
-  await supabase.from('auto_signal_quota').upsert({
-    quota_date: today,
-    signals_created: currentCount + toProcess.length,
-  });
+    const { error: upsertError } = await supabase.from('auto_signal_quota').upsert({
+      quota_date: today,
+      signals_created: currentCount + toProcess.length,
+    });
+    // Non-fatal: log to stderr but don't fail the ingestion
+    if (upsertError) process.stderr.write(`[signals] quota upsert failed: ${upsertError.message}\n`);
 
-  return { created: toProcess.length, skipped: signals.length - toProcess.length };
+    return { created: toProcess.length, skipped: signals.length - toProcess.length };
+  } catch (error) {
+    return { created: 0, skipped: signals.length };
+  }
 }
