@@ -6,6 +6,13 @@ export interface SuggestedConnection {
   readonly rationale: string;
 }
 
+const VALID_EDGE_TYPES = new Set([
+  'supports', 'contradicts', 'requires', 'evolved_from', 'tested_by',
+  'produced', 'connected_to', 'works_at', 'authored_by', 'challenges',
+  'mentioned_in', 'advances_goal', 'targets_outcome', 'indicates_progress',
+  'assigned_to_outcome',
+]);
+
 export async function resolveConnections(
   sourceNodeId: string,
   suggestions: ReadonlyArray<SuggestedConnection>,
@@ -18,6 +25,7 @@ export async function resolveConnections(
 
   for (const suggestion of suggestions) {
     if (!suggestion.target_title?.trim()) continue;
+    if (!VALID_EDGE_TYPES.has(suggestion.edge_type)) continue;
 
     const { data: match } = await supabase
       .from('nodes')
@@ -47,7 +55,11 @@ export async function resolveConnections(
       author_id: userId,
     });
 
-    if (!error) created++;
+    if (error) {
+      process.stderr.write(`[connectionResolver] Edge insert failed (${sourceNodeId} → ${match.id}, type: ${suggestion.edge_type}): ${error.message}\n`);
+    } else {
+      created++;
+    }
   }
 
   return created;

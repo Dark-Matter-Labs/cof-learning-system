@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     ] = await Promise.all([
       supabase
         .from('nodes')
-        .select('title, description, node_type, content, attachments')
+        .select('title, description, node_type, content, attachments, author_id')
         .eq('id', node_id)
         .single(),
       supabase
@@ -66,6 +66,10 @@ export async function POST(request: Request) {
 
     if (fetchError || !node) {
       throw new Error(`Node not found: ${node_id}`);
+    }
+
+    if ((node as unknown as { author_id: string }).author_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const goalContext: GoalContext = {
