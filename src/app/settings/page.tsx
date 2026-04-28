@@ -6,6 +6,7 @@ import type { NodeType } from '@/lib/types/nodes';
 import type { EdgeType } from '@/lib/types/edges';
 import { UsageTab } from './UsageTab';
 import { AutoSignalsTab } from './AutoSignalsTab';
+import { DistillationTab } from './DistillationTab';
 
 export default function SettingsPage() {
   const [nodeTypes, setNodeTypes] = useState<NodeType[]>([]);
@@ -92,6 +93,12 @@ export default function SettingsPage() {
       <section className="mt-8">
         <h2 className="text-base font-semibold text-cof-text-primary mb-4">Auto-signals</h2>
         <AutoSignalsTab />
+      </section>
+
+      {/* Distillation */}
+      <section className="mt-8">
+        <h2 className="text-base font-semibold text-cof-text-primary mb-4">Distillation</h2>
+        <DistillationTab />
       </section>
     </div></div>
   );
