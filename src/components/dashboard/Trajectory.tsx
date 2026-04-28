@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Card } from '@/components/ui/Card';
 import type { TrajectoryItem } from '@/lib/dashboard/queries';
 
 function Delta({ direction, delta }: { readonly direction: TrajectoryItem['direction']; readonly delta: number }) {
@@ -9,25 +10,25 @@ function Delta({ direction, delta }: { readonly direction: TrajectoryItem['direc
 
 export function Trajectory({ items }: { readonly items: readonly TrajectoryItem[] }) {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
+    <Card>
+      <p className="text-xs font-semibold uppercase tracking-widest text-cof-text-tertiary mb-4">
         Trajectory
       </p>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500">No goal spaces configured yet.</p>
+        <p className="text-sm text-cof-text-tertiary">No goal spaces configured yet.</p>
       ) : (
         <ul className="space-y-3">
           {items.map(item => (
             <li key={item.goalSpaceId} className="flex items-center justify-between gap-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{item.goalSpaceTitle}</span>
+              <span className="text-sm text-cof-text-secondary truncate">{item.goalSpaceTitle}</span>
               <Delta direction={item.direction} delta={item.delta} />
             </li>
           ))}
         </ul>
       )}
-      <Link href="/reflect" className="mt-4 block text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+      <Link href="/reflect" className="mt-4 block text-xs text-cof-text-tertiary hover:text-cof-text-secondary transition-colors">
         Run reflection →
       </Link>
-    </div>
+    </Card>
   );
 }

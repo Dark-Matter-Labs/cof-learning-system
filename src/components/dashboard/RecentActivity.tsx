@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Card } from '@/components/ui/Card';
 import type { RecentActivityGroup } from '@/lib/dashboard/queries';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -16,24 +17,24 @@ const TYPE_LABEL: Record<string, string> = {
 
 export function RecentActivity({ groups }: { readonly groups: readonly RecentActivityGroup[] }) {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
+    <Card>
+      <p className="text-xs font-semibold uppercase tracking-widest text-cof-text-tertiary mb-4">
         Recent activity
       </p>
       {groups.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500">No recent activity yet.</p>
+        <p className="text-sm text-cof-text-tertiary">No recent activity yet.</p>
       ) : (
         <div className="space-y-4">
           {groups.map(group => (
             <div key={group.label}>
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">{group.label}</p>
+              <p className="text-xs font-medium text-cof-text-tertiary mb-2">{group.label}</p>
               <ul className="space-y-1.5">
                 {group.items.map(item => (
                   <li key={item.id} className="flex items-baseline gap-2">
-                    <span className="text-[10px] text-gray-300 dark:text-gray-600 uppercase tracking-wide flex-shrink-0 w-16 truncate">
+                    <span className="text-[10px] text-cof-text-tertiary/60 uppercase tracking-wide flex-shrink-0 w-16 truncate">
                       {TYPE_LABEL[item.node_type] ?? item.node_type}
                     </span>
-                    <Link href={`/capture/${item.id}`} className="text-sm text-gray-700 dark:text-gray-300 hover:text-node-hunch transition-colors truncate">
+                    <Link href={`/capture/${item.id}`} className="text-sm text-cof-text-secondary hover:text-node-hunch transition-colors truncate">
                       {item.title}
                     </Link>
                   </li>
@@ -43,9 +44,9 @@ export function RecentActivity({ groups }: { readonly groups: readonly RecentAct
           ))}
         </div>
       )}
-      <Link href="/log" className="mt-4 block text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+      <Link href="/log" className="mt-4 block text-xs text-cof-text-tertiary hover:text-cof-text-secondary transition-colors">
         Open log →
       </Link>
-    </div>
+    </Card>
   );
 }

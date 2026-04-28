@@ -139,7 +139,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
       ) : (
         <>
           <div>
-            <label htmlFor="title" className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
+            <label htmlFor="title" className="block text-xs text-cof-text-tertiary uppercase tracking-wide mb-1">
               Title
             </label>
             <input
@@ -148,12 +148,12 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="What's on your mind?"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+              className="w-full bg-cof-bg-elevated border border-cof-border rounded-lg px-3 py-2 text-sm text-cof-text-primary placeholder:text-cof-text-tertiary focus:outline-none focus:border-node-hunch focus:ring-1 focus:ring-node-hunch/20 transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
+            <label htmlFor="description" className="block text-xs text-cof-text-tertiary uppercase tracking-wide mb-1">
               Description
             </label>
             <textarea
@@ -162,14 +162,14 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
               onChange={e => setDescription(e.target.value)}
               placeholder={descriptionPlaceholder}
               rows={descriptionRows}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch resize-none"
+              className="w-full bg-cof-bg-elevated border border-cof-border rounded-lg px-3 py-2 text-sm text-cof-text-primary placeholder:text-cof-text-tertiary focus:outline-none focus:border-node-hunch focus:ring-1 focus:ring-node-hunch/20 resize-none transition-colors"
             />
           </div>
         </>
       )}
 
       <div>
-        <label htmlFor="capture-date" className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+        <label htmlFor="capture-date" className="block text-xs text-cof-text-tertiary uppercase tracking-wide mb-1">
           When did this happen?
         </label>
         <input
@@ -177,12 +177,12 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-node-hunch"
+          className="w-full bg-cof-bg-elevated border border-cof-border rounded-lg px-3 py-2 text-sm text-cof-text-primary focus:outline-none focus:border-node-hunch focus:ring-1 focus:ring-node-hunch/20 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+        <label className="block text-xs text-cof-text-tertiary uppercase tracking-wide mb-1">
           People involved
         </label>
         <PersonAutocomplete
@@ -193,7 +193,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
 
       {!isFileMode && (
         <details className="group">
-          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
+          <summary className="text-xs text-cof-text-tertiary cursor-pointer hover:text-cof-text-secondary transition-colors">
             + Add external link
           </summary>
           <div className="mt-2 flex gap-2">
@@ -202,14 +202,14 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
               value={linkUrl}
               onChange={e => setLinkUrl(e.target.value)}
               placeholder="https://..."
-              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+              className="flex-1 bg-cof-bg-elevated border border-cof-border rounded-lg px-3 py-1.5 text-sm text-cof-text-primary placeholder:text-cof-text-tertiary focus:outline-none focus:border-node-hunch focus:ring-1 focus:ring-node-hunch/20 transition-colors"
             />
             <input
               type="text"
               value={linkLabel}
               onChange={e => setLinkLabel(e.target.value)}
               placeholder="Label"
-              className="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-node-hunch"
+              className="w-32 bg-cof-bg-elevated border border-cof-border rounded-lg px-3 py-1.5 text-sm text-cof-text-primary placeholder:text-cof-text-tertiary focus:outline-none focus:border-node-hunch focus:ring-1 focus:ring-node-hunch/20 transition-colors"
             />
           </div>
         </details>

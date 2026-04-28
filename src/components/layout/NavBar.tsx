@@ -37,9 +37,9 @@ export function NavBar({ reviewCount }: NavBarProps) {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-white/90 dark:bg-gray-950/80 backdrop-blur-sm border-b border-gray-200/80 dark:border-gray-800/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-cof-bg-elevated/90 backdrop-blur-sm border-b border-cof-border/70">
       <div className="flex items-center gap-8">
-        <Link href="/" className="text-sm font-bold text-gray-700 dark:text-gray-300 tracking-widest">
+        <Link href="/" className="text-sm font-bold text-cof-text-primary tracking-widest">
           COF
         </Link>
         <div className="flex gap-4">
@@ -50,7 +50,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
               className={`text-xs transition-colors ${
                 isActive(link.href)
                   ? 'text-node-hunch border-b-2 border-node-hunch pb-1'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300'
+                  : 'text-cof-text-tertiary hover:text-cof-text-secondary'
               }`}
             >
               {link.label}
@@ -69,7 +69,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
         )}
         <button
           onClick={handleSignOut}
-          className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="w-7 h-7 rounded-full bg-cof-bg-subtle flex items-center justify-center text-xs text-cof-text-secondary hover:bg-cof-border transition-colors"
           title={user?.email ?? 'Sign out'}
         >
           {user?.email?.charAt(0).toUpperCase() ?? '?'}

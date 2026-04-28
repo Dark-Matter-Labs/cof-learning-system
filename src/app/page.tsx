@@ -123,8 +123,8 @@ export default async function DashboardPage() {
     <div className="page-with-nav">
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{greeting(profileName)}</h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500">{todayLabel()}</p>
+          <h1 className="text-xl font-semibold text-cof-text-primary">{greeting(profileName)}</h1>
+          <p className="text-sm text-cof-text-tertiary">{todayLabel()}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <div className="lg:col-span-3 space-y-4">

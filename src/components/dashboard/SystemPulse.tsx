@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Card } from '@/components/ui/Card';
 import type { SystemPulseData } from '@/lib/dashboard/queries';
 
 function formatTimeAgo(iso: string): string {
@@ -12,49 +13,49 @@ function formatTimeAgo(iso: string): string {
 
 export function SystemPulse({ data }: { readonly data: SystemPulseData }) {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
+    <Card>
+      <p className="text-xs font-semibold uppercase tracking-widest text-cof-text-tertiary mb-4">
         System pulse
       </p>
       <dl className="space-y-3">
         <div className="flex justify-between text-sm">
-          <dt className="text-gray-500 dark:text-gray-400">Last capture</dt>
-          <dd className="font-medium text-gray-800 dark:text-gray-200">
+          <dt className="text-cof-text-secondary">Last capture</dt>
+          <dd className="font-medium text-cof-text-primary">
             {data.lastCaptureAt ? formatTimeAgo(data.lastCaptureAt) : 'Never'}
           </dd>
         </div>
         <div className="flex justify-between text-sm">
-          <dt className="text-gray-500 dark:text-gray-400">This week</dt>
-          <dd className="font-medium text-gray-800 dark:text-gray-200">{data.thisWeekCount}</dd>
+          <dt className="text-cof-text-secondary">This week</dt>
+          <dd className="font-medium text-cof-text-primary">{data.thisWeekCount}</dd>
         </div>
         <div className="flex justify-between text-sm">
-          <dt className="text-gray-500 dark:text-gray-400">Active commitments</dt>
+          <dt className="text-cof-text-secondary">Active commitments</dt>
           <dd>
-            <Link href="/commitments" className="font-medium text-gray-800 dark:text-gray-200 hover:text-node-hunch transition-colors">
+            <Link href="/commitments" className="font-medium text-cof-text-primary hover:text-node-hunch transition-colors">
               {data.activeCommitmentsCount}
             </Link>
           </dd>
         </div>
         <div className="flex justify-between text-sm">
-          <dt className="text-gray-500 dark:text-gray-400">Open tensions</dt>
+          <dt className="text-cof-text-secondary">Open tensions</dt>
           <dd>
-            <Link href="/review" className="font-medium text-gray-800 dark:text-gray-200 hover:text-node-hunch transition-colors">
+            <Link href="/review" className="font-medium text-cof-text-primary hover:text-node-hunch transition-colors">
               {data.openTensionsCount}
             </Link>
           </dd>
         </div>
         <div className="flex justify-between text-sm">
-          <dt className="text-gray-500 dark:text-gray-400">Hunches in flight</dt>
+          <dt className="text-cof-text-secondary">Hunches in flight</dt>
           <dd>
-            <Link href="/graph" className="font-medium text-gray-800 dark:text-gray-200 hover:text-node-hunch transition-colors">
+            <Link href="/graph" className="font-medium text-cof-text-primary hover:text-node-hunch transition-colors">
               {data.hunchesInFlightCount}
             </Link>
           </dd>
         </div>
       </dl>
-      <Link href="/review" className="mt-4 block text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+      <Link href="/review" className="mt-4 block text-xs text-cof-text-tertiary hover:text-cof-text-secondary transition-colors">
         View health →
       </Link>
-    </div>
+    </Card>
   );
 }

@@ -73,8 +73,8 @@ export default function CapturePage() {
 
   return (
     <div className="page-with-nav"><div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Capture</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Paste a transcript, drop a file, or write a thought.</p>
+      <h1 className="text-lg font-bold text-cof-text-primary mb-2">Capture</h1>
+      <p className="text-sm text-cof-text-secondary mb-6">Paste a transcript, drop a file, or write a thought.</p>
 
       {/* Quick-entry mode cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -83,12 +83,12 @@ export default function CapturePage() {
           onClick={() => setEntryMode(entryMode === 'thought' ? null : 'thought')}
           className={`rounded-xl border p-4 text-left transition-colors ${
             entryMode === 'thought'
-              ? 'border-node-hunch bg-node-hunch/10 dark:bg-node-hunch/10'
-              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              ? 'border-node-hunch bg-node-hunch/10'
+              : 'border-cof-border hover:border-cof-border-strong bg-cof-bg-elevated'
           }`}
         >
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Quick thought</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Just a title and a few lines</div>
+          <div className="text-sm font-medium text-cof-text-primary mb-1">Quick thought</div>
+          <div className="text-xs text-cof-text-secondary">Just a title and a few lines</div>
         </button>
 
         <button
@@ -96,12 +96,12 @@ export default function CapturePage() {
           onClick={() => setEntryMode(entryMode === 'call' ? null : 'call')}
           className={`rounded-xl border p-4 text-left transition-colors ${
             entryMode === 'call'
-              ? 'border-node-hunch bg-node-hunch/10 dark:bg-node-hunch/10'
-              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              ? 'border-node-hunch bg-node-hunch/10'
+              : 'border-cof-border hover:border-cof-border-strong bg-cof-bg-elevated'
           }`}
         >
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Paste a call</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Transcript or meeting notes</div>
+          <div className="text-sm font-medium text-cof-text-primary mb-1">Paste a call</div>
+          <div className="text-xs text-cof-text-secondary">Transcript or meeting notes</div>
         </button>
 
         <button
@@ -109,19 +109,19 @@ export default function CapturePage() {
           onClick={() => setEntryMode(entryMode === 'file' ? null : 'file')}
           className={`rounded-xl border p-4 text-left transition-colors ${
             entryMode === 'file'
-              ? 'border-node-hunch bg-node-hunch/10 dark:bg-node-hunch/10'
-              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              ? 'border-node-hunch bg-node-hunch/10'
+              : 'border-cof-border hover:border-cof-border-strong bg-cof-bg-elevated'
           }`}
         >
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Upload a file</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">PDF · DOCX · TXT</div>
+          <div className="text-sm font-medium text-cof-text-primary mb-1">Upload a file</div>
+          <div className="text-xs text-cof-text-secondary">PDF · DOCX · TXT</div>
         </button>
       </div>
 
       <QuickCaptureForm key={entryMode ?? 'none'} onSubmit={handleSubmit} isSubmitting={isSubmitting} entryMode={entryMode} />
 
       <div className="mt-10">
-        <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">Recent Captures</h2>
+        <h2 className="text-sm font-medium text-cof-text-tertiary uppercase tracking-wide mb-4">Recent Captures</h2>
         <HunchList nodes={nodes} />
       </div>
     </div></div>
