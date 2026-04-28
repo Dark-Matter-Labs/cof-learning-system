@@ -60,7 +60,6 @@ export async function runDistillation(
 
   const errors: string[] = [];
   let created = 0;
-  const validIdSet = new Set((nodes as NodeSummary[]).map(n => n.id));
   const nodeMap = new Map((nodes as NodeSummary[]).map(n => [n.id, n]));
 
   for (const group of groups) {
