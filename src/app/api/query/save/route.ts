@@ -45,15 +45,22 @@ export async function POST(request: Request): Promise<Response> {
       author_id: user.id,
     }));
     const { error: edgeError } = await supabase.from('edges').insert(edges);
-    if (!edgeError) edgesCreated = edges.length;
+    if (edgeError) {
+      process.stderr.write(`[query/save] Edge insert failed for node ${node.id}: ${edgeError.message}\n`);
+    } else {
+      edgesCreated = edges.length;
+    }
   }
 
-  await supabase.from('activity_log').insert({
+  const { error: logError } = await supabase.from('activity_log').insert({
     actor_id: user.id,
-    action: 'created_hunch',
+    action: node_type === 'hunch' ? 'created_hunch' : 'created_learning',
     target_node_id: node.id,
     details: { source: 'query_synthesis', context_node_count: context_node_ids.length },
   });
+  if (logError) {
+    process.stderr.write(`[query/save] Activity log failed for node ${node.id}: ${logError.message}\n`);
+  }
 
   return NextResponse.json({ data: { node, edges_created: edgesCreated } }, { status: 201 });
 }

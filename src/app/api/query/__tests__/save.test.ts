@@ -79,6 +79,8 @@ describe('POST /api/query/save', () => {
     expect(insertArg.confidence_basis).toBe('observation');
     expect(insertArg.author_id).toBe('user-1');
     expect(insertArg.title).toBe(VALID_BODY.title);
+    expect(insertArg.confidence_level).toBe(3);
+    expect(insertArg.description).toBe(VALID_BODY.content);
   });
 
   it('creates edges to each context node', async () => {
@@ -102,5 +104,27 @@ describe('POST /api/query/save', () => {
     const res = await POST(makeRequest({ ...VALID_BODY, context_node_ids: [] }));
     expect(res.status).toBe(201);
     expect(mockEdgesInsert).not.toHaveBeenCalled();
+  });
+
+  it('returns 500 when node insert fails', async () => {
+    mockNodesInsert.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: null, error: new Error('db error') }),
+      }),
+    });
+    const res = await POST(makeRequest(VALID_BODY));
+    expect(res.status).toBe(500);
+  });
+
+  it('logs created_learning action for learning node_type', async () => {
+    await POST(makeRequest(VALID_BODY)); // VALID_BODY.node_type is 'learning'
+    const logArg = mockActivityInsert.mock.calls[0][0] as Record<string, unknown>;
+    expect(logArg.action).toBe('created_learning');
+  });
+
+  it('logs created_hunch action for hunch node_type', async () => {
+    await POST(makeRequest({ ...VALID_BODY, node_type: 'hunch' }));
+    const logArg = mockActivityInsert.mock.calls[0][0] as Record<string, unknown>;
+    expect(logArg.action).toBe('created_hunch');
   });
 });
