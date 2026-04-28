@@ -51,8 +51,9 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
   const errors: string[] = [];
 
   for (const source of sources) {
-    const config = source.config as { search_query?: string };
-    const query = config.search_query ?? topics.find(t => t.id === source.topic_node_id)?.title ?? '';
+    const rawConfig = source.config as Record<string, unknown>;
+    const rawQuery = typeof rawConfig?.search_query === 'string' ? rawConfig.search_query : undefined;
+    const query = rawQuery ?? topics.find(t => t.id === source.topic_node_id)?.title ?? '';
     if (!query) continue;
 
     try {
@@ -60,20 +61,22 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
         `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=10`,
         { headers: { 'X-Subscription-Token': apiKey, 'Accept': 'application/json' } }
       );
-      if (!res.ok) { errors.push(`Brave search failed for "${query}": ${res.status}`); continue; }
+      if (!res.ok) {
+        process.stderr.write(`[signals] Brave search failed for "${query}": ${res.status}\n`);
+        errors.push(`Brave search unavailable for a source`);
+        continue;
+      }
 
       const data = await res.json() as BraveResponse;
       const results = data.web?.results ?? [];
 
-      const unseenResults: BraveResult[] = [];
-      for (const result of results) {
-        const { data: seen } = await supabase
-          .from('seen_external_urls')
-          .select('url')
-          .eq('url', result.url)
-          .single();
-        if (!seen) unseenResults.push(result);
-      }
+      const urls = results.map(r => r.url);
+      const { data: seenRows } = await supabase
+        .from('seen_external_urls')
+        .select('url')
+        .in('url', urls);
+      const seenSet = new Set((seenRows ?? []).map(r => r.url as string));
+      const unseenResults = results.filter(r => !seenSet.has(r.url));
 
       const relevant = filterRelevant(unseenResults, r => `${r.title} ${r.description}`, keywords, 5);
       if (!relevant.length) continue;
@@ -98,18 +101,20 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
         // non-fatal: malformed JSON from LLM
       }
 
+      const attributionUrl = relevant.map(r => r.url).join('; ');
       for (const e of extracted) {
         allSignals.push({
           title: e.title,
           summary: e.summary,
           sourceType: 'web',
-          sourceAttribution: relevant[0]?.url ?? query,
+          sourceAttribution: attributionUrl,
           topicNodeId: source.topic_node_id as string,
           authorId: userId,
         });
       }
     } catch (err) {
-      errors.push(`Web scan error for "${query}": ${String(err)}`);
+      process.stderr.write(`[signals] Web scan error for "${query}": ${String(err)}\n`);
+      errors.push(`Scan failed for source (see server logs)`);
     }
 
     await supabase.from('auto_signal_sources').update({ last_run_at: new Date().toISOString() }).eq('id', source.id);

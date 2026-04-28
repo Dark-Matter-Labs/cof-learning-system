@@ -75,15 +75,15 @@ export async function ingestSignals(signals: SignalInput[]): Promise<{ created: 
     const { error } = await supabase.from('nodes').insert(nodes);
     if (error) return { created: 0, skipped: signals.length };
 
-    const { error: upsertError } = await supabase.from('auto_signal_quota').upsert({
-      quota_date: today,
-      signals_created: currentCount + toProcess.length,
+    const { error: rpcError } = await supabase.rpc('increment_signal_quota', {
+      p_count: toProcess.length,
     });
     // Non-fatal: log to stderr but don't fail the ingestion
-    if (upsertError) process.stderr.write(`[signals] quota upsert failed: ${upsertError.message}\n`);
+    if (rpcError) process.stderr.write(`[signals] quota increment failed: ${rpcError.message}\n`);
 
     return { created: toProcess.length, skipped: signals.length - toProcess.length };
   } catch (error) {
+    process.stderr.write(`[signals] ingestSignals failed: ${String(error)}\n`);
     return { created: 0, skipped: signals.length };
   }
 }

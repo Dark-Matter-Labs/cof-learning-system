@@ -16,12 +16,14 @@ export function AutoSignalsTab() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
     fetch('/api/signals/sources')
       .then(r => r.json() as Promise<{ data?: SignalSource[] }>)
       .then(body => setSources(body.data ?? []))
+      .catch(() => setSources([]))
       .finally(() => setLoading(false));
   }, []);
 
@@ -32,14 +34,16 @@ export function AutoSignalsTab() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, enabled }),
-    }).then(() => load());
+    }).then(() => load()).catch(() => {});
   };
 
   const runScan = () => {
     setScanning(true);
+    setScanError(null);
     fetch('/api/signals/scan', { method: 'POST' })
       .then(r => r.json() as Promise<{ data?: { created: number; skipped: number } }>)
       .then(body => setLastScanResult(body.data ?? null))
+      .catch(() => setScanError('Scan failed — check server logs'))
       .finally(() => setScanning(false));
   };
 
@@ -69,6 +73,9 @@ export function AutoSignalsTab() {
           Last scan: {lastScanResult.created} signal{lastScanResult.created === 1 ? '' : 's'} created,{' '}
           {lastScanResult.skipped} skipped (quota or duplicate)
         </div>
+      )}
+      {scanError && (
+        <p className="text-xs text-red-500">{scanError}</p>
       )}
 
       {sources.length === 0 ? (

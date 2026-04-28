@@ -56,7 +56,10 @@ export async function PATCH(request: Request): Promise<Response> {
   const { id, enabled } = parsed.data;
 
   const { data, error } = await supabase.from('auto_signal_sources')
-    .update({ enabled: enabled ?? true }).eq('id', id).select().single();
+    .update({ enabled: enabled ?? true })
+    .eq('id', id)
+    .eq('created_by', user.id)
+    .select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data });
