@@ -41,4 +41,10 @@ describe('POST /api/distill/run', () => {
     const body = await res.json() as { data: { created: number } };
     expect(body.data.created).toBe(0);
   });
+
+  it('returns 500 when runDistillation throws', async () => {
+    mockRunDistillation.mockRejectedValue(new Error('LLM timeout'));
+    const res = await POST();
+    expect(res.status).toBe(500);
+  });
 });

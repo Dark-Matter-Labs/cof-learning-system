@@ -54,11 +54,13 @@ describe('GET /api/distill/candidates', () => {
       }),
     });
     mockNodesSelect.mockReturnValue({
-      in: vi.fn().mockResolvedValue({
-        data: [
-          { id: 'n1', title: 'Node 1', node_type: 'hunch', description: 'Desc 1' },
-          { id: 'n2', title: 'Node 2', node_type: 'hunch', description: 'Desc 2' },
-        ],
+      in: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          data: [
+            { id: 'n1', title: 'Node 1', node_type: 'hunch', description: 'Desc 1' },
+            { id: 'n2', title: 'Node 2', node_type: 'hunch', description: 'Desc 2' },
+          ],
+        }),
       }),
     });
   });
@@ -122,6 +124,9 @@ describe('PATCH /api/distill/candidates — reject', () => {
     expect(res.status).toBe(200);
     const body = await res.json() as { data: { action: string } };
     expect(body.data.action).toBe('rejected');
+    expect(mockCandidatesUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'rejected' })
+    );
   });
 });
 

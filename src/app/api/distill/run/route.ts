@@ -7,6 +7,11 @@ export async function POST(): Promise<Response> {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const result = await runDistillation(supabase, user.id);
-  return NextResponse.json({ data: result });
+  try {
+    const result = await runDistillation(supabase, user.id);
+    return NextResponse.json({ data: result });
+  } catch {
+    process.stderr.write('[distill/run] Unhandled error in runDistillation\n');
+    return NextResponse.json({ error: 'Distillation failed' }, { status: 500 });
+  }
 }

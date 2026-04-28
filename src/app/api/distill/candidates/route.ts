@@ -21,7 +21,8 @@ export async function GET(): Promise<Response> {
   const { data: nodes } = await supabase
     .from('nodes')
     .select('id, title, node_type, description')
-    .in('id', allNodeIds);
+    .in('id', allNodeIds)
+    .eq('author_id', user.id);
 
   const nodeMap = new Map((nodes ?? []).map(n => [n.id as string, n]));
   const enriched = candidates.map(c => ({
@@ -62,10 +63,14 @@ export async function PATCH(request: Request): Promise<Response> {
   if (fetchError || !candidate) return NextResponse.json({ error: 'Candidate not found' }, { status: 404 });
 
   if (action === 'reject') {
-    await supabase
+    const { error: rejectError } = await supabase
       .from('distillation_candidates')
       .update({ status: 'rejected', resolved_at: new Date().toISOString() })
       .eq('id', id);
+    if (rejectError) {
+      process.stderr.write(`[distill/candidates] Reject update failed for ${id}: ${rejectError.message}\n`);
+      return NextResponse.json({ error: 'Failed to reject candidate' }, { status: 500 });
+    }
     return NextResponse.json({ data: { action: 'rejected' } });
   }
 
@@ -99,15 +104,21 @@ export async function PATCH(request: Request): Promise<Response> {
     process.stderr.write(`[distill/candidates] Edge insert failed for candidate ${id}: ${edgeError.message}\n`);
   }
 
-  await supabase
+  const { error: archiveError } = await supabase
     .from('nodes')
     .update({ status: 'archived' })
     .in('id', candidate.node_ids as string[]);
+  if (archiveError) {
+    process.stderr.write(`[distill/candidates] Archive failed for candidate ${id}: ${archiveError.message}\n`);
+  }
 
-  await supabase
+  const { error: acceptUpdateError } = await supabase
     .from('distillation_candidates')
     .update({ status: 'accepted', resolved_at: new Date().toISOString(), resolved_node_id: newNode.id })
     .eq('id', id);
+  if (acceptUpdateError) {
+    process.stderr.write(`[distill/candidates] Accept status update failed for ${id}: ${acceptUpdateError.message}\n`);
+  }
 
   return NextResponse.json({ data: { action: 'accepted', node_id: newNode.id } });
 }
