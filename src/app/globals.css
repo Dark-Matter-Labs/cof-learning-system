@@ -110,12 +110,6 @@ body {
   min-height: 100vh;
 }
 
-/* Card hover lift */
-@keyframes card-lift {
-  from { transform: translateY(0); box-shadow: none; }
-  to   { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-}
-
 /* Tension alert pulse — 3 cycles then stops */
 @keyframes tension-pulse {
   0%, 100% { opacity: 1; }

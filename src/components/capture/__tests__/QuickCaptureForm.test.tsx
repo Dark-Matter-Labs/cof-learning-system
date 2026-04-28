@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { QuickCaptureForm } from '../QuickCaptureForm';
 
 // Mock PersonAutocomplete to avoid fetch calls in tests

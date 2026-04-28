@@ -226,7 +226,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
       ) : (
         <button
           type="submit"
-          disabled={!canSubmit || submitPhase !== 'idle'}
+          disabled={!canSubmit}
           className={`
             px-4 py-2 text-sm rounded-lg font-medium transition-all duration-200
             ${submitPhase === 'captured'

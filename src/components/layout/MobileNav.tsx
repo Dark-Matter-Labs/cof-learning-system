@@ -20,7 +20,11 @@ export function MobileNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm border-t border-cof-border safe-area-inset-bottom">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm border-t border-cof-border"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      aria-label="Mobile navigation"
+    >
       {NAV_ITEMS.map(item => (
         <Link
           key={item.href}
@@ -31,6 +35,7 @@ export function MobileNav() {
               : 'text-cof-text-tertiary hover:text-cof-text-secondary'
             }
             ${item.label === 'Capture' ? 'relative' : ''}`}
+          aria-current={isActive(item.href) ? 'page' : undefined}
         >
           {item.label === 'Capture' ? (
             <span className="w-10 h-10 rounded-full bg-node-hunch text-white flex items-center justify-center text-lg font-light -mt-4 shadow-lg">
