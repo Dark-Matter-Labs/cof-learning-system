@@ -23,7 +23,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
   const links = [
     { href: '/', label: 'Dashboard' },
     { href: '/graph', label: 'Graph' },
-    { href: '/capture', label: 'Capture' },
+    { href: '/portfolios', label: 'Portfolios' },
     { href: '/commitments', label: 'Commitments' },
     { href: '/query', label: 'Query' },
     { href: '/review', label: 'Health' },
