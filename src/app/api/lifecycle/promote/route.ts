@@ -12,7 +12,7 @@ export async function POST(): Promise<Response> {
     .select('id, lifecycle_stage')
     .eq('node_type', 'hunch')
     .eq('author_id', user.id)
-    .not('lifecycle_stage', 'in', '("execution","archived")');
+    .not('lifecycle_stage', 'in', '("holding","archived")');
 
   if (error) return NextResponse.json({ error: 'Failed to load hunches' }, { status: 500 });
 

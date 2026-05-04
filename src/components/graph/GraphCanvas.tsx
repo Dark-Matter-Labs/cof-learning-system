@@ -134,13 +134,14 @@ const FLOW_COLUMNS: Record<string, number> = {
 };
 
 const FLOW_BAND_COLORS: Record<string, string> = {
-  divergence: '#9ca3af',
-  attractor:  '#7F77DD',
-  convergence: '#1D9E75',
-  execution:  '#185FA5',
+  hypothesis:  '#9ca3af',
+  uncertainty: '#7F77DD',
+  navigation:  '#1D9E75',
+  coherence:   '#185FA5',
+  holding:     '#10b981',
 };
 
-const LIFECYCLE_BAND_LABELS = ['Divergence', 'Attractor', 'Convergence', 'Execution'] as const;
+const LIFECYCLE_BAND_LABELS = ['Hypothesis', 'Uncertainty', 'Navigation', 'Coherence', 'Holding'] as const;
 
 /** Flow: left-to-right by type — hunches → assumptions/signals → learnings/tests → commitments.
  *  Hunch nodes are additionally positioned by lifecycle_stage within the canvas width. */
@@ -459,8 +460,8 @@ const setTooltipRef = useRef(setTooltip);
     // Flow: lifecycle band column labels (rendered behind links and nodes)
     if (view === 'flow') {
       const BAND_HEIGHT = 32;
-      const bandWidth = width / 4;
-      const bandStages = ['divergence', 'attractor', 'convergence', 'execution'];
+      const bandWidth = width / 5;
+      const bandStages = ['hypothesis', 'uncertainty', 'navigation', 'coherence', 'holding'];
       const bandsG = g.append('g').attr('class', 'lifecycle-bands');
 
       bandStages.forEach((stage, i) => {

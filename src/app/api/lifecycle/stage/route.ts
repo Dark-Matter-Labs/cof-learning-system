@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const VALID_STAGES = ['divergence', 'attractor', 'convergence', 'execution', 'archived'] as const;
+const VALID_STAGES = ['hypothesis', 'uncertainty', 'navigation', 'coherence', 'holding', 'archived'] as const;
 
 const schema = z.object({
   node_id: z.string().uuid(),
