@@ -7,6 +7,7 @@ import type { LifecycleStage } from '@/lib/lifecycle/autoPromote';
 import { NodeTypeBadge } from '@/components/shared/NodeTypeBadge';
 import { NodeSearchAutocomplete, type NodeOption } from '@/components/shared/NodeSearchAutocomplete';
 import { getNodeConnections } from '@/lib/graph/queries';
+import { HunchExplainer } from '@/components/shared/HunchExplainer';
 
 const NODE_TYPE_OPTIONS = [
   { id: 'hunch',                   label: 'Hunch' },
@@ -67,30 +68,35 @@ interface LifecyclePromptProps {
 
 function LifecyclePrompt({ stage, nodeId, daysSinceTransition }: LifecyclePromptProps) {
   const prompts: Partial<Record<LifecycleStage, { threshold: number; text: string; actions: readonly { label: string; href: string }[] }>> = {
-    divergence: {
+    hypothesis: {
       threshold: 7,
-      text: `This hunch has been sitting for ${daysSinceTransition} days.`,
+      text: `This hypothesis has been sitting for ${daysSinceTransition} days. Time to map the uncertainty.`,
       actions: [
         { label: 'Connect an assumption', href: `/capture/${nodeId}` },
         { label: 'Archive it', href: `/capture/${nodeId}` },
       ],
     },
-    attractor: {
+    uncertainty: {
       threshold: 14,
-      text: 'This has assumptions but no reinforced evidence yet.',
+      text: 'Uncertainties mapped but untested. What probe generates the most informative signal?',
       actions: [{ label: 'Design a test', href: `/capture/${nodeId}` }],
     },
-    convergence: {
+    navigation: {
       threshold: 14,
-      text: 'Resources committed but no recent signals.',
+      text: 'Inquiry active but not yet integrated. What would moving toward coherence require?',
       actions: [
+        { label: 'Connect to a commitment', href: `/commitments` },
         { label: 'Log a signal', href: `/capture` },
-        { label: 'Update commitment', href: `/commitments` },
       ],
     },
-    execution: {
+    coherence: {
       threshold: 0,
-      text: 'This is now executing.',
+      text: "The field is coherent. What's the holding pattern? Who carries this through time?",
+      actions: [{ label: 'Capture a learning', href: `/capture` }],
+    },
+    holding: {
+      threshold: 0,
+      text: "This is live capability. What's the current state of learning?",
       actions: [{ label: 'Capture an outcome', href: `/capture` }],
     },
   };
@@ -100,7 +106,10 @@ function LifecyclePrompt({ stage, nodeId, daysSinceTransition }: LifecyclePrompt
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{prompt.text}</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-gray-500 dark:text-gray-400">{prompt.text}</p>
+        <HunchExplainer />
+      </div>
       <div className="flex flex-wrap gap-2">
         {prompt.actions.map(action => (
           <a
