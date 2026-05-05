@@ -3,6 +3,7 @@
 import { useState, useRef, useMemo } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import { NodeCard } from './NodeCard';
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 
 interface Message {
   readonly id: number;
@@ -10,6 +11,7 @@ interface Message {
   readonly content: string;
   readonly nodeIds: readonly string[];
   readonly savedNodeId?: string;
+  readonly sessionId?: string;
 }
 
 interface AskModeProps {
@@ -74,6 +76,8 @@ export function AskMode({ allNodes }: AskModeProps) {
         // non-fatal: proceed without node references
       }
 
+      const querySessionId = res.headers.get('X-Query-Session-Id') ?? undefined;
+
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       if (!reader) throw new Error('No response body');
@@ -88,6 +92,13 @@ export function AskMode({ allNodes }: AskModeProps) {
           setMessages(prev => {
             const updated = [...prev];
             updated[updated.length - 1] = { ...updated[updated.length - 1], content: current, nodeIds: contextNodeIds };
+            return updated;
+          });
+        }
+        if (querySessionId) {
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...updated[updated.length - 1], sessionId: querySessionId };
             return updated;
           });
         }
@@ -187,6 +198,7 @@ export function AskMode({ allNodes }: AskModeProps) {
                           Saved to graph →
                         </a>
                       ) : saveState?.messageId === msg.id ? (
+
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <input
                             type="text"
@@ -236,6 +248,9 @@ export function AskMode({ allNodes }: AskModeProps) {
                         </button>
                       )}
                     </div>
+                  )}
+                  {msg.content && !isStreaming && msg.sessionId && (
+                    <FeedbackWidget sourceType="query" sourceId={msg.sessionId} />
                   )}
                 </div>
               )}

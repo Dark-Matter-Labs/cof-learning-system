@@ -98,6 +98,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const encoder = new TextEncoder();
   const anthropic = new Anthropic({ apiKey });
+  const sessionId = crypto.randomUUID();
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -109,11 +110,21 @@ export async function POST(request: Request): Promise<Response> {
           messages,
         });
 
+        let accumulatedResponse = '';
         for await (const chunk of messageStream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            accumulatedResponse += chunk.delta.text;
             controller.enqueue(encoder.encode(chunk.delta.text));
           }
         }
+
+        await supabase.from('query_sessions').insert({
+          id: sessionId,
+          author_id: user.id,
+          query_text: query,
+          response: accumulatedResponse,
+          node_refs: contextNodeIds,
+        });
 
         controller.close();
       } catch (err) {
@@ -127,6 +138,7 @@ export async function POST(request: Request): Promise<Response> {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-cache',
       'X-Context-Nodes': JSON.stringify(contextNodeIds),
+      'X-Query-Session-Id': sessionId,
     },
   });
 }

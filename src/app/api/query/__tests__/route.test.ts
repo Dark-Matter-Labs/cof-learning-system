@@ -16,6 +16,7 @@ vi.mock('@/lib/supabase/server', () => ({
         if (table === 'nodes') return { select: mockNodesSelect };
         if (table === 'edges') return { select: mockEdgesSelect };
         if (table === 'profiles') return { select: mockProfileSelect };
+        if (table === 'query_sessions') return { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
         return { select: vi.fn().mockResolvedValue({ data: [] }) };
       },
     })
@@ -117,6 +118,12 @@ describe('POST /api/query', () => {
     const res = await POST(makeRequest({ query: 'Madrid financial' }));
     const text = await res.text();
     expect(text).toBe('Hello world');
+  });
+
+  it('includes X-Query-Session-Id header with a UUID', async () => {
+    const res = await POST(makeRequest({ query: 'Madrid financial' }));
+    const sessionId = res.headers.get('X-Query-Session-Id');
+    expect(sessionId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it('includes user background in system prompt when profile has background', async () => {
