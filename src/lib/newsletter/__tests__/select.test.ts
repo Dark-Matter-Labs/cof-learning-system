@@ -5,22 +5,9 @@ import {
   filterStuckHunches,
   filterActiveCommitments,
   filterCompletedCommitments,
+  type RawHunch,
+  type RawCommitment,
 } from '../select';
-
-type RawHunch = {
-  id: string;
-  title: string;
-  lifecycle_stage: string;
-  stage_transitioned_at: string | null;
-  created_at: string;
-};
-
-type RawCommitment = {
-  id: string;
-  title: string;
-  status: string;
-  updated_at: string;
-};
 
 const OLD = new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString();
 const RECENT = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();

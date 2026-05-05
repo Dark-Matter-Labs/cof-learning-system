@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { LifecycleStage } from '@/lib/lifecycle/autoPromote';
 
 const SIX_WEEKS_MS = 6 * 7 * 24 * 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -18,8 +19,8 @@ export interface CloseContactsData {
   readonly coherentHunches: ReadonlyArray<{ readonly id: string; readonly title: string; readonly lifecycle_stage: string }>;
 }
 
-type RawHunch = { id: string; title: string; lifecycle_stage: string; stage_transitioned_at: string | null; created_at: string };
-type RawCommitment = { id: string; title: string; status: string; updated_at: string };
+export type RawHunch = { id: string; title: string; lifecycle_stage: LifecycleStage; stage_transitioned_at: string | null; created_at: string };
+export type RawCommitment = { id: string; title: string; status: string; updated_at: string };
 
 export function computeStageCounts(hunches: readonly RawHunch[]): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -35,16 +36,16 @@ export function filterRecentlyMoved(hunches: readonly RawHunch[], sixWeeksAgo: s
     .map(h => ({ id: h.id, title: h.title, lifecycle_stage: h.lifecycle_stage }));
 }
 
-export function filterStuckHunches(hunches: readonly RawHunch[], thirtyDaysAgo: string): ReadonlyArray<{ id: string; title: string; lifecycle_stage: string; daysStuck: number }> {
+export function filterStuckHunches(hunches: readonly RawHunch[], thirtyDaysAgo: string, nowMs = Date.now()): ReadonlyArray<{ id: string; title: string; lifecycle_stage: string; daysStuck: number }> {
   return hunches
     .filter(h => {
-      if (['holding', 'archived'].includes(h.lifecycle_stage)) return false;
+      if ((['holding', 'archived'] as readonly LifecycleStage[]).includes(h.lifecycle_stage)) return false;
       const since = h.stage_transitioned_at ?? h.created_at;
       return since < thirtyDaysAgo;
     })
     .map(h => {
       const since = h.stage_transitioned_at ?? h.created_at;
-      const daysStuck = Math.floor((Date.now() - new Date(since).getTime()) / (24 * 60 * 60 * 1000));
+      const daysStuck = Math.floor((nowMs - new Date(since).getTime()) / (24 * 60 * 60 * 1000));
       return { id: h.id, title: h.title, lifecycle_stage: h.lifecycle_stage, daysStuck };
     });
 }
@@ -81,6 +82,10 @@ export async function selectMissionPathwaysNodes(supabase: SupabaseClient): Prom
       .not('status', 'in', '("archived","falsified")')
       .gte('updated_at', sixWeeksAgo),
   ]);
+
+  if (hunchesRes.error) throw new Error(`Failed to fetch hunches: ${hunchesRes.error.message}`);
+  if (commitmentsRes.error) throw new Error(`Failed to fetch commitments: ${commitmentsRes.error.message}`);
+  if (testsRes.error) throw new Error(`Failed to fetch tests: ${testsRes.error.message}`);
 
   const hunches = (hunchesRes.data ?? []) as RawHunch[];
   const commitments = (commitmentsRes.data ?? []) as RawCommitment[];
@@ -120,6 +125,10 @@ export async function selectCloseContactsNodes(supabase: SupabaseClient): Promis
       .in('lifecycle_stage', ['coherence', 'holding'])
       .gte('updated_at', sixWeeksAgo),
   ]);
+
+  if (learningsRes.error) throw new Error(`Failed to fetch learnings: ${learningsRes.error.message}`);
+  if (testsRes.error) throw new Error(`Failed to fetch tests: ${testsRes.error.message}`);
+  if (hunchesRes.error) throw new Error(`Failed to fetch hunches: ${hunchesRes.error.message}`);
 
   return {
     learnings: (learningsRes.data ?? []).map(l => ({
