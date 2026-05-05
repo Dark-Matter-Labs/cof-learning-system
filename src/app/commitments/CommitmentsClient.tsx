@@ -50,6 +50,7 @@ export function CommitmentsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [addTitle, setAddTitle] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
+  const [localOutcomesByGoalSpace, setLocalOutcomesByGoalSpace] = useState<Record<string, Node[]>>({});
 
   // Build hierarchy
   const outcomesByGoalSpace: Record<string, Node[]> = {};
@@ -134,6 +135,28 @@ export function CommitmentsClient({
     setEditingId(null);
   }, []);
 
+  const handleAddOutcome = useCallback(async (goalSpaceId: string, title: string) => {
+    const nodeRes = await fetch('/api/graph/nodes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, node_type: 'trigger_outcome', status: 'promoted' }),
+    });
+    if (!nodeRes.ok) throw new Error('Failed to create outcome');
+    const { data: newOutcome } = await nodeRes.json() as { data: Node };
+
+    const edgeRes = await fetch('/api/graph/edges', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_id: newOutcome.id, target_id: goalSpaceId, edge_type: 'advances_goal', weight: 1 }),
+    });
+    if (!edgeRes.ok) throw new Error('Failed to link outcome to goal space');
+
+    setLocalOutcomesByGoalSpace(prev => ({
+      ...prev,
+      [goalSpaceId]: [...(prev[goalSpaceId] ?? []), newOutcome],
+    }));
+  }, []);
+
   const isEmpty = goalSpaces.length === 0 && commitments.length === 0;
 
   return (
@@ -169,7 +192,7 @@ export function CommitmentsClient({
             <div key={gs.id} id={`gs-${gs.id}`}>
               <GoalSpaceSection
                 goalSpace={gs}
-                triggerOutcomes={outcomesByGoalSpace[gs.id] ?? []}
+                triggerOutcomes={[...(outcomesByGoalSpace[gs.id] ?? []), ...(localOutcomesByGoalSpace[gs.id] ?? [])]}
                 commitmentsByOutcome={commitmentsByOutcome}
                 unlinkedCommitments={goalSpaceOnlyCommitments[gs.id] ?? []}
                 allNodes={allNodes}
@@ -182,6 +205,7 @@ export function CommitmentsClient({
                 editingId={editingId}
                 onSave={handleSave}
                 onCancelEdit={() => setEditingId(null)}
+                onAddOutcome={(title) => handleAddOutcome(gs.id, title)}
               />
             </div>
           ))}

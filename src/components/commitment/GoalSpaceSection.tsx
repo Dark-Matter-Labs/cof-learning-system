@@ -26,6 +26,7 @@ interface GoalSpaceSectionProps {
   readonly editingId?: string | null;
   readonly onSave?: (id: string, updates: CommitmentUpdates) => Promise<void>;
   readonly onCancelEdit?: () => void;
+  readonly onAddOutcome?: (title: string) => Promise<void>;
 }
 
 export function GoalSpaceSection({
@@ -43,9 +44,14 @@ export function GoalSpaceSection({
   editingId,
   onSave,
   onCancelEdit,
+  onAddOutcome,
 }: GoalSpaceSectionProps) {
   const [expanded, setExpanded] = useState(true);
   const [convergenceData, setConvergenceData] = useState<ConvergenceData | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addTitle, setAddTitle] = useState('');
+  const [addError, setAddError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     fetch(`/api/convergence/snapshots?goal_space_id=${goalSpace.id}`)
@@ -69,6 +75,22 @@ export function GoalSpaceSection({
     ...Object.values(commitmentsByOutcome).flat(),
     ...unlinkedCommitments,
   ];
+
+  const handleAddOutcomeSubmit = async () => {
+    const trimmed = addTitle.trim();
+    if (!trimmed || !onAddOutcome) return;
+    setIsAdding(true);
+    setAddError(null);
+    try {
+      await onAddOutcome(trimmed);
+      setAddTitle('');
+      setShowAddForm(false);
+    } catch {
+      setAddError('Failed to add outcome');
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <div className="border-b border-gray-200/80 dark:border-gray-800/50">
@@ -174,6 +196,55 @@ export function GoalSpaceSection({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Inline add outcome */}
+          {onAddOutcome && (
+            <div className="pl-6 py-1">
+              {showAddForm ? (
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={addTitle}
+                      onChange={e => setAddTitle(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { void handleAddOutcomeSubmit(); }
+                        if (e.key === 'Escape') { setShowAddForm(false); setAddTitle(''); setAddError(null); }
+                      }}
+                      placeholder="Outcome title…"
+                      autoFocus
+                      className="flex-1 text-[10px] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-xco-teal"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { void handleAddOutcomeSubmit(); }}
+                      disabled={!addTitle.trim() || isAdding}
+                      className="text-[10px] text-xco-ocean disabled:opacity-40"
+                    >
+                      {isAdding ? '…' : 'Add'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddForm(false); setAddTitle(''); setAddError(null); }}
+                      className="text-[10px] text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {addError && <p className="text-[9px] text-red-400 mt-0.5">{addError}</p>}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(true)}
+                  className="text-[9px] text-gray-400 hover:text-xco-ocean flex items-center gap-0.5"
+                >
+                  <span>+</span>
+                  <span>outcome</span>
+                </button>
+              )}
             </div>
           )}
 
