@@ -19,28 +19,28 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="font-ui min-h-screen flex items-center justify-center bg-xco-navy">
       <div className="max-w-sm w-full space-y-8 p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white tracking-wider">xCO</h1>
-          <p className="mt-2 text-sm text-gray-400">Expanding Civilisational Optionality</p>
+          <h1 className="font-display text-2xl font-semibold text-xco-paper tracking-widest">xCO</h1>
+          <p className="mt-2 text-sm text-xco-ink-muted">Expanding Civilisational Optionality</p>
         </div>
 
         {error === 'unauthorized' && (
-          <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm text-red-400">
+          <div className="bg-red-900/20 border border-red-800 rounded p-3 text-sm text-red-400">
             Your email is not authorized to access this system.
           </div>
         )}
 
         {error === 'auth_failed' && (
-          <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm text-red-400">
+          <div className="bg-red-900/20 border border-red-800 rounded p-3 text-sm text-red-400">
             Authentication failed. Please try again.
           </div>
         )}
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 rounded-lg px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors"
+          className="w-full flex items-center justify-center gap-3 bg-xco-paper text-xco-ink rounded px-4 py-3 text-sm font-medium hover:bg-xco-paper/90 transition-colors"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -58,8 +58,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="text-gray-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-xco-navy">
+        <div className="font-ui text-xco-ink-muted">Loading...</div>
       </div>
     }>
       <LoginForm />

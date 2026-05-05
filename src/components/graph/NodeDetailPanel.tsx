@@ -337,7 +337,7 @@ export function NodeDetailPanel({
             <button
               onClick={() => onProcessThis(node)}
               aria-label="Process this node"
-              className="text-xs text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 px-1.5 py-0.5 rounded border border-teal-300 dark:border-teal-700 hover:border-teal-500"
+              className="text-xs text-xco-ocean hover:text-xco-navy dark:text-xco-teal dark:hover:text-xco-teal/80 px-1.5 py-0.5 rounded border border-xco-ocean/30 dark:border-xco-teal/40 hover:border-xco-ocean"
             >
               Process this
             </button>

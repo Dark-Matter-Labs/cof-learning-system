@@ -106,7 +106,7 @@ describe('TrajectoryBadge click-expand breakdown', () => {
     expect(screen.getByText('Retention improved 5%')).toBeInTheDocument();
   });
 
-  it('positive factor weight has text-teal-400 class', () => {
+  it('positive factor weight has text-xco-teal class', () => {
     render(
       <TrajectoryBadge
         status="converging"
@@ -115,9 +115,8 @@ describe('TrajectoryBadge click-expand breakdown', () => {
       />
     );
     fireEvent.click(screen.getByRole('button'));
-    // Find the element that shows positive weight "+3.0"
     const positiveEl = screen.getByText((content, el) =>
-      el?.textContent?.includes('+3.0') && el?.classList.contains('text-teal-400') || false
+      (el?.textContent?.includes('+3.0') && el?.classList.contains('text-xco-teal')) || false
     );
     expect(positiveEl).toBeInTheDocument();
   });

@@ -58,7 +58,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${crimsonPro.variable} ${dmMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${crimsonPro.variable} ${dmMono.variable} font-body antialiased`}
         style={{ background: 'var(--color-bg)', color: 'var(--color-text-primary)' }}
       >
         <AuthProvider initialUser={user}>

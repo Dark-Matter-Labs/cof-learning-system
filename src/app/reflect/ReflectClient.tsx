@@ -49,8 +49,8 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
 
   const windowButtonClass = (d: 30 | 60 | 90) =>
     days === d
-      ? 'px-3 py-1 text-sm rounded bg-teal-600 text-white'
-      : 'px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600';
+      ? 'px-3 py-1 text-sm rounded bg-xco-ocean text-xco-paper'
+      : 'px-3 py-1 text-sm rounded bg-cof-bg-subtle text-cof-text-secondary hover:bg-cof-border';
 
   const handleAddDecision = () => {
     if (newDecisionText.trim()) {
@@ -156,7 +156,7 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
               <li key={idx} className="flex items-start justify-between bg-gray-100 dark:bg-gray-800 rounded p-3">
                 <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">{d.text}</span>
                 {d.node_id && (
-                  <span className="text-xs text-teal-400 ml-2 shrink-0">node: {d.node_id}</span>
+                  <span className="text-xs text-xco-teal ml-2 shrink-0">node: {d.node_id}</span>
                 )}
                 <button
                   className="text-gray-500 hover:text-red-400 ml-3 text-xs shrink-0"
@@ -190,14 +190,14 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
       {/* Section 4: Save */}
       <section className="mb-8">
         <button
-          className="px-6 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-xco-ocean text-xco-paper rounded hover:bg-xco-teal disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSave}
           disabled={saving}
         >
           {saving ? 'Saving...' : 'Save Reflection Session'}
         </button>
         {saveResult === 'success' && (
-          <p className="mt-2 text-sm text-green-400">Session saved</p>
+          <p className="mt-2 text-sm text-xco-teal">Session saved</p>
         )}
         {saveResult === 'error' && (
           <p className="mt-2 text-sm text-red-400">Failed to save</p>

@@ -32,7 +32,7 @@ export function FlaggedItem({ node, onAccept, onArchive }: FlaggedItemProps) {
         <button
           type="button"
           onClick={() => onAccept(node.id)}
-          className="text-[10px] px-2 py-1 bg-teal-900/20 border border-teal-900/30 text-teal-400 rounded hover:bg-teal-900/40"
+          className="text-[10px] px-2 py-1 bg-xco-ocean/10 border border-xco-ocean/20 text-xco-teal rounded hover:bg-xco-ocean/20"
         >
           Accept as-is
         </button>

@@ -135,7 +135,7 @@ export function SystemHealthClient({
                 </div>
                 <a
                   href={`/capture/${node.id}/review`}
-                  className="text-[10px] text-teal-400 hover:text-teal-300 shrink-0 ml-2"
+                  className="text-[10px] text-xco-teal hover:text-xco-ocean shrink-0 ml-2"
                 >
                   Process this
                 </a>

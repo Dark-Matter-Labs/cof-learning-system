@@ -24,7 +24,7 @@ interface GoalSpacePanelProps {
 const STATUS_DISPLAY: Record<OutcomeStatus, { symbol: string; colorClass: string }> = {
   not_started: { symbol: '\u25CB', colorClass: 'text-gray-600' },
   in_progress: { symbol: '\u25D0', colorClass: 'text-yellow-500' },
-  met:         { symbol: '\u25C9', colorClass: 'text-teal-400' },
+  met:         { symbol: '\u25C9', colorClass: 'text-xco-teal' },
   blocked:     { symbol: '\u2715', colorClass: 'text-red-500' },
 };
 
