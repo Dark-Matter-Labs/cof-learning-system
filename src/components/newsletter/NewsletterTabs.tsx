@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 
 type NewsletterType = 'mission_pathways' | 'close_contacts';
 
@@ -24,6 +25,7 @@ export function NewsletterTabs() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [currentId, setCurrentId] = useState<string | null>(null);
 
   const loadHistory = useCallback(async (type: NewsletterType) => {
     setLoadingHistory(true);
@@ -46,6 +48,7 @@ export function NewsletterTabs() {
   useEffect(() => {
     setCurrentOutput(null);
     setExpandedId(null);
+    setCurrentId(null);
     void loadHistory(activeTab);
   }, [activeTab, loadHistory]);
 
@@ -64,6 +67,7 @@ export function NewsletterTabs() {
         return;
       }
       setCurrentOutput(body.data.content);
+      setCurrentId(body.data.id);
       setHistory(prev => [body.data!, ...prev]);
     } catch {
       setError('Network error');
@@ -111,6 +115,9 @@ export function NewsletterTabs() {
             rows={16}
             className="w-full font-mono text-sm bg-cof-bg-elevated border border-cof-border rounded-md p-4 text-cof-text-primary resize-none focus:outline-none focus:ring-1 focus:ring-node-hunch"
           />
+          {currentId && (
+            <FeedbackWidget sourceType="newsletter" sourceId={currentId} />
+          )}
         </div>
       )}
 

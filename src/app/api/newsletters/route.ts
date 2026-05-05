@@ -53,17 +53,31 @@ export async function POST(request: Request): Promise<Response> {
   let userMessage: string;
   let systemPrompt: string;
   let llmResponse: { content: string };
+  let nodeRefs: string[] = [];
 
   try {
     if (type === 'mission_pathways') {
       const nodeData = await selectMissionPathwaysNodes(supabase);
       userMessage = buildMissionPathwaysMessage(nodeData);
       systemPrompt = MISSION_PATHWAYS_PROMPT;
+      nodeRefs = [
+        ...nodeData.recentlyMoved,
+        ...nodeData.activeCommitments,
+        ...nodeData.completedCommitments,
+        ...nodeData.testsWithActivity,
+        ...nodeData.stuckHunches,
+      ].map(n => n.id);
     } else {
       const nodeData = await selectCloseContactsNodes(supabase);
       userMessage = buildCloseContactsMessage(nodeData);
       systemPrompt = CLOSE_CONTACTS_PROMPT;
+      nodeRefs = [
+        ...nodeData.learnings,
+        ...nodeData.testsWithActivity,
+        ...nodeData.coherentHunches,
+      ].map(n => n.id);
     }
+    nodeRefs = [...new Set(nodeRefs)];
     llmResponse = await callLLM('newsletter', { systemPrompt, userMessage, maxTokens: 800 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Generation failed';
@@ -72,7 +86,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const { data: newsletter, error: insertError } = await supabase
     .from('newsletters')
-    .insert({ type, content: llmResponse.content, author_id: user.id })
+    .insert({ type, content: llmResponse.content, author_id: user.id, node_refs: nodeRefs })
     .select('id, type, content, created_at')
     .single();
 
