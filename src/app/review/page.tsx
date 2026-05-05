@@ -31,7 +31,7 @@ export default async function SystemHealthPage() {
       .from('nodes')
       .select('id, title, node_type, created_at')
       .in('node_type', ['learning', 'signal'])
-      .eq('status', 'promoted')
+      .eq('status', 'llm_reviewed')
       .order('created_at', { ascending: false }),
     supabase
       .from('nodes')

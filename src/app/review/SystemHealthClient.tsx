@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Link from 'next/link';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
 import type { FilterOption } from '@/lib/types/filter';
@@ -122,7 +123,7 @@ export function SystemHealthClient({
       {learnings.length > 0 && (
         <section>
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-            Unprocessed learnings
+            Awaiting review
           </h2>
           <div className="space-y-1.5">
             {learnings.map(node => (
@@ -130,15 +131,15 @@ export function SystemHealthClient({
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{node.title}</p>
                   <p className="text-[10px] text-gray-500 mt-0.5">
-                    {new Date(node.created_at).toLocaleDateString()}
+                    {node.node_type} · {new Date(node.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <a
+                <Link
                   href={`/capture/${node.id}/review`}
                   className="text-[10px] text-xco-teal hover:text-xco-ocean shrink-0 ml-2"
                 >
-                  Process this
-                </a>
+                  Review
+                </Link>
               </div>
             ))}
           </div>
