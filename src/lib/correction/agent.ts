@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { callLLM } from '@/lib/llm';
 
+const VALID_NODE_TYPES = new Set(['hunch', 'learning', 'commitment', 'signal', 'option', 'test']);
+
 export interface CorrectionNode {
   readonly id: string;
   readonly node_type: string;
@@ -110,13 +112,26 @@ export async function applyCorrection(
 
   const { actions } = parseCorrectionActions(llmResponse.content);
 
+  if (actions.length === 0) {
+    console.error('[correction] LLM returned no actions for feedback:', feedbackId);
+    return;
+  }
+
+  const errors: string[] = [];
+
   for (const action of actions) {
     if (action.action === 'update') {
-      await supabase.from('nodes').update(action.fields).eq('id', action.node_id);
+      const { error } = await supabase.from('nodes').update(action.fields).eq('id', action.node_id);
+      if (error) errors.push(`update ${action.node_id}: ${error.message}`);
     } else if (action.action === 'archive') {
-      await supabase.from('nodes').update({ status: 'archived' }).eq('id', action.node_id);
+      const { error } = await supabase.from('nodes').update({ status: 'archived' }).eq('id', action.node_id);
+      if (error) errors.push(`archive ${action.node_id}: ${error.message}`);
     } else if (action.action === 'create') {
-      await supabase.from('nodes').insert({
+      if (!VALID_NODE_TYPES.has(action.node_type)) {
+        errors.push(`create: invalid node_type '${action.node_type}'`);
+        continue;
+      }
+      const { error } = await supabase.from('nodes').insert({
         node_type: action.node_type,
         title: action.title,
         description: action.description,
@@ -126,7 +141,13 @@ export async function applyCorrection(
         confidence_level: 3,
         confidence_basis: 'intuition',
       });
+      if (error) errors.push(`create: ${error.message}`);
     }
+  }
+
+  if (errors.length > 0) {
+    console.error('[correction] action failures:', errors);
+    return;
   }
 
   await supabase.from('feedback').update({ applied_at: new Date().toISOString() }).eq('id', feedbackId);
