@@ -35,9 +35,10 @@ const AGENT_DEFAULT_MODELS: Record<string, string> = {
   digest: 'claude-sonnet-4-6',
   portfolio: 'claude-sonnet-4-6',
   newsletter: 'claude-sonnet-4-6',
+  correction: 'claude-sonnet-4-6',
 };
 
-export type AgentName = 'extraction' | 'review' | 'create' | 'reflection' | 'process' | 'setup' | 'query' | 'digest' | 'portfolio' | 'newsletter';
+export type AgentName = 'extraction' | 'review' | 'create' | 'reflection' | 'process' | 'setup' | 'query' | 'digest' | 'portfolio' | 'newsletter' | 'correction';
 
 function getAgentConfig(agent: AgentName): LLMConfig {
   const prefix = agent.toUpperCase();
