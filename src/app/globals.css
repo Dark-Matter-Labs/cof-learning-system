@@ -20,6 +20,16 @@
   /* Legacy vars kept for compatibility */
   --background: #FAFAF7;
   --foreground: #1A1A1A;
+
+  /* xCO design tokens */
+  --color-xco-paper:     #FFFFFF;
+  --color-xco-ink:       #1C1B17;
+  --color-xco-ink-muted: #5F5C53;
+  --color-xco-navy:      #192640;
+  --color-xco-ocean:     #085A8C;
+  --color-xco-teal:      #3786A6;
+  --color-xco-sand:      #F2B077;
+  --color-xco-dusk:      #F27F3D;
 }
 
 .dark {
@@ -36,11 +46,23 @@
 }
 
 @theme inline {
-  /* Fonts */
-  --font-display: 'Geist', 'Inter', system-ui, sans-serif;
-  --font-sans: 'Geist', 'Inter', system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), Georgia, serif;
-  --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
+  /* Fonts — xCO design system */
+  --font-display: var(--font-crimson-pro), Georgia, serif;
+  --font-body: var(--font-crimson-pro), Georgia, serif;
+  --font-ui: var(--font-inter), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-crimson-pro), Georgia, serif;
+  --font-mono: var(--font-dm-mono), 'Courier New', monospace;
+
+  /* xCO colour palette */
+  --color-xco-paper:     #FFFFFF;
+  --color-xco-ink:       #1C1B17;
+  --color-xco-ink-muted: #5F5C53;
+  --color-xco-navy:      #192640;
+  --color-xco-ocean:     #085A8C;
+  --color-xco-teal:      #3786A6;
+  --color-xco-sand:      #F2B077;
+  --color-xco-dusk:      #F27F3D;
 
   /* Semantic colors — picked up by Tailwind as bg-cof-bg, text-cof-text-primary, etc. */
   --color-cof-bg: var(--color-bg);

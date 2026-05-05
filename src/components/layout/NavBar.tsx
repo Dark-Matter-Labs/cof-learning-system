@@ -42,7 +42,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-cof-bg-elevated/90 backdrop-blur-sm border-b border-cof-border/70">
       <div className="flex items-center gap-8">
         <Link href="/" className="text-sm font-bold text-cof-text-primary tracking-widest">
-          COF
+          xCO
         </Link>
         <div className="flex gap-4">
           {links.map(link => (

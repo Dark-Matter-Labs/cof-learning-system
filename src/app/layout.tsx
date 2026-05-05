@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Source_Serif_4 } from 'next/font/google';
+import { Inter, Crimson_Pro, DM_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/layout/AuthProvider';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -11,20 +11,23 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const crimsonPro = Crimson_Pro({
   subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
+  variable: '--font-crimson-pro',
+  display: 'swap',
+  weight: ['400', '500', '600'],
 });
 
-const sourceSerif4 = Source_Serif_4({
+const dmMono = DM_Mono({
   subsets: ['latin'],
-  variable: '--font-source-serif',
+  variable: '--font-dm-mono',
   display: 'swap',
+  weight: ['400', '500'],
 });
 
 export const metadata: Metadata = {
-  title: 'COF Learning System',
-  description: 'Visual operating system for the Civilization Options Fund',
+  title: 'xCO',
+  description: 'Expanding Civilisational Optionality — knowledge system by Dark Matter Labs',
 };
 
 export default async function RootLayout({
@@ -55,7 +58,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} font-sans antialiased`}
+        className={`${inter.variable} ${crimsonPro.variable} ${dmMono.variable} font-sans antialiased`}
         style={{ background: 'var(--color-bg)', color: 'var(--color-text-primary)' }}
       >
         <AuthProvider initialUser={user}>

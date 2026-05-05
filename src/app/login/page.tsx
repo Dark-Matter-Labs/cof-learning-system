@@ -22,8 +22,8 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
       <div className="max-w-sm w-full space-y-8 p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white tracking-wider">COF</h1>
-          <p className="mt-2 text-sm text-gray-400">Civilization Options Fund Learning System</p>
+          <h1 className="text-2xl font-bold text-white tracking-wider">xCO</h1>
+          <p className="mt-2 text-sm text-gray-400">Expanding Civilisational Optionality</p>
         </div>
 
         {error === 'unauthorized' && (

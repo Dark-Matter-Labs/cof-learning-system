@@ -1,7 +1,7 @@
 import type { LlmExtraction, MeetingExtraction } from '@/lib/types/nodes';
 import { callLLM } from '@/lib/llm';
 
-const MEETING_SYSTEM_PROMPT = `You are an extraction system for the Civilization Options Fund (COF).
+const MEETING_SYSTEM_PROMPT = `You are an extraction system for the xCO (Expanding Civilisational Optionality).
 
 Given a meeting transcript or notes, extract MULTIPLE distinct nodes from the content. Return ONLY valid JSON:
 
@@ -45,7 +45,7 @@ export interface AttachmentContent {
   readonly base64?: string;
 }
 
-const SYSTEM_PROMPT = `You are an extraction system for the Civilization Options Fund (COF), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
+const SYSTEM_PROMPT = `You are an extraction system for the xCO (Expanding Civilisational Optionality), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
 
 Given input text (which may be a rough note, call transcript, document excerpt, or transcribed audio), extract the following and return ONLY valid JSON with no other text:
 

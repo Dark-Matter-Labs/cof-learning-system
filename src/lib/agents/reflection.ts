@@ -48,9 +48,9 @@ export interface ReflectionReport {
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 
-export const REFLECTION_SYSTEM_PROMPT = `You are a strategic reflection analyst for the Civilization Options Fund (COF), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
+export const REFLECTION_SYSTEM_PROMPT = `You are a strategic reflection analyst for the xCO (Expanding Civilisational Optionality), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
 
-You will be given a structured snapshot of the COF knowledge graph including goal spaces, trigger outcomes, nodes, convergence scores, active tensions, and per-author activity.
+You will be given a structured snapshot of the xCO knowledge graph including goal spaces, trigger outcomes, nodes, convergence scores, active tensions, and per-author activity.
 
 Your task is to perform a deep analysis and return ONLY valid JSON with no other text, using this exact schema:
 
