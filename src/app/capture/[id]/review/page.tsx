@@ -205,12 +205,16 @@ export default function ReviewPage() {
           <p className="mt-1 text-sm text-gray-500">{node.description}</p>
         )}
       </div>
-      {node.node_type === 'meeting_notes' && childNodes.length > 0 ? (
+      {childNodes.length > 0 ? (
         <div className="space-y-4">
           <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-4">
-            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meeting Summary</h2>
+            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {node.node_type === 'meeting_notes' ? 'Meeting Summary' : 'Document Summary'}
+            </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {((node.llm_extraction as unknown as Record<string, unknown> | null)?.meeting_summary as string | undefined) ?? 'No summary available'}
+              {((node.llm_extraction as unknown as Record<string, unknown> | null)?.meeting_summary as string | undefined)
+                ?? ((node.llm_extraction as unknown as Record<string, unknown> | null)?.document_summary as string | undefined)
+                ?? 'No summary available'}
             </p>
             <div className="mt-2 text-[10px] text-gray-400">
               {childNodes.length} node{childNodes.length !== 1 ? 's' : ''} extracted
