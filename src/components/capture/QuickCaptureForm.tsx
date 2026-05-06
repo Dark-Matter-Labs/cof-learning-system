@@ -73,8 +73,9 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
         fd.append('file', selectedFile);
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
         if (!res.ok) {
-          const err = await res.json() as { error?: string };
-          throw new Error(err.error ?? 'Upload failed');
+          const err = await res.json().catch(() => ({})) as { error?: string };
+          const msg = err.error ?? (res.status === 413 ? 'File too large — maximum 10 MB' : `Upload failed (${res.status})`);
+          throw new Error(msg);
         }
         const attachment = await res.json() as Attachment;
         setIsUploading(false);
