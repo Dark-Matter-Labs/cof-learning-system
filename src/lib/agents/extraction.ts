@@ -309,10 +309,11 @@ Domain tags: dartmoor, madrid, copenhagen, antarctica, capital_strategy, formati
 confidence_level: 1=vague mention, 2=discussed briefly, 3=discussed in detail, 4=agreed upon, 5=committed to
 
 Rules:
-1. Extract EVERY distinct insight, claim, argument, and question as a separate node.
-2. A dense 500-word note typically produces 3-8 nodes. A long document may produce 10-20.
-3. Each node must stand alone with enough context to be understood without the full document.
-4. Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
+1. Extract distinct insights, claims, arguments, and questions as separate nodes. Maximum 20 nodes total.
+2. A dense 500-word note typically produces 3-8 nodes. A long document 8-15.
+3. Prioritise the most important and distinct nodes. Merge closely related points.
+4. Each node must stand alone with enough context to be understood without the full document.
+5. Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
 
 export function buildDocumentExtractionPrompt(
   title: string,
@@ -369,7 +370,7 @@ export async function runDocumentExtraction(
   const response = await callLLM('extraction', {
     systemPrompt: DOCUMENT_SYSTEM_PROMPT,
     userMessage: promptText,
-    maxTokens: 4096,
+    maxTokens: 8192,
     temperature: 0.3,
     pdfBase64: attachmentContent?.type === 'pdf' ? attachmentContent.base64 : undefined,
   });
