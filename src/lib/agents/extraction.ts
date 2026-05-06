@@ -182,12 +182,19 @@ export function buildExtractionPrompt(
 export function parseExtractionResponse(content: string): LlmExtraction {
   // Strip markdown code fences if present
   const cleaned = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  const parsed = JSON.parse(cleaned);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    // LLM returned natural language instead of JSON — likely a PDF it cannot read
+    throw new Error('PDF_UNREADABLE');
+  }
 
   // Validate required fields
   const required = ['title', 'summary', 'entities', 'domain_tags', 'suggested_connections', 'confidence_assessment', 'open_questions'];
   for (const field of required) {
-    if (!(field in parsed)) {
+    if (!(field in (parsed as Record<string, unknown>))) {
       throw new Error(`Missing required field: ${field}`);
     }
   }

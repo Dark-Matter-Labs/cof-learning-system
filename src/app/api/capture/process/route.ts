@@ -172,7 +172,17 @@ export async function POST(request: Request) {
         }
       }
 
-      const extraction = await runExtraction(node.title, node.description ?? '', goalContext, attachmentContent);
+      let extraction;
+      try {
+        extraction = await runExtraction(node.title, node.description ?? '', goalContext, attachmentContent);
+      } catch (err) {
+        if (err instanceof Error && err.message === 'PDF_UNREADABLE' && attachmentContent?.type === 'pdf') {
+          // PDF could not be parsed by the LLM — fall back to description-only extraction
+          extraction = await runExtraction(node.title, node.description ?? '', goalContext, undefined);
+        } else {
+          throw err;
+        }
+      }
 
       // Determine node_type and confidence from extraction
       const classifiedNodeType = extraction.node_type ?? node.node_type;
