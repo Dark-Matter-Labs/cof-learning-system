@@ -208,9 +208,19 @@ export async function runExtraction(
   goalContext?: GoalContext,
   attachmentContent?: AttachmentContent,
 ): Promise<LlmExtraction> {
-  const promptText = attachmentContent?.type === 'text' && attachmentContent.textContent
-    ? buildExtractionPrompt(title, '', goalContext, attachmentContent.textContent)
-    : buildExtractionPrompt(title, description, goalContext);
+  let promptText: string;
+  if (attachmentContent?.type === 'text' && attachmentContent.textContent) {
+    promptText = buildExtractionPrompt(title, '', goalContext, attachmentContent.textContent);
+  } else if (attachmentContent?.type === 'pdf') {
+    const cleanTitle = title.replace(/\.pdf$/i, '').replace(/_/g, ' ');
+    const pdfNote = 'A PDF document is attached — read it and extract insights from its full content.';
+    const effectiveDescription = description.trim()
+      ? `${pdfNote}\n\nAdditional context from submitter: ${description}`
+      : pdfNote;
+    promptText = buildExtractionPrompt(cleanTitle, effectiveDescription, goalContext);
+  } else {
+    promptText = buildExtractionPrompt(title, description, goalContext);
+  }
 
   const response = await callLLM('extraction', {
     systemPrompt: SYSTEM_PROMPT,
