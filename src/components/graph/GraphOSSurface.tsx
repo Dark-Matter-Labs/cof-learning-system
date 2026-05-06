@@ -10,23 +10,9 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { GoalSpacePanel } from './GoalSpacePanel';
 import { ProcessFlow } from '@/components/process/ProcessFlow';
+import { getGraphTypes, GOAL_CONTAINER_TYPE } from '@/lib/config/captureTypes';
 
-const NODE_TYPE_OPTIONS = [
-  { id: 'hunch',                   label: 'Hunch',                   color: '#7F77DD' },
-  { id: 'assumption_background',   label: 'Background Assumption',   color: '#1D9E75' },
-  { id: 'assumption_foreground',   label: 'Foreground Assumption',   color: '#D85A30' },
-  { id: 'test',                    label: 'Test',                    color: '#D4537E' },
-  { id: 'learning',                label: 'Learning',                color: '#378ADD' },
-  { id: 'option',                  label: 'Option',                  color: '#BA7517' },
-  { id: 'entity',                  label: 'Entity',                  color: '#888780' },
-  { id: 'site',                    label: 'Site',                    color: '#639922' },
-  { id: 'commitment',              label: 'Commitment',              color: '#185FA5' },
-  { id: 'intervention',            label: 'Intervention',            color: '#534AB7' },
-  { id: 'signal',                  label: 'Signal',                  color: '#A32D2D' },
-  { id: 'goal_space',              label: 'Goal space',              color: '#0F6E56' },
-  { id: 'trigger_outcome',         label: 'Trigger outcome',         color: '#085041' },
-] as const;
-
+const NODE_TYPE_OPTIONS = getGraphTypes();
 const ALL_TYPE_IDS = NODE_TYPE_OPTIONS.map(t => t.id);
 
 export function GraphOSSurface() {
@@ -96,7 +82,7 @@ export function GraphOSSurface() {
     setProcessFlowNode(node);
   }, []);
 
-  const goalSpaces = nodes.filter(n => n.node_type === 'goal_space');
+  const goalSpaces = nodes.filter(n => n.node_type === GOAL_CONTAINER_TYPE);
   const triggerOutcomes = nodes.filter(n => n.node_type === 'trigger_outcome');
 
   const sidebarStats = {

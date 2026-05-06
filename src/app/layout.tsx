@@ -5,6 +5,7 @@ import { AuthProvider } from '@/components/layout/AuthProvider';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { NavBar } from '@/components/layout/NavBar';
 import { createClient } from '@/lib/supabase/server';
+import { getKnowledgeReviewTypes } from '@/lib/config/captureTypes';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -50,7 +51,7 @@ export default async function RootLayout({
         .from('nodes')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'llm_reviewed')
-        .in('node_type', ['learning', 'signal']),
+        .in('node_type', getKnowledgeReviewTypes() as string[]),
     ]);
     reviewCount = (flaggedCount ?? 0) + (learningsCount ?? 0);
   }

@@ -1,5 +1,6 @@
 import { callLLM } from '@/lib/llm';
 import { z } from 'zod';
+import { getDistillableTypes } from '@/lib/config/captureTypes';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 interface NodeSummary {
@@ -16,10 +17,11 @@ const clusterSchema = z.object({
   })).optional(),
 });
 
+const distillableTypes = getDistillableTypes() as [string, ...string[]];
 const synthesisSchema = z.object({
   title: z.string().min(1).max(300).trim(),
   summary: z.string().min(1).max(2000).trim(),
-  node_type: z.enum(['hunch', 'learning', 'assumption']),
+  node_type: z.enum(distillableTypes),
   rationale: z.string().min(1).max(500).trim(),
 });
 

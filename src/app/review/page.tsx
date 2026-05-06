@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getKnowledgeReviewTypes } from '@/lib/config/captureTypes';
 import { redirect } from 'next/navigation';
 import { SystemHealthClient } from './SystemHealthClient';
 import type { Node } from '@/lib/types/nodes';
@@ -30,7 +31,7 @@ export default async function SystemHealthPage() {
     supabase
       .from('nodes')
       .select('id, title, node_type, created_at')
-      .in('node_type', ['learning', 'signal'])
+      .in('node_type', getKnowledgeReviewTypes() as string[])
       .eq('status', 'llm_reviewed')
       .order('created_at', { ascending: false }),
     supabase

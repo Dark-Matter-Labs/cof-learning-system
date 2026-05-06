@@ -1,7 +1,19 @@
 import type { LlmExtraction, MeetingExtraction, DocumentExtraction } from '@/lib/types/nodes';
 import { callLLM } from '@/lib/llm';
+import {
+  ORG_CONTEXT,
+  DOMAIN_TAGS,
+  getLlmNodeTypeEnum,
+  getLlmNodeTypeDescriptions,
+} from '@/lib/config/captureTypes';
 
-const MEETING_SYSTEM_PROMPT = `You are an extraction system for the xCO (Expanding Civilisational Optionality).
+// Computed once at module load from taxonomy config — change captureTypes.ts to update these.
+const LLM_NODE_TYPE_ENUM = getLlmNodeTypeEnum();
+const LLM_NODE_TYPE_DESCRIPTIONS = getLlmNodeTypeDescriptions();
+const LLM_DOMAIN_TAGS_JSON = DOMAIN_TAGS.map(t => `"${t}"`).join(', ');
+const LLM_DOMAIN_TAGS_LIST = DOMAIN_TAGS.join(', ');
+
+const MEETING_SYSTEM_PROMPT = `You are an extraction system for ${ORG_CONTEXT}.
 
 Given a meeting transcript or notes, extract MULTIPLE distinct nodes from the content. Return ONLY valid JSON:
 
@@ -28,7 +40,7 @@ Rules:
 2. Map categories to node_types: insight->hunch, action->commitment, decision->learning, open_question->hunch, person_mention->signal.
 3. Be thorough — a 30-minute meeting typically produces 5-15 nodes.
 4. Each node must stand alone with enough context to be understood without the full transcript.
-5. Domain tags should match COF domains: dartmoor, madrid, copenhagen, antarctica, capital_strategy, formation, demand_architecture, philanthropy, natural_assets, carbon, water.
+5. Domain tags: ${LLM_DOMAIN_TAGS_LIST}.
 6. confidence_level: 1=vague mention, 2=discussed briefly, 3=discussed in detail, 4=agreed upon, 5=committed to.
 7. Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
 
@@ -45,19 +57,19 @@ export interface AttachmentContent {
   readonly base64?: string;
 }
 
-const SYSTEM_PROMPT = `You are an extraction system for the xCO (Expanding Civilisational Optionality), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
+const SYSTEM_PROMPT = `You are an extraction system for ${ORG_CONTEXT}.
 
 Given input text (which may be a rough note, call transcript, document excerpt, or transcribed audio), extract the following and return ONLY valid JSON with no other text:
 
 {
-  "node_type": "hunch|assumption_background|assumption_foreground|test|signal|learning|option",
+  "node_type": "${LLM_NODE_TYPE_ENUM}",
   "maturity": "ready_to_promote|watch_closely|needs_development|cluster_dependent",
   "title": "Concise title (max 10 words)",
   "summary": "2-3 sentence summary of the core insight or claim",
   "structured_claim": { "if": "condition", "then": "consequence", "because": "reasoning" } or null if no clear causal claim,
   "assumption_type": "background" or "foreground" or null,
   "entities": [{ "name": "...", "type": "person|organisation|site|concept" }],
-  "domain_tags": ["dartmoor", "madrid", "copenhagen", "antarctica", "capital_strategy", "formation", "demand_architecture", "philanthropy", "natural_assets", "carbon", "water"],
+  "domain_tags": [${LLM_DOMAIN_TAGS_JSON}],
   "suggested_connections": [{ "target_title": "existing concept name", "edge_type": "supports|contradicts|requires|challenges", "rationale": "why" }],
   "confidence_assessment": { "level": 1-5, "basis": "intuition|analogy|observation|early_evidence|strong_evidence" },
   "open_questions": ["question 1", "question 2"],
@@ -73,13 +85,7 @@ Given input text (which may be a rough note, call transcript, document excerpt, 
 
 CRITICAL — Node type and maturity classification:
 1. NODE_TYPE: Based on the content, classify as one of:
-   - hunch: A directional belief, emerging insight, or speculation about how things work
-   - assumption_background: A contextual claim treated as given (e.g. "3-4° warming is coming")
-   - assumption_foreground: An actively testable if/then proposition
-   - test: A specific probe or experiment being run
-   - signal: Feedback from reality — new data, a conversation result, external evidence
-   - learning: A conclusion drawn from tests or signals
-   - option: A potential path or strategic opportunity
+${LLM_NODE_TYPE_DESCRIPTIONS}
 2. MATURITY: Classify as one of:
    - ready_to_promote: Clear, well-supported, should go directly to the graph
    - watch_closely: Plausible but needs more evidence before acting on it
@@ -277,7 +283,7 @@ export function parseMeetingExtractionResponse(content: string): MeetingExtracti
   return parsed as MeetingExtraction;
 }
 
-const DOCUMENT_SYSTEM_PROMPT = `You are an extraction system for xCO (Expanding Civilisational Optionality), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
+const DOCUMENT_SYSTEM_PROMPT = `You are an extraction system for ${ORG_CONTEXT}.
 
 Given a document, long note, or rich text capture, extract MULTIPLE distinct nodes. Return ONLY valid JSON:
 
@@ -286,7 +292,7 @@ Given a document, long note, or rich text capture, extract MULTIPLE distinct nod
   "document_summary": "2-3 sentence summary of the content",
   "extracted_nodes": [
     {
-      "node_type": "hunch|assumption_background|assumption_foreground|test|signal|learning|option",
+      "node_type": "${LLM_NODE_TYPE_ENUM}",
       "title": "Concise title (max 10 words)",
       "summary": "2-3 sentence description of this specific insight, claim, or idea",
       "confidence_level": 1-5,
@@ -296,15 +302,9 @@ Given a document, long note, or rich text capture, extract MULTIPLE distinct nod
 }
 
 Node type rules:
-- hunch: directional belief, emerging insight, or speculation about how things work
-- assumption_background: contextual claim treated as given (e.g. "civilisational collapse risk is real")
-- assumption_foreground: actively testable if/then proposition
-- test: a specific probe or experiment being run
-- signal: feedback from reality — new data, evidence, a data point
-- learning: conclusion drawn from evidence or experience
-- option: potential path, strategy, or opportunity
+${LLM_NODE_TYPE_DESCRIPTIONS}
 
-Domain tags: dartmoor, madrid, copenhagen, antarctica, capital_strategy, formation, demand_architecture, philanthropy, natural_assets, carbon, water
+Domain tags: ${LLM_DOMAIN_TAGS_LIST}
 
 confidence_level: 1=vague mention, 2=discussed briefly, 3=discussed in detail, 4=agreed upon, 5=committed to
 
