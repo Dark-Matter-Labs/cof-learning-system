@@ -75,6 +75,11 @@ export interface DocumentExtractedNode {
   readonly summary: string;
   readonly confidence_level: 1 | 2 | 3 | 4 | 5;
   readonly domain_tags: readonly string[];
+  readonly suggested_connections?: ReadonlyArray<{
+    readonly target_title: string;
+    readonly edge_type: string;
+    readonly rationale: string;
+  }>;
 }
 
 export interface DocumentExtraction {

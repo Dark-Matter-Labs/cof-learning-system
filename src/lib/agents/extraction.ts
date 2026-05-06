@@ -296,7 +296,10 @@ Given a document, long note, or rich text capture, extract MULTIPLE distinct nod
       "title": "Concise title (max 10 words)",
       "summary": "2-3 sentence description of this specific insight, claim, or idea",
       "confidence_level": 1-5,
-      "domain_tags": ["relevant", "tags"]
+      "domain_tags": ["relevant", "tags"],
+      "suggested_connections": [
+        { "target_title": "exact title of a related node", "edge_type": "supports|contradicts|requires|evolved_from|challenges|tested_by", "rationale": "why connected" }
+      ]
     }
   ]
 }
@@ -313,25 +316,33 @@ Rules:
 2. A dense 500-word note typically produces 3-8 nodes. A long document 8-15.
 3. Prioritise the most important and distinct nodes. Merge closely related points.
 4. Each node must stand alone with enough context to be understood without the full document.
-5. Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
+5. Mark uncertain extractions appropriately. All outputs are suggestions for human review.
+6. In suggested_connections, you may reference: (a) other nodes you extracted from this document — use the exact title you gave them, and (b) any existing graph nodes listed in the prompt. Omit the field if no strong connections exist.`;
 
 export function buildDocumentExtractionPrompt(
   title: string,
   description: string,
   textFileContent?: string,
+  existingNodes?: ReadonlyArray<{ readonly id: string; readonly title: string; readonly node_type: string }>,
 ): string {
-  if (textFileContent) {
-    const cleanTitle = title.replace(/\.(pdf|txt|docx?)$/i, '').replace(/_/g, ' ');
-    const titleHint = cleanTitle ? `Title hint: ${cleanTitle}\n\n` : '';
-    return `${titleHint}Extract all insights from this document:\n\n<document>\n${textFileContent}\n</document>`;
-  }
   const cleanTitle = title.replace(/\.(pdf|txt|docx?)$/i, '').replace(/_/g, ' ');
-  const truncated = description.length > 8000
-    ? description.slice(0, 8000) + '\n\n[truncated]'
-    : description;
-  return cleanTitle
-    ? `Title hint: ${cleanTitle}\n\nContent:\n${truncated}`
-    : `Content:\n${truncated}`;
+  let base: string;
+  if (textFileContent) {
+    const titleHint = cleanTitle ? `Title hint: ${cleanTitle}\n\n` : '';
+    base = `${titleHint}Extract all insights from this document:\n\n<document>\n${textFileContent}\n</document>`;
+  } else {
+    const truncated = description.length > 8000
+      ? description.slice(0, 8000) + '\n\n[truncated]'
+      : description;
+    base = cleanTitle
+      ? `Title hint: ${cleanTitle}\n\nContent:\n${truncated}`
+      : `Content:\n${truncated}`;
+  }
+  if (existingNodes && existingNodes.length > 0) {
+    const nodeList = existingNodes.slice(0, 20).map(n => `- [${n.node_type}] ${n.title}`).join('\n');
+    base += `\n\nExisting graph nodes (use exact titles in suggested_connections where relevant):\n${nodeList}`;
+  }
+  return base;
 }
 
 export function parseDocumentExtractionResponse(content: string): DocumentExtraction {
@@ -351,20 +362,22 @@ export async function runDocumentExtraction(
   title: string,
   description: string,
   attachmentContent?: AttachmentContent,
+  goalContext?: GoalContext,
 ): Promise<DocumentExtraction> {
+  const existingNodes = goalContext?.existingNodes;
   let promptText: string;
 
   if (attachmentContent?.type === 'text' && attachmentContent.textContent) {
-    promptText = buildDocumentExtractionPrompt(title, description, attachmentContent.textContent);
+    promptText = buildDocumentExtractionPrompt(title, description, attachmentContent.textContent, existingNodes);
   } else if (attachmentContent?.type === 'pdf') {
     const cleanTitle = title.replace(/\.pdf$/i, '').replace(/_/g, ' ');
     const pdfInstruction = 'Read the attached PDF and extract all distinct insights from it.';
     const effectiveDesc = description.trim()
       ? `${pdfInstruction}\n\nSubmitter notes: ${description}`
       : pdfInstruction;
-    promptText = buildDocumentExtractionPrompt(cleanTitle, effectiveDesc);
+    promptText = buildDocumentExtractionPrompt(cleanTitle, effectiveDesc, undefined, existingNodes);
   } else {
-    promptText = buildDocumentExtractionPrompt(title, description);
+    promptText = buildDocumentExtractionPrompt(title, description, undefined, existingNodes);
   }
 
   const response = await callLLM('extraction', {

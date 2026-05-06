@@ -177,6 +177,7 @@ export async function POST(request: Request) {
         node.title,
         node.description ?? '',
         attachmentContent,
+        goalContext,
       );
 
       const titleUpdate = node.title === '' ? { title: documentExtraction.document_title } : {};
@@ -206,7 +207,7 @@ export async function POST(request: Request) {
           summary: extracted.summary,
           entities: [],
           domain_tags: extracted.domain_tags,
-          suggested_connections: [],
+          suggested_connections: extracted.suggested_connections ?? [],
           confidence_assessment: { level: extracted.confidence_level, basis: 'observation' },
           open_questions: [],
           structured_claim: null,
@@ -216,7 +217,22 @@ export async function POST(request: Request) {
       }));
 
       if (childInserts.length > 0) {
-        await supabase.from('nodes').insert(childInserts);
+        const { data: insertedChildren } = await supabase
+          .from('nodes')
+          .insert(childInserts)
+          .select('id, title');
+
+        // Resolve connections for each child — siblings are now in DB so cross-references work
+        if (insertedChildren && insertedChildren.length > 0) {
+          const { resolveConnections } = await import('@/lib/agents/connectionResolver');
+          for (let i = 0; i < insertedChildren.length; i++) {
+            const child = insertedChildren[i];
+            const suggestions = documentExtraction.extracted_nodes[i]?.suggested_connections;
+            if (suggestions && suggestions.length > 0) {
+              await resolveConnections(child.id as string, suggestions, supabase, user.id);
+            }
+          }
+        }
       }
 
       await supabase.from('activity_log').insert({
