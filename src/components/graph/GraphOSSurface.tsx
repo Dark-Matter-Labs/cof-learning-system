@@ -129,7 +129,7 @@ export function GraphOSSurface() {
   return (
     <div className="w-full h-full relative bg-gray-50 dark:bg-gray-950">
       <GraphCanvas
-        nodes={nodes}
+        nodes={nodes.filter(n => n.attachments.length === 0 && !['raw', 'processing', 'archived', 'error'].includes(n.status))}
         edges={edges}
         activeTypes={activeTypes}
         view={currentView}

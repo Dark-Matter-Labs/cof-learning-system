@@ -1,4 +1,4 @@
-import type { LlmExtraction, MeetingExtraction } from '@/lib/types/nodes';
+import type { LlmExtraction, MeetingExtraction, DocumentExtraction } from '@/lib/types/nodes';
 import { callLLM } from '@/lib/llm';
 
 const MEETING_SYSTEM_PROMPT = `You are an extraction system for the xCO (Expanding Civilisational Optionality).
@@ -275,6 +275,106 @@ export function parseMeetingExtractionResponse(content: string): MeetingExtracti
     throw new Error('extracted_nodes must be a non-empty array');
   }
   return parsed as MeetingExtraction;
+}
+
+const DOCUMENT_SYSTEM_PROMPT = `You are an extraction system for xCO (Expanding Civilisational Optionality), a formation studio working at the intersection of civilisational risk, institutional design, and transition finance.
+
+Given a document, long note, or rich text capture, extract MULTIPLE distinct nodes. Return ONLY valid JSON:
+
+{
+  "document_title": "Concise document title (max 10 words)",
+  "document_summary": "2-3 sentence summary of the content",
+  "extracted_nodes": [
+    {
+      "node_type": "hunch|assumption_background|assumption_foreground|test|signal|learning|option",
+      "title": "Concise title (max 10 words)",
+      "summary": "2-3 sentence description of this specific insight, claim, or idea",
+      "confidence_level": 1-5,
+      "domain_tags": ["relevant", "tags"]
+    }
+  ]
+}
+
+Node type rules:
+- hunch: directional belief, emerging insight, or speculation about how things work
+- assumption_background: contextual claim treated as given (e.g. "civilisational collapse risk is real")
+- assumption_foreground: actively testable if/then proposition
+- test: a specific probe or experiment being run
+- signal: feedback from reality — new data, evidence, a data point
+- learning: conclusion drawn from evidence or experience
+- option: potential path, strategy, or opportunity
+
+Domain tags: dartmoor, madrid, copenhagen, antarctica, capital_strategy, formation, demand_architecture, philanthropy, natural_assets, carbon, water
+
+confidence_level: 1=vague mention, 2=discussed briefly, 3=discussed in detail, 4=agreed upon, 5=committed to
+
+Rules:
+1. Extract EVERY distinct insight, claim, argument, and question as a separate node.
+2. A dense 500-word note typically produces 3-8 nodes. A long document may produce 10-20.
+3. Each node must stand alone with enough context to be understood without the full document.
+4. Mark uncertain extractions appropriately. All outputs are suggestions for human review.`;
+
+export function buildDocumentExtractionPrompt(
+  title: string,
+  description: string,
+  textFileContent?: string,
+): string {
+  if (textFileContent) {
+    const cleanTitle = title.replace(/\.(pdf|txt|docx?)$/i, '').replace(/_/g, ' ');
+    const titleHint = cleanTitle ? `Title hint: ${cleanTitle}\n\n` : '';
+    return `${titleHint}Extract all insights from this document:\n\n<document>\n${textFileContent}\n</document>`;
+  }
+  const cleanTitle = title.replace(/\.(pdf|txt|docx?)$/i, '').replace(/_/g, ' ');
+  const truncated = description.length > 8000
+    ? description.slice(0, 8000) + '\n\n[truncated]'
+    : description;
+  return cleanTitle
+    ? `Title hint: ${cleanTitle}\n\nContent:\n${truncated}`
+    : `Content:\n${truncated}`;
+}
+
+export function parseDocumentExtractionResponse(content: string): DocumentExtraction {
+  const cleaned = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+  const parsed = JSON.parse(cleaned);
+  const required = ['document_title', 'document_summary', 'extracted_nodes'];
+  for (const field of required) {
+    if (!(field in parsed)) throw new Error(`Missing required field: ${field}`);
+  }
+  if (!Array.isArray(parsed.extracted_nodes) || parsed.extracted_nodes.length === 0) {
+    throw new Error('extracted_nodes must be a non-empty array');
+  }
+  return parsed as DocumentExtraction;
+}
+
+export async function runDocumentExtraction(
+  title: string,
+  description: string,
+  attachmentContent?: AttachmentContent,
+): Promise<DocumentExtraction> {
+  let promptText: string;
+
+  if (attachmentContent?.type === 'text' && attachmentContent.textContent) {
+    promptText = buildDocumentExtractionPrompt(title, description, attachmentContent.textContent);
+  } else if (attachmentContent?.type === 'pdf') {
+    const cleanTitle = title.replace(/\.pdf$/i, '').replace(/_/g, ' ');
+    const pdfInstruction = 'Read the attached PDF and extract all distinct insights from it.';
+    const effectiveDesc = description.trim()
+      ? `${pdfInstruction}\n\nSubmitter notes: ${description}`
+      : pdfInstruction;
+    promptText = buildDocumentExtractionPrompt(cleanTitle, effectiveDesc);
+  } else {
+    promptText = buildDocumentExtractionPrompt(title, description);
+  }
+
+  const response = await callLLM('extraction', {
+    systemPrompt: DOCUMENT_SYSTEM_PROMPT,
+    userMessage: promptText,
+    maxTokens: 4096,
+    temperature: 0.3,
+    pdfBase64: attachmentContent?.type === 'pdf' ? attachmentContent.base64 : undefined,
+  });
+
+  return parseDocumentExtractionResponse(response.content);
 }
 
 export async function runMeetingExtraction(

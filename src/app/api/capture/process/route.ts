@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { runExtraction, runMeetingExtraction, type GoalContext } from '@/lib/agents/extraction';
+import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalContext } from '@/lib/agents/extraction';
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
 import type { MeetingExtraction } from '@/lib/types/nodes';
@@ -79,7 +79,33 @@ export async function POST(request: Request) {
       existingNodes: (existingNodesData ?? []) as Array<{ id: string; title: string; node_type: string }>,
     };
 
+    // Read file attachment content before path decision
+    let attachmentContent: AttachmentContent | undefined;
+    const attachments = (node as unknown as { attachments?: Array<{ storage_path: string; mime_type: string }> }).attachments ?? [];
+
+    if (attachments.length > 0) {
+      const attachment = attachments[0];
+      const adminClient = createAdminClient();
+      const { data: fileData } = await adminClient.storage.from('attachments').download(attachment.storage_path);
+
+      if (fileData) {
+        const arrayBuffer = await fileData.arrayBuffer();
+
+        if (attachment.mime_type === 'text/plain') {
+          attachmentContent = { type: 'text', textContent: new TextDecoder().decode(arrayBuffer) };
+        } else if (attachment.mime_type === 'application/pdf') {
+          attachmentContent = { type: 'pdf', base64: Buffer.from(arrayBuffer).toString('base64') };
+        } else if (attachment.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+          const mammoth = await import('mammoth');
+          const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
+          attachmentContent = { type: 'text', textContent: result.value };
+        }
+      }
+    }
+
     const captureConfig = getCaptureType(node.node_type as Parameters<typeof getCaptureType>[0]);
+    const hasAttachments = attachments.length > 0;
+    const hasLongContent = (node.description?.length ?? 0) > 1500;
 
     if (captureConfig?.multiNodeExtraction) {
       // Multi-node extraction path (meeting notes)
@@ -145,32 +171,66 @@ export async function POST(request: Request) {
       return NextResponse.json({
         data: { node_id, status: 'llm_reviewed', child_count: childInserts.length },
       });
+    } else if (hasAttachments || hasLongContent) {
+      // Document multi-node extraction (attachments or long text)
+      const documentExtraction = await runDocumentExtraction(
+        node.title,
+        node.description ?? '',
+        attachmentContent,
+      );
+
+      const titleUpdate = node.title === '' ? { title: documentExtraction.document_title } : {};
+
+      await supabase
+        .from('nodes')
+        .update({
+          ...titleUpdate,
+          llm_extraction: documentExtraction as unknown as Record<string, unknown>,
+          status: 'llm_reviewed',
+        })
+        .eq('id', node_id);
+
+      const childInserts = documentExtraction.extracted_nodes.map(extracted => ({
+        node_type: extracted.node_type,
+        title: extracted.title,
+        description: extracted.summary,
+        confidence_level: extracted.confidence_level,
+        confidence_basis: 'observation' as const,
+        status: 'llm_reviewed' as const,
+        author_id: user.id,
+        parent_node_id: node_id,
+        domain_tags: extracted.domain_tags,
+        content: { source_document: node_id },
+        llm_extraction: {
+          title: extracted.title,
+          summary: extracted.summary,
+          entities: [],
+          domain_tags: extracted.domain_tags,
+          suggested_connections: [],
+          confidence_assessment: { level: extracted.confidence_level, basis: 'observation' },
+          open_questions: [],
+          structured_claim: null,
+          assumption_type: null,
+          commitment_relevance: null,
+        },
+      }));
+
+      if (childInserts.length > 0) {
+        await supabase.from('nodes').insert(childInserts);
+      }
+
+      await supabase.from('activity_log').insert({
+        actor_id: user.id,
+        action: 'reviewed',
+        target_node_id: node_id,
+        details: { type: 'document_extraction', model: 'extraction', child_count: childInserts.length },
+      });
+
+      return NextResponse.json({
+        data: { node_id, status: 'llm_reviewed', child_count: childInserts.length },
+      });
     } else {
       // Single-node extraction path
-
-      // Read file attachment content if present
-      let attachmentContent: AttachmentContent | undefined;
-      const attachments = (node as unknown as { attachments?: Array<{ storage_path: string; mime_type: string }> }).attachments ?? [];
-
-      if (attachments.length > 0) {
-        const attachment = attachments[0];
-        const adminClient = createAdminClient();
-        const { data: fileData } = await adminClient.storage.from('attachments').download(attachment.storage_path);
-
-        if (fileData) {
-          const arrayBuffer = await fileData.arrayBuffer();
-
-          if (attachment.mime_type === 'text/plain') {
-            attachmentContent = { type: 'text', textContent: new TextDecoder().decode(arrayBuffer) };
-          } else if (attachment.mime_type === 'application/pdf') {
-            attachmentContent = { type: 'pdf', base64: Buffer.from(arrayBuffer).toString('base64') };
-          } else if (attachment.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-            const mammoth = await import('mammoth');
-            const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
-            attachmentContent = { type: 'text', textContent: result.value };
-          }
-        }
-      }
 
       let extraction;
       try {

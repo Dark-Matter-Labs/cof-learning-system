@@ -69,6 +69,20 @@ export interface MeetingExtraction {
   readonly key_themes: readonly string[];
 }
 
+export interface DocumentExtractedNode {
+  readonly node_type: string;
+  readonly title: string;
+  readonly summary: string;
+  readonly confidence_level: 1 | 2 | 3 | 4 | 5;
+  readonly domain_tags: readonly string[];
+}
+
+export interface DocumentExtraction {
+  readonly document_title: string;
+  readonly document_summary: string;
+  readonly extracted_nodes: readonly DocumentExtractedNode[];
+}
+
 export interface HumanReview {
   readonly reviewed_at: string;
   readonly reviewer_id: string;
