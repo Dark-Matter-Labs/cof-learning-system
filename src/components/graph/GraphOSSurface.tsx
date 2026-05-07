@@ -10,7 +10,7 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { GoalSpacePanel } from './GoalSpacePanel';
 import { ProcessFlow } from '@/components/process/ProcessFlow';
-import { getGraphTypes, GOAL_CONTAINER_TYPE } from '@/lib/config/captureTypes';
+import { getGraphTypes, getKnowledgeReviewTypes, GOAL_CONTAINER_TYPE } from '@/lib/config/captureTypes';
 
 const NODE_TYPE_OPTIONS = getGraphTypes();
 const ALL_TYPE_IDS = NODE_TYPE_OPTIONS.map(t => t.id);
@@ -86,7 +86,10 @@ export function GraphOSSurface() {
   const triggerOutcomes = nodes.filter(n => n.node_type === 'trigger_outcome');
 
   const sidebarStats = {
-    awaitingReview: nodes.filter(n => n.status === 'llm_reviewed').length,
+    awaitingReview: nodes.filter(n =>
+      n.status === 'flagged_for_review' ||
+      (n.status === 'llm_reviewed' && getKnowledgeReviewTypes().includes(n.node_type))
+    ).length,
     promotedThisWeek: nodes.filter(n => {
       if (n.status !== 'promoted') return false;
       const updated = new Date(n.updated_at);

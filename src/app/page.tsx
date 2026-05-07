@@ -12,6 +12,7 @@ import {
   getWeekStart,
   getTodayIndex,
 } from '@/lib/dashboard/queries';
+import { getKnowledgeReviewTypes } from '@/lib/config/captureTypes';
 import type { FocusItem, SystemPulseData, HunchStageCounts, RhythmData, ActivityNode } from '@/lib/dashboard/queries';
 
 function greeting(name: string | null): string {
@@ -63,8 +64,10 @@ export default async function DashboardPage() {
     supabase.from('nodes').select('id, title').eq('node_type', 'commitment')
       .neq('status', 'archived').neq('status', 'falsified').neq('status', 'suspended')
       .lt('updated_at', tenDaysAgo).limit(3),
+    // Count nodes awaiting review — matches Health page logic exactly
     supabase.from('nodes').select('id', { count: 'exact', head: true })
-      .in('status', ['raw', 'llm_reviewed']).gte('created_at', sevenDaysAgo),
+      .eq('author_id', user.id)
+      .or(`status.eq.flagged_for_review,and(status.eq.llm_reviewed,node_type.in.(${getKnowledgeReviewTypes().join(',')}))`),
     supabase.from('nodes').select('id, title').eq('node_type', 'goal_space').neq('status', 'archived'),
     supabase.from('convergence_snapshots' as string).select('goal_space_id, score, computed_at')
       .order('computed_at', { ascending: false }).limit(200),
