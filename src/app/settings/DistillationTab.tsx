@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface NodeSummary {
   readonly id: string;
@@ -79,8 +80,9 @@ export function DistillationTab() {
           type="button"
           onClick={runDistillation}
           disabled={running}
-          className="px-3 py-1.5 text-xs bg-node-hunch text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-node-hunch text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
+          {running && <Spinner size="sm" label="Scanning" />}
           {running ? 'Scanning…' : 'Run distillation'}
         </button>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
+import { Spinner } from '@/components/ui/Spinner';
 
 type NewsletterType = 'mission_pathways' | 'close_contacts';
 
@@ -97,9 +98,10 @@ export function NewsletterTabs() {
       <button
         onClick={() => void handleGenerate()}
         disabled={generating}
-        className="mb-6 px-4 py-2 text-sm bg-node-hunch text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+        className="mb-6 inline-flex items-center gap-2 px-4 py-2 text-sm bg-node-hunch text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
       >
-        {generating ? 'Generating...' : `Generate ${TAB_LABELS[activeTab]} brief`}
+        {generating && <Spinner size="sm" label="Generating" />}
+        {generating ? 'Generating…' : `Generate ${TAB_LABELS[activeTab]} brief`}
       </button>
 
       {error && (

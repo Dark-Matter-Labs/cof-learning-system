@@ -4,6 +4,7 @@ import { useState, useRef, useMemo } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import { NodeCard } from './NodeCard';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface Message {
   readonly id: number;
@@ -271,9 +272,10 @@ export function AskMode({ allNodes }: AskModeProps) {
           <button
             type="submit"
             disabled={isStreaming || !input.trim()}
-            className="px-4 py-2 text-sm bg-node-hunch text-white rounded-lg disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-node-hunch text-white rounded-lg disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
-            {isStreaming ? '…' : 'Ask'}
+            {isStreaming && <Spinner size="sm" label="Asking" />}
+            {isStreaming ? 'Thinking…' : 'Ask'}
           </button>
         </form>
       </div>

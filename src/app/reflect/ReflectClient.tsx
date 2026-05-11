@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ConvergenceSparkline } from '@/components/graph/convergence/ConvergenceSparkline';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
+import { Spinner } from '@/components/ui/Spinner';
 import { REFLECTION_QUESTIONS } from './questions';
 import type { DecisionEntry, ReflectionSessionPayload, GoalSpaceInfo, ReflectionSession } from './types';
 import type { ConvergenceData } from '@/lib/types/convergence';
@@ -190,11 +191,12 @@ export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClient
       {/* Section 4: Save */}
       <section className="mb-8">
         <button
-          className="px-6 py-2 bg-xco-ocean text-xco-paper rounded hover:bg-xco-teal disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-6 py-2 bg-xco-ocean text-xco-paper rounded hover:bg-xco-teal disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Saving...' : 'Save Reflection Session'}
+          {saving && <Spinner size="sm" label="Saving" />}
+          {saving ? 'Saving…' : 'Save Reflection Session'}
         </button>
         {saveResult === 'success' && (
           <p className="mt-2 text-sm text-xco-teal">Session saved</p>

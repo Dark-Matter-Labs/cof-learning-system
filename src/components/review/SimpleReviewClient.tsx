@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Node } from '@/lib/types/nodes';
+import { Spinner } from '@/components/ui/Spinner';
 
 const NODE_TYPE_LABELS: Record<string, string> = {
   hunch: 'Hunch',
@@ -112,9 +113,10 @@ export function SimpleReviewClient({ node, onPromote, onArchive, isSubmitting }:
           type="button"
           onClick={handlePromote}
           disabled={isSubmitting}
-          className="px-4 py-2 text-sm bg-[#185FA5] text-white rounded-md disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-[#185FA5] text-white rounded-md disabled:opacity-50"
         >
-          {isSubmitting ? 'Saving…' : 'Promote'}
+          {isSubmitting && <Spinner size="sm" label="Promoting" />}
+          {isSubmitting ? 'Promoting…' : 'Promote'}
         </button>
         <button
           type="button"
