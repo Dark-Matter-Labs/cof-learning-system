@@ -103,7 +103,7 @@ export default function ReviewPage() {
             })
             .filter((e): e is NonNullable<typeof e> => e !== null);
           if (edges.length > 0) {
-            const { error: edgesError } = await supabase.from('edges').insert(edges);
+            const { error: edgesError } = await supabase.from('edges').upsert(edges, { ignoreDuplicates: true });
             if (edgesError) throw edgesError;
           }
         }
@@ -118,7 +118,7 @@ export default function ReviewPage() {
           edge_type: 'targets_outcome',
           weight: 1,
         }));
-        const { error: goalEdgesError } = await supabase.from('edges').insert(goalEdges);
+        const { error: goalEdgesError } = await supabase.from('edges').upsert(goalEdges, { ignoreDuplicates: true });
         if (goalEdgesError) throw goalEdgesError;
       }
 
