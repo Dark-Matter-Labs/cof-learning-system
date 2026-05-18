@@ -31,7 +31,11 @@ export function GuidedTour({ allNodes }: GuidedTourProps) {
     setStatus('loading');
     try {
       const res = await fetch('/api/query/tour', { method: 'POST' });
-      if (!res.ok) throw new Error('Tour failed');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error('[GuidedTour] API error', res.status, body);
+        throw new Error('Tour failed');
+      }
       const data = await res.json() as TourResponse;
       setLlmChapters(data.chapters as TourChapter[]);
       setActiveIndex(0);

@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { callLLM } from '@/lib/llm';
 import { serializeNodesForQuery, buildTourPrompt } from '@/lib/agents/query';
-import type { TourResponse, QuerySerializedNode } from '@/lib/agents/query';
+import type { TourResponse, TourChapter, QuerySerializedNode } from '@/lib/agents/query';
 import { extractJsonObject } from '@/lib/utils/json';
 
 const EMPTY_TOUR: TourResponse = {
@@ -14,18 +14,30 @@ const EMPTY_TOUR: TourResponse = {
   ],
 };
 
-function isValidTourResponse(v: unknown): v is TourResponse {
-  if (!v || typeof v !== 'object') return false;
-  const { chapters } = v as Record<string, unknown>;
-  if (!Array.isArray(chapters) || chapters.length === 0) return false;
-  return (chapters as unknown[]).every(
-    ch =>
-      ch !== null &&
-      typeof ch === 'object' &&
-      typeof (ch as Record<string, unknown>).title === 'string' &&
-      typeof (ch as Record<string, unknown>).narrative === 'string' &&
-      Array.isArray((ch as Record<string, unknown>).nodeIds)
-  );
+/**
+ * Coerces a parsed LLM response into a valid TourResponse, tolerating omitted
+ * or wrongly-typed fields (e.g. missing nodeIds, extra keys, null values).
+ * Returns null if the shape is unrecognisably wrong.
+ */
+function normalizeTour(v: unknown): TourResponse | null {
+  if (!v || typeof v !== 'object') return null;
+  const raw = v as Record<string, unknown>;
+  if (!Array.isArray(raw.chapters) || raw.chapters.length === 0) return null;
+
+  const chapters: TourChapter[] = [];
+  for (const ch of raw.chapters as unknown[]) {
+    if (!ch || typeof ch !== 'object') return null;
+    const c = ch as Record<string, unknown>;
+    const title = typeof c.title === 'string' ? c.title : '';
+    const narrative = typeof c.narrative === 'string' ? c.narrative : '';
+    const nodeIds: string[] = Array.isArray(c.nodeIds)
+      ? (c.nodeIds as unknown[]).filter((id): id is string => typeof id === 'string')
+      : [];
+    if (!title) return null;
+    chapters.push({ title, narrative, nodeIds });
+  }
+
+  return chapters.length > 0 ? { chapters } : null;
 }
 
 export async function POST(_request: Request): Promise<Response> {
@@ -35,17 +47,13 @@ export async function POST(_request: Request): Promise<Response> {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return Response.json({ error: 'Server misconfiguration' }, { status: 500 });
-  }
-
   const { data: nodesData, error: dbError } = await supabase
     .from('nodes')
     .select('id, node_type, title, description, status')
     .neq('status', 'archived');
 
   if (dbError) {
+    console.error('[tour] DB error fetching nodes:', dbError);
     return Response.json({ error: 'Failed to load graph data' }, { status: 500 });
   }
 
@@ -58,32 +66,30 @@ export async function POST(_request: Request): Promise<Response> {
   const serialized = serializeNodesForQuery(nodes);
   const prompt = buildTourPrompt(serialized);
 
-  const anthropic = new Anthropic({ apiKey });
-
-  let message: Awaited<ReturnType<typeof anthropic.messages.create>>;
+  let llmText: string;
   try {
-    message = await anthropic.messages.create({
-      model: process.env.QUERY_LLM_MODEL ?? 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await callLLM('query', {
+      systemPrompt: 'You are a knowledge graph assistant. Return only valid JSON with no commentary.',
+      userMessage: prompt,
+      maxTokens: 4096,
     });
-  } catch {
-    return Response.json({ error: 'Failed to generate tour' }, { status: 500 });
-  }
-
-  const textBlock = message.content.find(b => b.type === 'text');
-  if (!textBlock) {
+    llmText = response.content;
+  } catch (err) {
+    console.error('[tour] LLM call failed:', err);
     return Response.json({ error: 'Failed to generate tour' }, { status: 500 });
   }
 
   try {
-    const extracted = extractJsonObject(textBlock.text);
-    const tour = JSON.parse(extracted) as TourResponse;
-    if (!isValidTourResponse(tour)) {
+    const extracted = extractJsonObject(llmText);
+    const parsed = JSON.parse(extracted) as unknown;
+    const tour = normalizeTour(parsed);
+    if (!tour) {
+      console.error('[tour] Invalid tour structure after normalize. Raw (200):', llmText.slice(0, 200));
       return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
     }
     return Response.json(tour);
-  } catch {
+  } catch (err) {
+    console.error('[tour] JSON parse failed:', err, '| raw (200):', llmText.slice(0, 200));
     return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
   }
 }
