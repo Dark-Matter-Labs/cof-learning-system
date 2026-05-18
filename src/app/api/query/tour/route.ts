@@ -1,5 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { callLLM } from '@/lib/llm';
 import { serializeNodesForQuery, buildTourPrompt } from '@/lib/agents/query';
 import type { TourResponse, QuerySerializedNode } from '@/lib/agents/query';
 import { extractJsonObject } from '@/lib/utils/json';
@@ -35,17 +35,13 @@ export async function POST(_request: Request): Promise<Response> {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return Response.json({ error: 'Server misconfiguration' }, { status: 500 });
-  }
-
   const { data: nodesData, error: dbError } = await supabase
     .from('nodes')
     .select('id, node_type, title, description, status')
     .neq('status', 'archived');
 
   if (dbError) {
+    console.error('[tour] DB error fetching nodes:', dbError);
     return Response.json({ error: 'Failed to load graph data' }, { status: 500 });
   }
 
@@ -58,32 +54,29 @@ export async function POST(_request: Request): Promise<Response> {
   const serialized = serializeNodesForQuery(nodes);
   const prompt = buildTourPrompt(serialized);
 
-  const anthropic = new Anthropic({ apiKey });
-
-  let message: Awaited<ReturnType<typeof anthropic.messages.create>>;
+  let llmText: string;
   try {
-    message = await anthropic.messages.create({
-      model: process.env.QUERY_LLM_MODEL ?? 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await callLLM('query', {
+      systemPrompt: 'You are a knowledge graph assistant. Return only valid JSON with no commentary.',
+      userMessage: prompt,
+      maxTokens: 2048,
     });
-  } catch {
-    return Response.json({ error: 'Failed to generate tour' }, { status: 500 });
-  }
-
-  const textBlock = message.content.find(b => b.type === 'text');
-  if (!textBlock) {
+    llmText = response.content;
+  } catch (err) {
+    console.error('[tour] LLM call failed:', err);
     return Response.json({ error: 'Failed to generate tour' }, { status: 500 });
   }
 
   try {
-    const extracted = extractJsonObject(textBlock.text);
+    const extracted = extractJsonObject(llmText);
     const tour = JSON.parse(extracted) as TourResponse;
     if (!isValidTourResponse(tour)) {
+      console.error('[tour] Invalid tour structure:', extracted.slice(0, 200));
       return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
     }
     return Response.json(tour);
-  } catch {
+  } catch (err) {
+    console.error('[tour] JSON parse failed:', err, 'raw:', llmText.slice(0, 200));
     return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
   }
 }
