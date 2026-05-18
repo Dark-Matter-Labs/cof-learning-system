@@ -4,6 +4,8 @@ import { useAuth } from './AuthProvider';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { getKnowledgeReviewTypes } from '@/lib/config/captureTypes';
 
 interface NavBarProps {
   readonly reviewCount: number;
@@ -13,6 +15,35 @@ export function NavBar({ reviewCount }: NavBarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [liveCount, setLiveCount] = useState(reviewCount);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const fetchCount = async () => {
+      const [{ count: flaggedCount }, { count: learningsCount }] = await Promise.all([
+        supabase
+          .from('nodes')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'flagged_for_review'),
+        supabase
+          .from('nodes')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'llm_reviewed')
+          .in('node_type', getKnowledgeReviewTypes() as string[]),
+      ]);
+      setLiveCount((flaggedCount ?? 0) + (learningsCount ?? 0));
+    };
+
+    const channel = supabase
+      .channel('nav-review-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'nodes' }, () => {
+        fetchCount();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -61,12 +92,12 @@ export function NavBar({ reviewCount }: NavBarProps) {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        {reviewCount > 0 && (
+        {liveCount > 0 && (
           <Link
             href="/review"
             className="bg-node-assumption-fg text-white text-xs px-2.5 py-0.5 rounded-full"
           >
-            {reviewCount} awaiting review
+            {liveCount} awaiting review
           </Link>
         )}
         <button

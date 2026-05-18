@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { serializeNodesForQuery, buildTourPrompt } from '@/lib/agents/query';
 import type { TourResponse, QuerySerializedNode } from '@/lib/agents/query';
+import { extractJsonObject } from '@/lib/utils/json';
 
 const EMPTY_TOUR: TourResponse = {
   chapters: [
@@ -76,9 +77,8 @@ export async function POST(_request: Request): Promise<Response> {
   }
 
   try {
-    const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON found');
-    const tour = JSON.parse(jsonMatch[0]) as TourResponse;
+    const extracted = extractJsonObject(textBlock.text);
+    const tour = JSON.parse(extracted) as TourResponse;
     if (!isValidTourResponse(tour)) {
       return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
     }
