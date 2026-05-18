@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { callLLM } from '@/lib/llm';
 import { serializeNodesForQuery, buildTourPrompt } from '@/lib/agents/query';
-import type { TourResponse, QuerySerializedNode } from '@/lib/agents/query';
+import type { TourResponse, TourChapter, QuerySerializedNode } from '@/lib/agents/query';
 import { extractJsonObject } from '@/lib/utils/json';
 
 const EMPTY_TOUR: TourResponse = {
@@ -14,18 +14,30 @@ const EMPTY_TOUR: TourResponse = {
   ],
 };
 
-function isValidTourResponse(v: unknown): v is TourResponse {
-  if (!v || typeof v !== 'object') return false;
-  const { chapters } = v as Record<string, unknown>;
-  if (!Array.isArray(chapters) || chapters.length === 0) return false;
-  return (chapters as unknown[]).every(
-    ch =>
-      ch !== null &&
-      typeof ch === 'object' &&
-      typeof (ch as Record<string, unknown>).title === 'string' &&
-      typeof (ch as Record<string, unknown>).narrative === 'string' &&
-      Array.isArray((ch as Record<string, unknown>).nodeIds)
-  );
+/**
+ * Coerces a parsed LLM response into a valid TourResponse, tolerating omitted
+ * or wrongly-typed fields (e.g. missing nodeIds, extra keys, null values).
+ * Returns null if the shape is unrecognisably wrong.
+ */
+function normalizeTour(v: unknown): TourResponse | null {
+  if (!v || typeof v !== 'object') return null;
+  const raw = v as Record<string, unknown>;
+  if (!Array.isArray(raw.chapters) || raw.chapters.length === 0) return null;
+
+  const chapters: TourChapter[] = [];
+  for (const ch of raw.chapters as unknown[]) {
+    if (!ch || typeof ch !== 'object') return null;
+    const c = ch as Record<string, unknown>;
+    const title = typeof c.title === 'string' ? c.title : '';
+    const narrative = typeof c.narrative === 'string' ? c.narrative : '';
+    const nodeIds: string[] = Array.isArray(c.nodeIds)
+      ? (c.nodeIds as unknown[]).filter((id): id is string => typeof id === 'string')
+      : [];
+    if (!title) return null;
+    chapters.push({ title, narrative, nodeIds });
+  }
+
+  return chapters.length > 0 ? { chapters } : null;
 }
 
 export async function POST(_request: Request): Promise<Response> {
@@ -59,7 +71,7 @@ export async function POST(_request: Request): Promise<Response> {
     const response = await callLLM('query', {
       systemPrompt: 'You are a knowledge graph assistant. Return only valid JSON with no commentary.',
       userMessage: prompt,
-      maxTokens: 2048,
+      maxTokens: 4096,
     });
     llmText = response.content;
   } catch (err) {
@@ -69,14 +81,15 @@ export async function POST(_request: Request): Promise<Response> {
 
   try {
     const extracted = extractJsonObject(llmText);
-    const tour = JSON.parse(extracted) as TourResponse;
-    if (!isValidTourResponse(tour)) {
-      console.error('[tour] Invalid tour structure:', extracted.slice(0, 200));
+    const parsed = JSON.parse(extracted) as unknown;
+    const tour = normalizeTour(parsed);
+    if (!tour) {
+      console.error('[tour] Invalid tour structure after normalize. Raw (200):', llmText.slice(0, 200));
       return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
     }
     return Response.json(tour);
   } catch (err) {
-    console.error('[tour] JSON parse failed:', err, 'raw:', llmText.slice(0, 200));
+    console.error('[tour] JSON parse failed:', err, '| raw (200):', llmText.slice(0, 200));
     return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
   }
 }
