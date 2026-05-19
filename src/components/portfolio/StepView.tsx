@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { StepAIContent } from './StepAIContent';
 import { STEP_AGENTS } from '@/lib/portfolio/agents';
+import { Markdown } from '@/components/ui/Markdown';
 
 interface Step {
   readonly id: string;
@@ -184,9 +185,9 @@ export function StepView({ step, portfolioId, onStepUpdated }: StepViewProps) {
       {step.status === 'complete' && (
         <>
           <div className="bg-cof-bg-subtle rounded-lg p-4 mb-4">
-            <p className="text-xs text-cof-text-secondary leading-relaxed whitespace-pre-wrap">
+            <Markdown>
               {typeof step.content.text === 'string' ? step.content.text : step.ai_suggestions?.text ?? ''}
-            </p>
+            </Markdown>
           </div>
           <button
             onClick={() => void handleReopen()}

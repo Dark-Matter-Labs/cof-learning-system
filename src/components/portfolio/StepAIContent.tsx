@@ -1,3 +1,5 @@
+import { Markdown } from '@/components/ui/Markdown';
+
 interface StepAIContentProps {
   readonly agentName: string;
   readonly content: string;
@@ -12,9 +14,7 @@ export function StepAIContent({ agentName, content }: StepAIContentProps) {
         </span>
         <span className="text-[10px] text-cof-text-tertiary">— {agentName}</span>
       </div>
-      <div className="text-xs text-cof-text-secondary leading-relaxed whitespace-pre-wrap">
-        {content}
-      </div>
+      <Markdown>{content}</Markdown>
     </div>
   );
 }

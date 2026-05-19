@@ -7,6 +7,7 @@ import type { TensionAlert } from '@/lib/types/tension';
 import type { FilterOption } from '@/lib/types/filter';
 import { FlaggedItem } from '@/components/review/FlaggedItem';
 import { ReflectionSection } from '@/components/review/ReflectionSection';
+import { Markdown } from '@/components/ui/Markdown';
 
 interface SystemHealthClientProps {
   readonly flagged: readonly Node[];
@@ -108,9 +109,9 @@ export function SystemHealthClient({
                   <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${colors.text}`}>
                     {alert.severity} · {alert.type.replace(/_/g, ' ')}
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2">
-                    {alert.description}
-                  </p>
+                  <div className="line-clamp-3">
+                    <Markdown>{alert.description}</Markdown>
+                  </div>
                 </div>
               );
             })}
