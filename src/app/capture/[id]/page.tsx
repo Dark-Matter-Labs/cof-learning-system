@@ -101,6 +101,20 @@ export default function HunchDetailPage() {
         </span>
       </div>
 
+      {node.status === 'raw' && (
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+          <p className="text-sm text-gray-500 mb-3">This capture hasn't been processed yet.</p>
+          <button
+            onClick={handleRetry}
+            disabled={retrying}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-[#185FA5] text-white rounded-md disabled:opacity-50"
+          >
+            {retrying ? 'Processing…' : 'Process with AI'}
+          </button>
+          {retryError && <p className="mt-2 text-xs text-red-400">{retryError}</p>}
+        </div>
+      )}
+
       {node.status === 'processing' && (
         <div className="bg-node-option/10 border border-node-option/30 rounded-lg p-4 text-center">
           <p className="text-sm text-node-option">{retrying ? 'Retrying…' : 'Processing with AI...'}</p>
