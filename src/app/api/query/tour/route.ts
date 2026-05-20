@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { callLLM } from '@/lib/llm';
 
 export const maxDuration = 300;
@@ -111,7 +112,8 @@ export async function POST(_request: Request): Promise<Response> {
     }
 
     const generatedAt = new Date().toISOString();
-    const { error: saveError } = await supabase.from('profiles').upsert({
+    const adminClient = createAdminClient();
+    const { error: saveError } = await adminClient.from('profiles').upsert({
       id: user.id,
       guided_tour: tour,
       guided_tour_generated_at: generatedAt,
