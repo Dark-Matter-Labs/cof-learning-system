@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Node } from '@/lib/types/nodes';
-import type { TourResponse, TourChapter } from '@/lib/agents/query';
+import type { TourChapter } from '@/lib/agents/query';
 import { NodeCard } from './NodeCard';
 
 const STATIC_CHAPTER_1: TourChapter = {
@@ -15,20 +15,44 @@ interface GuidedTourProps {
   readonly allNodes: ReadonlyArray<Pick<Node, 'id' | 'node_type' | 'title' | 'description' | 'status'>>;
 }
 
+type Status = 'loading-cache' | 'idle' | 'generating' | 'ready' | 'error';
+
+function formatAge(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  return `${diffDays} days ago`;
+}
+
 export function GuidedTour({ allNodes }: GuidedTourProps) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [status, setStatus] = useState<Status>('loading-cache');
   const [llmChapters, setLlmChapters] = useState<TourChapter[]>([]);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/query/tour')
+      .then(r => r.json())
+      .then((data: { tour: { chapters: TourChapter[] } | null; generatedAt: string | null }) => {
+        if (data.tour?.chapters?.length) {
+          setLlmChapters(data.tour.chapters);
+          setGeneratedAt(data.generatedAt);
+          setStatus('ready');
+        } else {
+          setStatus('idle');
+        }
+      })
+      .catch(() => setStatus('idle'));
+  }, []);
 
   const allChapters: TourChapter[] = status === 'ready' ? [STATIC_CHAPTER_1, ...llmChapters] : [];
   const activeChapter = allChapters[activeIndex];
   const chapterNodeIds = new Set(activeChapter?.nodeIds ?? []);
-  const chapterNodes = activeChapter
-    ? allNodes.filter(n => chapterNodeIds.has(n.id))
-    : [];
+  const chapterNodes = activeChapter ? allNodes.filter(n => chapterNodeIds.has(n.id)) : [];
 
-  async function handleStart() {
-    setStatus('loading');
+  async function handleGenerate() {
+    setStatus('generating');
     try {
       const res = await fetch('/api/query/tour', { method: 'POST' });
       if (!res.ok) {
@@ -36,13 +60,28 @@ export function GuidedTour({ allNodes }: GuidedTourProps) {
         console.error('[GuidedTour] API error', res.status, body);
         throw new Error('Tour failed');
       }
-      const data = await res.json() as TourResponse;
-      setLlmChapters(data.chapters as TourChapter[]);
+      const data = await res.json() as { tour: { chapters: TourChapter[] }; generatedAt: string };
+      setLlmChapters(data.tour.chapters);
+      setGeneratedAt(data.generatedAt);
       setActiveIndex(0);
       setStatus('ready');
     } catch {
       setStatus('error');
     }
+  }
+
+  if (status === 'loading-cache') {
+    return (
+      <div className="flex flex-col gap-6 pt-8">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="animate-pulse">
+            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-2" />
+            <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-full mb-1" />
+            <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-4/5" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (status === 'idle') {
@@ -53,7 +92,7 @@ export function GuidedTour({ allNodes }: GuidedTourProps) {
         </p>
         <button
           type="button"
-          onClick={handleStart}
+          onClick={() => void handleGenerate()}
           className="px-6 py-2.5 bg-node-hunch text-white text-sm rounded-lg hover:opacity-90 transition-opacity"
         >
           Start guided tour
@@ -62,7 +101,7 @@ export function GuidedTour({ allNodes }: GuidedTourProps) {
     );
   }
 
-  if (status === 'loading') {
+  if (status === 'generating') {
     return (
       <div className="flex flex-col gap-6 pt-8">
         {[1, 2, 3, 4, 5, 6].map(i => (
@@ -82,7 +121,7 @@ export function GuidedTour({ allNodes }: GuidedTourProps) {
         <p className="text-sm text-red-500 mb-4">Failed to generate tour. Please try again.</p>
         <button
           type="button"
-          onClick={handleStart}
+          onClick={() => void handleGenerate()}
           className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           Retry
@@ -108,6 +147,20 @@ export function GuidedTour({ allNodes }: GuidedTourProps) {
             {ch.title}
           </button>
         ))}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-800 mt-2">
+          {generatedAt && (
+            <p className="text-[10px] text-gray-400 dark:text-gray-600 mb-2 px-3">
+              Generated {formatAge(generatedAt)}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => void handleGenerate()}
+            className="w-full text-left text-[10px] px-3 py-1.5 text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
+          >
+            Regenerate ↺
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">

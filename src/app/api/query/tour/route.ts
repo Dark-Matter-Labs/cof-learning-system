@@ -42,6 +42,26 @@ function normalizeTour(v: unknown): TourResponse | null {
   return chapters.length > 0 ? { chapters } : null;
 }
 
+export async function GET(_request: Request): Promise<Response> {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('guided_tour, guided_tour_generated_at')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.guided_tour) {
+    return Response.json({ tour: null, generatedAt: null });
+  }
+
+  return Response.json({ tour: profile.guided_tour, generatedAt: profile.guided_tour_generated_at });
+}
+
 export async function POST(_request: Request): Promise<Response> {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -89,7 +109,15 @@ export async function POST(_request: Request): Promise<Response> {
       console.error('[tour] Invalid tour structure after normalize. Raw (200):', llmText.slice(0, 200));
       return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
     }
-    return Response.json(tour);
+
+    const generatedAt = new Date().toISOString();
+    await supabase.from('profiles').upsert({
+      id: user.id,
+      guided_tour: tour,
+      guided_tour_generated_at: generatedAt,
+    });
+
+    return Response.json({ tour, generatedAt });
   } catch (err) {
     console.error('[tour] JSON parse failed:', err, '| raw (200):', llmText.slice(0, 200));
     return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
