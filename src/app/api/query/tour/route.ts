@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { callLLM } from '@/lib/llm';
+
+export const maxDuration = 300;
 import { serializeNodesForQuery, buildTourPrompt } from '@/lib/agents/query';
 import type { TourResponse, TourChapter, QuerySerializedNode } from '@/lib/agents/query';
 import { extractJsonObject } from '@/lib/utils/json';

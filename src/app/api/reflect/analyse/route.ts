@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+export const maxDuration = 300;
+
 // Fix 4: NodeRow hoisted to module scope
 type NodeRow = { id: string; title: string; node_type: string; description: string | null };
 

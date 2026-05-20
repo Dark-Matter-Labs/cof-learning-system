@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
+
+export const maxDuration = 300;
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { buildQuerySystemPrompt, serializeNodesForQuery } from '@/lib/agents/query';

@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+
+export const maxDuration = 300;
 import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalContext } from '@/lib/agents/extraction';
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
