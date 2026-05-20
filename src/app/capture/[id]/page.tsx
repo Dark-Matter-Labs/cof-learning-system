@@ -63,6 +63,10 @@ export default function HunchDetailPage() {
       if (!response.ok) {
         const body = await response.json().catch(() => ({})) as { error?: string };
         setRetryError(body.error ?? `Server error (${response.status})`);
+      } else {
+        const supabase = createClient();
+        const { data } = await supabase.from('nodes').select('*').eq('id', params.id).single();
+        if (data) setNode(data as unknown as Node);
       }
     } catch {
       setRetryError('Network error — check your connection');
