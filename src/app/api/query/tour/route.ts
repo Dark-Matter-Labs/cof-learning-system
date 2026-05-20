@@ -111,11 +111,12 @@ export async function POST(_request: Request): Promise<Response> {
     }
 
     const generatedAt = new Date().toISOString();
-    await supabase.from('profiles').upsert({
+    const { error: saveError } = await supabase.from('profiles').upsert({
       id: user.id,
       guided_tour: tour,
       guided_tour_generated_at: generatedAt,
     });
+    if (saveError) console.error('[tour] Failed to cache tour:', saveError);
 
     return Response.json({ tour, generatedAt });
   } catch (err) {
