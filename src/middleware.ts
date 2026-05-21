@@ -27,7 +27,16 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/api/auth')) {
+  // Webhook routes receive unauthenticated requests from external services;
+  // they verify identity via HMAC signatures instead of Supabase sessions.
+  const WEBHOOK_PATHS = [
+    '/api/integrations/slack/events',
+    '/api/integrations/notion/webhook',
+    '/api/integrations/folk/sync',
+  ];
+  const isWebhook = WEBHOOK_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+
+  if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/api/auth') && !isWebhook) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
