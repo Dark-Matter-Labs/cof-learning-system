@@ -94,7 +94,15 @@ export async function POST(request: Request) {
         if (attachment.mime_type === 'text/plain') {
           attachmentContent = { type: 'text', textContent: new TextDecoder().decode(arrayBuffer) };
         } else if (attachment.mime_type === 'application/pdf') {
-          attachmentContent = { type: 'pdf', base64: Buffer.from(arrayBuffer).toString('base64') };
+          // Extract text as markdown first (cheaper tokens). Fall back to sending
+          // the raw PDF as base64 when there's no extractable text layer
+          // (e.g. scanned/image PDFs) so Claude's native vision still handles it.
+          const buffer = Buffer.from(arrayBuffer);
+          const { pdfToMarkdown } = await import('@/lib/files/pdfToMarkdown');
+          const markdown = await pdfToMarkdown(buffer);
+          attachmentContent = markdown
+            ? { type: 'text', textContent: markdown }
+            : { type: 'pdf', base64: buffer.toString('base64') };
         } else if (attachment.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
           const mammoth = await import('mammoth');
           const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });

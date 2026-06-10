@@ -80,8 +80,8 @@ export async function runDistillation(
     try {
       const synthResult = await callLLM('digest', {
         systemPrompt: 'You synthesise knowledge graph nodes into distilled summaries. Respond with JSON only.',
-        userMessage: `Synthesise these ${groupNodes.length} knowledge nodes into a single, more precise distilled node.\n\n${nodeDetails}\n\nCombine the key insights and produce a distilled node that captures the essential claim more precisely than any individual node.\n\nRespond with JSON only:\n{"title": "...", "summary": "...", "node_type": "hunch|learning|assumption", "rationale": "what was synthesised and why"}`,
-        maxTokens: 512,
+        userMessage: `Synthesise these ${groupNodes.length} knowledge nodes into a single, more precise distilled node.\n\n${nodeDetails}\n\nCombine the key insights and produce a distilled node that captures the essential claim more precisely than any individual node.\n\nRespond with JSON only:\n{"title": "...", "summary": "...", "node_type": "${distillableTypes.join('|')}", "rationale": "what was synthesised and why"}`,
+        maxTokens: 1024,
       });
 
       const synthesis = synthesisSchema.parse(JSON.parse(synthResult.content));
@@ -100,8 +100,13 @@ export async function runDistillation(
       } else {
         created++;
       }
-    } catch {
-      errors.push(`Failed to synthesise group (${group.node_ids.join(', ')})`);
+    } catch (err) {
+      const reason = err instanceof z.ZodError
+        ? err.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+        : err instanceof Error
+          ? err.message
+          : 'unknown error';
+      errors.push(`Failed to synthesise group (${group.node_ids.join(', ')}): ${reason}`);
     }
   }
 
