@@ -74,6 +74,16 @@ describe('runDistillation', () => {
     );
   });
 
+  it('parses cluster and synthesis responses wrapped in ```json code fences', async () => {
+    const supabase = makeSupabase(NODES);
+    mockCallLLM
+      .mockResolvedValueOnce({ content: '```json\n{"groups":[{"node_ids":["a1","a2"],"rationale":"same idea"}]}\n```' })
+      .mockResolvedValueOnce({ content: '```json\n{"title":"Patient debt underpins formation capital","summary":"Merged.","node_type":"hunch","rationale":"deduped"}\n```' });
+    const result = await runDistillation(supabase as never, 'user-1');
+    expect(result.created).toBe(1);
+    expect(result.errors).toHaveLength(0);
+  });
+
   it('skips groups where LLM returns invalid node IDs not in the node list', async () => {
     const supabase = makeSupabase(NODES);
     mockCallLLM.mockResolvedValueOnce({ content: JSON.stringify({ groups: [{ node_ids: ['ghost-1', 'ghost-2'], rationale: 'unknown' }] }) });
