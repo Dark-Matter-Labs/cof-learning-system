@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic({ apiKey });
 
     const message = await anthropic.messages.create({
-      model: process.env.REFLECTION_LLM_MODEL ?? 'claude-sonnet-4-20250514',
+      model: process.env.REFLECTION_LLM_MODEL ?? 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: SYSTEM_PROMPT(label),
       // Fix 5: Pass nodes.length as nodeCount

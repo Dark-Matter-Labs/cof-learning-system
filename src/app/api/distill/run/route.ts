@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { runDistillation } from '@/lib/agents/distillation';
 
+// Clustering + one synthesis LLM call per group run sequentially; on a large
+// graph this can exceed the default function timeout.
+export const maxDuration = 300;
+
 export async function POST(): Promise<Response> {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
