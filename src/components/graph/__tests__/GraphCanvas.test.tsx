@@ -53,6 +53,9 @@ const makeNode = (id: string, node_type: string): Node => ({
   attachments: [],
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
+  lifecycle_stage: null,
+  stage_transitioned_at: null,
+  stage_transition_reason: null,
 });
 
 describe('GraphCanvas', () => {
@@ -70,6 +73,7 @@ describe('GraphCanvas', () => {
           view="force"
           onSelectNode={onSelectNode}
           onSelectCommitment={onSelectCommitment}
+          onChangeView={vi.fn()}
         />
       )
     ).not.toThrow();
@@ -84,6 +88,7 @@ describe('GraphCanvas', () => {
           activeTypes={['hunch']}
           view="force"
           onSelectNode={vi.fn()}
+          onChangeView={vi.fn()}
         />
       )
     ).not.toThrow();
