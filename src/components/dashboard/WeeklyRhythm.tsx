@@ -8,7 +8,7 @@ export function WeeklyRhythm({ rhythm }: { readonly rhythm: RhythmData }) {
   return (
     <Card>
       <p className="text-xs font-semibold uppercase tracking-widest text-cof-text-tertiary mb-4">
-        This week's rhythm
+        This week&apos;s rhythm
       </p>
       <div className="space-y-4">
         <div>

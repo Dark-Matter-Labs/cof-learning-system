@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { InlineCaptureCard } from '../InlineCaptureCard';
-import { vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Node } from '@/lib/types/nodes';
 
 global.fetch = vi.fn();

@@ -87,7 +87,7 @@ describe('POST /api/query/tour', () => {
 
   it('handles LLM response wrapped in markdown code fences', async () => {
     const wrapped = `\`\`\`json\n${JSON.stringify(mockLlmResponse)}\n\`\`\``;
-    const { default: Anthropic } = await import('@anthropic-ai/sdk') as { default: ReturnType<typeof vi.fn> };
+    const { default: Anthropic } = await import('@anthropic-ai/sdk') as unknown as { default: ReturnType<typeof vi.fn> };
     Anthropic.mockImplementationOnce(function() {
       return {
         messages: {
@@ -115,7 +115,7 @@ describe('POST /api/query/tour', () => {
   });
 
   it('returns 500 when LLM call fails', async () => {
-    const { default: Anthropic } = await import('@anthropic-ai/sdk') as { default: ReturnType<typeof vi.fn> };
+    const { default: Anthropic } = await import('@anthropic-ai/sdk') as unknown as { default: ReturnType<typeof vi.fn> };
     Anthropic.mockImplementationOnce(function() {
       return {
         messages: {

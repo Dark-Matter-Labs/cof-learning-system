@@ -107,7 +107,7 @@ export default function HunchDetailPage() {
 
       {node.status === 'raw' && (
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-          <p className="text-sm text-gray-500 mb-3">This capture hasn't been processed yet.</p>
+          <p className="text-sm text-gray-500 mb-3">This capture hasn&apos;t been processed yet.</p>
           <button
             onClick={handleRetry}
             disabled={retrying}

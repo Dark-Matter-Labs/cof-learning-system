@@ -102,7 +102,7 @@ export async function POST(_request: Request): Promise<Response> {
   const stream = new ReadableStream({
     async start(controller) {
       const messageStream = anthropic.messages.stream({
-        model: process.env.REFLECTION_LLM_MODEL ?? 'claude-sonnet-4-20250514',
+        model: process.env.REFLECTION_LLM_MODEL ?? 'claude-sonnet-4-6',
         max_tokens: 4096,
         system: REFLECTION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],

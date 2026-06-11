@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse, after } from 'next/server';
+import { isOwnedStoragePath } from '@/lib/files/storagePath';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
   } = body;
 
   const hasAttachment = attachment && typeof attachment.storage_path === 'string';
+  // The capture → process pipeline later downloads this path with the
+  // service-role client (bypassing storage RLS), so reject any path the caller
+  // doesn't own before it is persisted.
+  if (hasAttachment && !isOwnedStoragePath(attachment.storage_path, user.id)) {
+    return NextResponse.json({ error: 'Invalid attachment path' }, { status: 403 });
+  }
   if (!hasAttachment && (!title || typeof title !== 'string' || title.trim().length === 0)) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
