@@ -21,12 +21,12 @@ describe('POST /api/distill/run', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error('Unauthorized') });
-    const res = await POST();
+    const res = await POST(new Request('http://t/api/distill/run', { method: 'POST' }));
     expect(res.status).toBe(401);
   });
 
   it('calls runDistillation with user id and returns result', async () => {
-    const res = await POST();
+    const res = await POST(new Request('http://t/api/distill/run', { method: 'POST' }));
     expect(res.status).toBe(200);
     expect(mockRunDistillation).toHaveBeenCalledWith(expect.anything(), 'user-1');
     const body = await res.json() as { data: { created: number; errors: string[] } };
@@ -36,7 +36,7 @@ describe('POST /api/distill/run', () => {
 
   it('returns result even when distillation finds 0 candidates', async () => {
     mockRunDistillation.mockResolvedValue({ created: 0, errors: [] });
-    const res = await POST();
+    const res = await POST(new Request('http://t/api/distill/run', { method: 'POST' }));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: { created: number } };
     expect(body.data.created).toBe(0);
@@ -44,7 +44,7 @@ describe('POST /api/distill/run', () => {
 
   it('returns 500 when runDistillation throws', async () => {
     mockRunDistillation.mockRejectedValue(new Error('LLM timeout'));
-    const res = await POST();
+    const res = await POST(new Request('http://t/api/distill/run', { method: 'POST' }));
     expect(res.status).toBe(500);
   });
 });
