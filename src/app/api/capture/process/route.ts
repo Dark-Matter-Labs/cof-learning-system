@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-export const maxDuration = 300;
 import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalContext } from '@/lib/agents/extraction';
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
+import { isOwnedStoragePath } from '@/lib/files/storagePath';
 import type { MeetingExtraction } from '@/lib/types/nodes';
+
+export const maxDuration = 300;
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -87,6 +88,12 @@ export async function POST(request: Request) {
 
     if (attachments.length > 0) {
       const attachment = attachments[0];
+      // Defense-in-depth: the download below uses the service-role client, which
+      // bypasses storage RLS. The node is already confirmed to belong to the
+      // caller (author_id check above), so the path must be under their prefix.
+      if (!isOwnedStoragePath(attachment.storage_path, user.id)) {
+        return NextResponse.json({ error: 'Invalid attachment path' }, { status: 403 });
+      }
       const adminClient = createAdminClient();
       const { data: fileData } = await adminClient.storage.from('attachments').download(attachment.storage_path);
 

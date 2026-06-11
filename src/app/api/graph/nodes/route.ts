@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { computeConvergenceScore, shouldTriggerSnapshot } from '@/lib/graph/convergence';
 import { NextResponse } from 'next/server';
+import { nodeCreateSchema } from '@/lib/api/nodeInput';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
 
@@ -105,10 +106,17 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json();
+  const parsed = nodeCreateSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Invalid node payload', details: parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabase
     .from('nodes')
-    .insert({ ...body, author_id: user.id })
+    .insert({ ...parsed.data, author_id: user.id })
     .select()
     .single();
 

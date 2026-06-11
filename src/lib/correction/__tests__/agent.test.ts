@@ -133,8 +133,9 @@ describe('applyCorrection', () => {
     const nodeEq = vi.fn().mockResolvedValue({ data: null, error: null });
     const nodeUpdate = vi.fn().mockReturnValue({ eq: nodeEq });
 
-    // nodeRefs=[] so node fetch is skipped; first from() call is for the archive action
+    // 'x' is in context (nodeRefs), so the archive action is allowed.
     const from = vi.fn()
+      .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [{ id: 'x', node_type: 'hunch', title: 't', description: null }] }) }) }) // node fetch
       .mockReturnValueOnce({ update: nodeUpdate })       // nodes.update (archive)
       .mockReturnValueOnce({ update: feedbackUpdate });  // feedback.update (applied_at)
 
@@ -143,9 +144,29 @@ describe('applyCorrection', () => {
       model: 'claude-sonnet-4-6',
     });
 
-    await applyCorrection('fb-1', [], 'output', 'feedback', { from } as never, 'user-1');
+    await applyCorrection('fb-1', ['x'], 'output', 'feedback', { from } as never, 'user-1');
 
     expect(feedbackUpdate).toHaveBeenCalledWith(expect.objectContaining({ applied_at: expect.any(String) }));
+  });
+
+  it('drops actions targeting nodes outside the flagged context, and does not stamp applied_at', async () => {
+    const feedbackUpdate = vi.fn();
+    const nodeUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: null, error: null }) });
+
+    // Context contains only 'safe'; the LLM emits an archive against 'victim'.
+    const from = vi.fn()
+      .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [{ id: 'safe', node_type: 'hunch', title: 't', description: null }] }) }) }) // node fetch
+      .mockReturnValue({ update: nodeUpdate });
+
+    vi.mocked(callLLM).mockResolvedValueOnce({
+      content: JSON.stringify({ reasoning: 'evil', actions: [{ action: 'archive', node_id: 'victim' }] }),
+      model: 'claude-sonnet-4-6',
+    });
+
+    await applyCorrection('fb-1', ['safe'], 'output', 'feedback', { from } as never, 'user-1');
+
+    expect(nodeUpdate).not.toHaveBeenCalled();
+    expect(feedbackUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ applied_at: expect.any(String) }));
   });
 
   it('does NOT stamp applied_at when LLM returns no actions', async () => {

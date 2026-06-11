@@ -76,6 +76,31 @@ export function parseCorrectionActions(rawJson: string): CorrectionResult {
   }
 }
 
+/**
+ * Splits LLM-proposed actions into those allowed to run and those rejected.
+ *
+ * `update`/`archive` may only target a node that was actually part of the
+ * flagged output (i.e. present in `allowedNodeIds`). Feedback text is free user
+ * input forwarded into the prompt, so without this guard a crafted message
+ * could make the model emit an action against any node id in the graph.
+ * `create` has no target and is always allowed.
+ */
+export function partitionCorrectionActions(
+  actions: readonly CorrectionAction[],
+  allowedNodeIds: ReadonlySet<string>,
+): { allowed: CorrectionAction[]; rejected: CorrectionAction[] } {
+  const allowed: CorrectionAction[] = [];
+  const rejected: CorrectionAction[] = [];
+  for (const action of actions) {
+    if (action.action === 'create' || allowedNodeIds.has(action.node_id)) {
+      allowed.push(action);
+    } else {
+      rejected.push(action);
+    }
+  }
+  return { allowed, rejected };
+}
+
 export async function applyCorrection(
   feedbackId: string,
   nodeRefs: readonly string[],
@@ -117,9 +142,24 @@ export async function applyCorrection(
     return;
   }
 
+  // Only let the agent mutate nodes that were actually part of the flagged
+  // output. Anything targeting another node id is dropped (and logged).
+  const allowedNodeIds = new Set(nodes.map(n => n.id));
+  const { allowed: actionsToApply, rejected } = partitionCorrectionActions(actions, allowedNodeIds);
+  if (rejected.length > 0) {
+    console.error('[correction] dropped out-of-context actions for feedback:', feedbackId, rejected);
+  }
+
+  // Nothing applicable remains (e.g. every action targeted a node outside the
+  // flagged context). Don't stamp applied_at for a no-op.
+  if (actionsToApply.length === 0) {
+    console.error('[correction] no in-context actions to apply for feedback:', feedbackId);
+    return;
+  }
+
   const errors: string[] = [];
 
-  for (const action of actions) {
+  for (const action of actionsToApply) {
     if (action.action === 'update') {
       const { error } = await supabase.from('nodes').update(action.fields).eq('id', action.node_id);
       if (error) errors.push(`update ${action.node_id}: ${error.message}`);
