@@ -22,7 +22,7 @@ export function GraphOSSurface() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [processFlowNode, setProcessFlowNode] = useState<Node | null>(null);
-  const [currentView, setCurrentView] = useState<GraphView>('force');
+  const [currentView, setCurrentView] = useState<GraphView>('flow');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
