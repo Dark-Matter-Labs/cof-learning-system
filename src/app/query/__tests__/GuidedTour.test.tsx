@@ -6,7 +6,7 @@ const mockNodes = [
   { id: 'gs1', node_type: 'goal_space', title: 'Madrid Goal', description: null, status: 'raw' as const },
 ];
 
-const mockTourResponse = {
+const mockTour = {
   chapters: [
     { title: 'Our goals', narrative: 'We have one goal space.', nodeIds: ['gs1'] },
     { title: 'Key assumptions', narrative: 'No assumptions yet.', nodeIds: [] },
@@ -15,6 +15,24 @@ const mockTourResponse = {
     { title: 'Where attention is needed', narrative: 'Nothing pending.', nodeIds: [] },
   ],
 };
+
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+/** No cached tour on GET (→ idle). On POST, run `post()` to produce the response. */
+function mockFetch(post: () => Response | Promise<Response>): ReturnType<typeof vi.fn> {
+  const fn = vi.fn((_url: string, opts?: { method?: string }) => {
+    if (opts?.method === 'POST') return Promise.resolve(post());
+    return Promise.resolve(jsonResponse({ tour: null, generatedAt: null }));
+  });
+  global.fetch = fn as unknown as typeof fetch;
+  return fn;
+}
+
+const generatedTour = () => jsonResponse({ tour: mockTour, generatedAt: '2026-01-01T00:00:00.000Z' });
 
 describe('GuidedTour', () => {
   beforeEach(() => {
@@ -25,57 +43,48 @@ describe('GuidedTour', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders Start guided tour button in idle state', () => {
+  it('renders Start guided tour button in idle state', async () => {
+    mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    expect(screen.getByRole('button', { name: 'Start guided tour' })).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Start guided tour' })).toBeDefined();
+    });
   });
 
   it('shows loading skeleton after clicking Start', async () => {
-    global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
+    // GET resolves to idle; POST never resolves → stays in the generating skeleton.
+    mockFetch(() => new Promise<Response>(() => {}));
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => {
       expect(document.querySelector('.animate-pulse')).toBeTruthy();
     });
   });
 
   it('shows static chapter 1 "What is this system?" after load', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(mockTourResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
+    mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => {
       expect(screen.getAllByText('What is this system?').length).toBeGreaterThan(0);
     });
   });
 
   it('shows all 6 chapter buttons in sidebar after load', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(mockTourResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
+    mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => screen.getByText('Our goals'));
+    // Static chapter 1 appears in both the sidebar and the active heading.
+    expect(screen.getAllByText('What is this system?').length).toBeGreaterThan(0);
     expect(screen.getByText('Key assumptions')).toBeDefined();
     expect(screen.getByText('Where attention is needed')).toBeDefined();
   });
 
   it('shows node card for node referenced in active chapter', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(mockTourResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
+    mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => screen.getByText('Our goals'));
     fireEvent.click(screen.getByText('Our goals'));
     await waitFor(() => {
@@ -84,39 +93,29 @@ describe('GuidedTour', () => {
   });
 
   it('shows Retry button on API failure', async () => {
-    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 500 }));
+    mockFetch(() => new Response('', { status: 500 }));
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Retry' })).toBeDefined();
     });
   });
 
   it('shows Next chapter button when not on last chapter', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(mockTourResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
+    mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => screen.getAllByText('What is this system?'));
     // Chapter 1 (index 0) is not the last — "Next chapter →" should appear
     expect(screen.getByRole('button', { name: /Next chapter/i })).toBeDefined();
   });
 
   it('does not show Next chapter button on last chapter', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(mockTourResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
+    mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => screen.getByText('Where attention is needed'));
-    // Navigate to last chapter (index 5)
+    // Navigate to last chapter (static chapter + 5 LLM chapters → index 5)
     fireEvent.click(screen.getByText('Where attention is needed'));
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /Next chapter/i })).toBeNull();
@@ -124,20 +123,14 @@ describe('GuidedTour', () => {
   });
 
   it('does not re-fetch when navigating between chapters', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(mockTourResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-    global.fetch = fetchMock;
+    const fetchMock = mockFetch(generatedTour);
     render(<GuidedTour allNodes={mockNodes} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start guided tour' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start guided tour' }));
     await waitFor(() => screen.getByText('Our goals'));
-    // Navigate to multiple chapters
+    const callsAfterLoad = fetchMock.mock.calls.length;
+    // Navigate between chapters — must not trigger additional fetches.
     fireEvent.click(screen.getByText('Our goals'));
     fireEvent.click(screen.getByText('Key assumptions'));
-    // fetch should only have been called once (the initial load)
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(callsAfterLoad);
   });
 });

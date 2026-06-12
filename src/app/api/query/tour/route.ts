@@ -83,7 +83,7 @@ export async function POST(_request: Request): Promise<Response> {
   const nodes = (nodesData ?? []) as QuerySerializedNode[];
 
   if (nodes.length === 0) {
-    return Response.json(EMPTY_TOUR);
+    return Response.json({ tour: EMPTY_TOUR, generatedAt: null });
   }
 
   const serialized = serializeNodesForQuery(nodes);

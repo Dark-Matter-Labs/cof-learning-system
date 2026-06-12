@@ -1,5 +1,37 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { parseCaptureModalValues } from '../modal';
+
+// A single, controllable mock for the admin client's terminal `.single()` call.
+// `vi.mock` is hoisted, so we cannot define a fresh factory per test (the last
+// hoisted factory would win for the whole file). Instead each test drives the
+// shared `mockSingle` fn via mockResolvedValue(Once).
+const { mockSingle } = vi.hoisted(() => ({ mockSingle: vi.fn() }));
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({
+    from: () => ({
+      insert: () => ({
+        select: () => ({ single: mockSingle }),
+      }),
+    }),
+  }),
+}));
+
+// Avoid INTEGRATION_TOKEN_ENCRYPTION_KEY requirement via transitive imports.
+vi.mock('@/lib/integrations/crypto', () => ({
+  encryptToken: (t: string) => ({ ciphertext: `enc:${t}`, iv: 'testiv' }),
+  decryptToken: (c: string) => c.replace('enc:', ''),
+}));
+
+// after() is fire-and-forget in tests — we don't await background tasks.
+vi.mock('next/server', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/server')>();
+  return {
+    ...actual,
+    after: vi.fn(() => {}),
+  };
+});
+
 import { handleViewSubmission } from '../handler';
 import type { ViewSubmissionPayload } from '../handler';
 
@@ -67,7 +99,7 @@ describe('parseCaptureModalValues', () => {
   });
 });
 
-// ─── handleViewSubmission — DB write happy path ──────────────────────────────
+// ─── handleViewSubmission — DB write ──────────────────────────────────────────
 
 const MOCK_NODE_ID = 'aaa00000-0000-0000-0000-000000000001';
 
@@ -101,44 +133,16 @@ function makeViewSubmissionPayload(
 
 describe('handleViewSubmission', () => {
   beforeEach(() => {
-    // Mock the admin client module
-    vi.mock('@/lib/supabase/admin', () => ({
-      createAdminClient: () => ({
-        from: () => ({
-          insert: () => ({
-            select: () => ({
-              single: () => Promise.resolve({
-                data: { id: MOCK_NODE_ID, title: 'Test' },
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      }),
-    }));
-
-    // Mock crypto module to avoid INTEGRATION_TOKEN_ENCRYPTION_KEY requirement
-    vi.mock('@/lib/integrations/crypto', () => ({
-      encryptToken: (t: string) => ({ ciphertext: `enc:${t}`, iv: 'testiv' }),
-      decryptToken: (c: string) => c.replace('enc:', ''),
-    }));
-
-    // after() is a no-op in tests
-    vi.mock('next/server', async (importOriginal) => {
-      const actual = await importOriginal<typeof import('next/server')>();
-      return {
-        ...actual,
-        after: vi.fn(() => {
-          // fire-and-forget in tests — we don't await background tasks
-        }),
-      };
+    mockSingle.mockReset();
+    // Default: successful insert.
+    mockSingle.mockResolvedValue({
+      data: { id: MOCK_NODE_ID, title: 'Test' },
+      error: null,
     });
-
     process.env.SLACK_BOT_TOKEN = 'xoxb-test-token';
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     delete process.env.SLACK_BOT_TOKEN;
   });
 
@@ -171,21 +175,10 @@ describe('handleViewSubmission', () => {
   });
 
   it('returns errors response when DB insert returns a non-dedup error', async () => {
-    vi.mock('@/lib/supabase/admin', () => ({
-      createAdminClient: () => ({
-        from: () => ({
-          insert: () => ({
-            select: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: null,
-                  error: { message: 'connection error', code: '08006' },
-                }),
-            }),
-          }),
-        }),
-      }),
-    }));
+    mockSingle.mockResolvedValue({
+      data: null,
+      error: { message: 'connection error', code: '08006' },
+    });
 
     const payload = makeViewSubmissionPayload('Some title');
     const res = await handleViewSubmission(payload, 'http://localhost:3000');
@@ -194,24 +187,13 @@ describe('handleViewSubmission', () => {
   });
 
   it('handles dedup gracefully (23505 unique constraint violation)', async () => {
-    vi.mock('@/lib/supabase/admin', () => ({
-      createAdminClient: () => ({
-        from: () => ({
-          insert: () => ({
-            select: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: null,
-                  error: {
-                    message: 'duplicate key value violates unique constraint',
-                    code: '23505',
-                  },
-                }),
-            }),
-          }),
-        }),
-      }),
-    }));
+    mockSingle.mockResolvedValue({
+      data: null,
+      error: {
+        message: 'duplicate key value violates unique constraint',
+        code: '23505',
+      },
+    });
 
     const payload = makeViewSubmissionPayload('Duplicate capture');
     const res = await handleViewSubmission(payload, 'http://localhost:3000');

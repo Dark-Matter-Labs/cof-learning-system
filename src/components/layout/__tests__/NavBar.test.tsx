@@ -11,9 +11,21 @@ vi.mock('@/components/layout/AuthProvider', () => ({
   useAuth: () => ({ user: { email: 'test@example.com' } }),
 }));
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({ auth: { signOut: vi.fn() } }),
-}));
+vi.mock('@/lib/supabase/client', () => {
+  // NavBar's useEffect opens a realtime channel to keep the review count live.
+  // Provide a chainable channel stub so the effect doesn't throw during render.
+  const channel = {
+    on: vi.fn(() => channel),
+    subscribe: vi.fn(() => channel),
+  };
+  return {
+    createClient: () => ({
+      auth: { signOut: vi.fn() },
+      channel: vi.fn(() => channel),
+      removeChannel: vi.fn(),
+    }),
+  };
+});
 
 import { NavBar } from '../NavBar';
 

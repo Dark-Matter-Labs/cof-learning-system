@@ -98,11 +98,11 @@ describe('SimpleReviewClient', () => {
     });
   });
 
-  it('disables buttons and shows Saving… when isSubmitting is true', () => {
+  it('disables buttons and shows Promoting… when isSubmitting is true', () => {
     render(<SimpleReviewClient node={baseNode} onPromote={vi.fn()} onArchive={vi.fn()} isSubmitting={true} />);
-    expect(screen.getByText('Saving…')).toBeInTheDocument();
-    expect((screen.getByText('Saving…') as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByText('Archive') as HTMLButtonElement).disabled).toBe(true);
+    const promoteButton = screen.getByRole('button', { name: /Promoting/ });
+    expect(promoteButton).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
   });
 
   it('shows error when onPromote rejects', async () => {

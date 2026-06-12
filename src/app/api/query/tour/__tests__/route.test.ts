@@ -1,9 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockGetUser, mockNodesSelect } = vi.hoisted(() => ({
+const { mockGetUser, mockNodesSelect, mockCallLLM, mockAdminUpsert } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockNodesSelect: vi.fn(),
+  mockCallLLM: vi.fn(),
+  mockAdminUpsert: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -15,6 +17,16 @@ vi.mock('@/lib/supabase/server', () => ({
   ),
 }));
 
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(() => ({
+    from: () => ({ upsert: mockAdminUpsert }),
+  })),
+}));
+
+vi.mock('@/lib/llm', () => ({
+  callLLM: mockCallLLM,
+}));
+
 const mockLlmResponse = {
   chapters: [
     { title: 'Our goals', narrative: 'We have one goal space.', nodeIds: ['gs1'] },
@@ -24,18 +36,6 @@ const mockLlmResponse = {
     { title: 'Where attention is needed', narrative: 'Nothing pending.', nodeIds: [] },
   ],
 };
-
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn(function() {
-    return {
-      messages: {
-        create: vi.fn().mockResolvedValue({
-          content: [{ type: 'text', text: JSON.stringify(mockLlmResponse) }],
-        }),
-      },
-    };
-  }),
-}));
 
 import { POST } from '../route';
 
@@ -53,6 +53,8 @@ describe('POST /api/query/tour', () => {
         data: [{ id: 'gs1', node_type: 'goal_space', title: 'Madrid Goal', description: null, status: 'raw' }],
       }),
     });
+    mockCallLLM.mockResolvedValue({ content: JSON.stringify(mockLlmResponse), model: 'test-model' });
+    mockAdminUpsert.mockResolvedValue({ error: null });
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -63,16 +65,16 @@ describe('POST /api/query/tour', () => {
 
   it('returns 5 chapters from the LLM response', async () => {
     const res = await POST(makeRequest());
-    const body = await res.json() as { chapters: unknown[] };
+    const body = await res.json() as { tour: { chapters: unknown[] } };
     expect(res.status).toBe(200);
-    expect(body.chapters).toHaveLength(5);
+    expect(body.tour.chapters).toHaveLength(5);
   });
 
   it('returns chapter titles from LLM', async () => {
     const res = await POST(makeRequest());
-    const body = await res.json() as { chapters: Array<{ title: string }> };
-    expect(body.chapters[0].title).toBe('Our goals');
-    expect(body.chapters[4].title).toBe('Where attention is needed');
+    const body = await res.json() as { tour: { chapters: Array<{ title: string }> } };
+    expect(body.tour.chapters[0].title).toBe('Our goals');
+    expect(body.tour.chapters[4].title).toBe('Where attention is needed');
   });
 
   it('returns 5 fallback chapters when no nodes exist', async () => {
@@ -80,49 +82,22 @@ describe('POST /api/query/tour', () => {
       neq: vi.fn().mockResolvedValue({ data: [] }),
     });
     const res = await POST(makeRequest());
-    const body = await res.json() as { chapters: unknown[] };
+    const body = await res.json() as { tour: { chapters: unknown[] } };
     expect(res.status).toBe(200);
-    expect(body.chapters).toHaveLength(5);
+    expect(body.tour.chapters).toHaveLength(5);
   });
 
   it('handles LLM response wrapped in markdown code fences', async () => {
     const wrapped = `\`\`\`json\n${JSON.stringify(mockLlmResponse)}\n\`\`\``;
-    const { default: Anthropic } = await import('@anthropic-ai/sdk') as unknown as { default: ReturnType<typeof vi.fn> };
-    Anthropic.mockImplementationOnce(function() {
-      return {
-        messages: {
-          create: vi.fn().mockResolvedValue({
-            content: [{ type: 'text', text: wrapped }],
-          }),
-        },
-      };
-    });
+    mockCallLLM.mockResolvedValueOnce({ content: wrapped, model: 'test-model' });
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
-    const body = await res.json() as { chapters: unknown[] };
-    expect(body.chapters).toHaveLength(5);
-  });
-
-  it('returns 500 when ANTHROPIC_API_KEY is not configured', async () => {
-    const saved = process.env.ANTHROPIC_API_KEY;
-    delete process.env.ANTHROPIC_API_KEY;
-    try {
-      const res = await POST(makeRequest());
-      expect(res.status).toBe(500);
-    } finally {
-      if (saved) process.env.ANTHROPIC_API_KEY = saved;
-    }
+    const body = await res.json() as { tour: { chapters: unknown[] } };
+    expect(body.tour.chapters).toHaveLength(5);
   });
 
   it('returns 500 when LLM call fails', async () => {
-    const { default: Anthropic } = await import('@anthropic-ai/sdk') as unknown as { default: ReturnType<typeof vi.fn> };
-    Anthropic.mockImplementationOnce(function() {
-      return {
-        messages: {
-          create: vi.fn().mockRejectedValue(new Error('Network error')),
-        },
-      };
-    });
+    mockCallLLM.mockRejectedValueOnce(new Error('Network error'));
     const res = await POST(makeRequest());
     expect(res.status).toBe(500);
   });
@@ -131,6 +106,12 @@ describe('POST /api/query/tour', () => {
     mockNodesSelect.mockReturnValue({
       neq: vi.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
     });
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(500);
+  });
+
+  it('returns 500 when the LLM returns an unparseable response', async () => {
+    mockCallLLM.mockResolvedValueOnce({ content: 'not json at all', model: 'test-model' });
     const res = await POST(makeRequest());
     expect(res.status).toBe(500);
   });
