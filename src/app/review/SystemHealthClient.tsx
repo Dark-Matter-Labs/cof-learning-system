@@ -1,16 +1,20 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Link from 'next/link';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
-import { FlaggedItem } from '@/components/review/FlaggedItem';
+import { ReviewItem, type ReviewKind } from '@/components/review/ReviewItem';
 import { Markdown } from '@/components/ui/Markdown';
 
+export interface ReviewQueueEntry {
+  readonly node: Node;
+  readonly kind: ReviewKind;
+}
+
 interface SystemHealthClientProps {
-  readonly flagged: readonly Node[];
+  readonly queue: readonly ReviewQueueEntry[];
   readonly tensions: readonly TensionAlert[];
-  readonly learnings: readonly Node[];
+  readonly sourceTitles: Readonly<Record<string, string>>;
 }
 
 const SEVERITY_COLORS: Record<string, { readonly text: string; readonly border: string }> = {
@@ -20,62 +24,54 @@ const SEVERITY_COLORS: Record<string, { readonly text: string; readonly border: 
 };
 
 export function SystemHealthClient({
-  flagged: initialFlagged,
+  queue: initialQueue,
   tensions,
-  learnings,
+  sourceTitles,
 }: SystemHealthClientProps) {
-  const [flagged, setFlagged] = useState<readonly Node[]>(initialFlagged);
+  const [queue, setQueue] = useState<readonly ReviewQueueEntry[]>(initialQueue);
   const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
 
-  const handleAccept = useCallback(async (id: string) => {
+  const mutate = useCallback(async (id: string, status: 'promoted' | 'archived', verb: string) => {
     try {
       const res = await fetch(`/api/nodes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'promoted' }),
+        body: JSON.stringify({ status }),
       });
       if (res.ok) {
-        setFlagged(prev => prev.filter(n => n.id !== id));
+        setQueue(prev => prev.filter(e => e.node.id !== id));
       } else {
-        setItemErrors(prev => ({ ...prev, [id]: 'Failed to accept — try again' }));
+        setItemErrors(prev => ({ ...prev, [id]: `Failed to ${verb} — try again` }));
       }
     } catch {
-      setItemErrors(prev => ({ ...prev, [id]: 'Failed to accept — try again' }));
+      setItemErrors(prev => ({ ...prev, [id]: `Failed to ${verb} — try again` }));
     }
   }, []);
 
-  const handleArchive = useCallback(async (id: string) => {
-    try {
-      const res = await fetch(`/api/nodes/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'archived' }),
-      });
-      if (res.ok) {
-        setFlagged(prev => prev.filter(n => n.id !== id));
-      } else {
-        setItemErrors(prev => ({ ...prev, [id]: 'Failed to archive — try again' }));
-      }
-    } catch {
-      setItemErrors(prev => ({ ...prev, [id]: 'Failed to archive — try again' }));
-    }
-  }, []);
+  const handleAccept = useCallback((id: string) => mutate(id, 'promoted', 'accept'), [mutate]);
+  const handleArchive = useCallback((id: string) => mutate(id, 'archived', 'archive'), [mutate]);
 
   return (
     <div className="space-y-10">
       <section>
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          Flagged for review
+          Review queue {queue.length > 0 && <span className="text-gray-400">· {queue.length}</span>}
         </h2>
-        {flagged.length === 0 ? (
+        {queue.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-600">
-            Nothing flagged — system is running cleanly.
+            Nothing to review — system is running cleanly.
           </p>
         ) : (
           <div className="space-y-2">
-            {flagged.map(node => (
+            {queue.map(({ node, kind }) => (
               <div key={node.id}>
-                <FlaggedItem node={node} onAccept={handleAccept} onArchive={handleArchive} />
+                <ReviewItem
+                  node={node}
+                  kind={kind}
+                  sourceTitle={node.parent_node_id ? sourceTitles[node.parent_node_id] : undefined}
+                  onAccept={handleAccept}
+                  onArchive={handleArchive}
+                />
                 {itemErrors[node.id] && (
                   <p className="text-[10px] text-red-400 mt-1 ml-1">{itemErrors[node.id]}</p>
                 )}
@@ -107,32 +103,6 @@ export function SystemHealthClient({
                 </div>
               );
             })}
-          </div>
-        </section>
-      )}
-
-      {learnings.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-            Awaiting review
-          </h2>
-          <div className="space-y-1.5">
-            {learnings.map(node => (
-              <div key={node.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{node.title}</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">
-                    {node.node_type} · {new Date(node.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <Link
-                  href={`/capture/${node.id}/review`}
-                  className="text-[10px] text-xco-teal hover:text-xco-ocean shrink-0 ml-2"
-                >
-                  Review
-                </Link>
-              </div>
-            ))}
           </div>
         </section>
       )}
