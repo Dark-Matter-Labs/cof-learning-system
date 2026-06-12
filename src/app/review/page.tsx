@@ -16,9 +16,6 @@ export default async function SystemHealthPage() {
     flaggedRes,
     tensionsRes,
     learningsRes,
-    sitesRes,
-    optionsRes,
-    goalSpacesRes,
   ] = await Promise.all([
     supabase
       .from('nodes')
@@ -36,26 +33,7 @@ export default async function SystemHealthPage() {
       .in('node_type', getKnowledgeReviewTypes() as string[])
       .eq('status', 'llm_reviewed')
       .order('created_at', { ascending: false }),
-    supabase
-      .from('nodes')
-      .select('id, title')
-      .eq('node_type', 'site')
-      .neq('status', 'archived'),
-    supabase
-      .from('nodes')
-      .select('id, title')
-      .eq('node_type', 'option')
-      .in('status', ['promoted', 'human_reviewed']),
-    supabase
-      .from('nodes')
-      .select('id, title')
-      .eq('node_type', 'goal_space')
-      .neq('status', 'archived'),
   ]);
-
-  const sites = (sitesRes.data ?? []).map(n => ({ id: n.id as string, label: n.title as string, type: 'site' as const }));
-  const options = (optionsRes.data ?? []).map(n => ({ id: n.id as string, label: n.title as string, type: 'option' as const }));
-  const goalSpaces = (goalSpacesRes.data ?? []).map(n => ({ id: n.id as string, label: n.title as string, type: 'goal_space' as const }));
 
   return (
     <div className="page-with-nav">
@@ -65,9 +43,6 @@ export default async function SystemHealthPage() {
           flagged={(flaggedRes.data ?? []) as unknown as Node[]}
           tensions={(tensionsRes.data ?? []) as unknown as TensionAlert[]}
           learnings={(learningsRes.data ?? []) as unknown as Node[]}
-          sites={sites}
-          options={options}
-          goalSpaces={goalSpaces}
         />
       </div>
     </div>
