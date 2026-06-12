@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { callLLM } from '@/lib/llm';
+import { parseLlmJsonLoose } from '@/lib/llm/parse';
 
 const VALID_NODE_TYPES = new Set(['hunch', 'learning', 'commitment', 'signal', 'option', 'test']);
 
@@ -60,7 +61,7 @@ export function buildCorrectionPrompt(
 
 export function parseCorrectionActions(rawJson: string): CorrectionResult {
   try {
-    const parsed = JSON.parse(rawJson) as unknown;
+    const parsed = parseLlmJsonLoose(rawJson) as unknown;
     if (typeof parsed !== 'object' || parsed === null) return { reasoning: '', actions: [] };
     const obj = parsed as Record<string, unknown>;
     const reasoning = typeof obj['reasoning'] === 'string' ? obj['reasoning'] : '';

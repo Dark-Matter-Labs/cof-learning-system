@@ -1,6 +1,7 @@
 import { extractKeywords, filterRelevant } from './relevanceFilter';
 import { ingestSignals, type SignalInput } from './signalIngestor';
 import { callLLM } from '@/lib/llm';
+import { parseLlmJson } from '@/lib/llm/parse';
 import { z } from 'zod';
 
 const extractedSignalSchema = z.object({
@@ -114,7 +115,7 @@ export async function scanWebForTopics(userId: string): Promise<{ created: numbe
 
       let extracted: z.infer<typeof extractedSignalSchema>[] = [];
       try {
-        const parsed = extractionOutputSchema.parse(JSON.parse(extractionResult.content));
+        const parsed = parseLlmJson(extractionResult.content, extractionOutputSchema);
         extracted = parsed.signals ?? [];
       } catch {
         // non-fatal: malformed or schema-invalid LLM output

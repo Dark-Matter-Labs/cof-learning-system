@@ -1,4 +1,5 @@
 import { callLLM } from '@/lib/llm';
+import { parseLlmJsonLoose } from '@/lib/llm/parse';
 
 const GOAL_SUGGEST_PROMPT = `You are helping a team articulate their strategic goals for a knowledge management system.
 The user will describe what they're trying to do in plain language.
@@ -51,7 +52,7 @@ export async function suggestGoal(userInput: string): Promise<GoalSuggestion> {
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(response.content);
+    parsed = parseLlmJsonLoose(response.content);
   } catch {
     throw new Error('Failed to parse goal suggestion');
   }
@@ -80,7 +81,7 @@ export async function processSeedChat(input: SeedChatInput): Promise<SeedChatRes
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(response.content);
+    parsed = parseLlmJsonLoose(response.content);
   } catch {
     throw new Error('Failed to parse seed chat response');
   }
