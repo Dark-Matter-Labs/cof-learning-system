@@ -58,7 +58,7 @@ export function NavBar({ reviewCount }: NavBarProps) {
     { href: '/newsletter', label: 'Intelligence' },
     { href: '/commitments', label: 'Commitments' },
     { href: '/query', label: 'Query' },
-    { href: '/review', label: 'Health' },
+    { href: '/review', label: 'Review' },
     { href: '/reflect', label: 'Reflect' },
     { href: '/capture', label: 'Capture' },
     { href: '/settings', label: 'Settings' },

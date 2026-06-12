@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 vi.mock('@/app/review/SystemHealthClient', () => ({
   SystemHealthClient: (props: Record<string, unknown>) =>
     React.createElement('div', { 'data-testid': 'system-health-client' },
-      React.createElement('span', null, `flagged:${(props.flagged as unknown[]).length}`),
+      React.createElement('span', null, `queue:${(props.queue as unknown[]).length}`),
       React.createElement('span', null, `tensions:${(props.tensions as unknown[]).length}`),
     ),
 }));
@@ -56,21 +56,22 @@ async function renderPage() {
 describe('SystemHealthPage', () => {
   beforeEach(() => { vi.resetModules(); });
 
-  it('renders page title "System Health"', async () => {
+  it('renders page title "Review"', async () => {
     vi.mocked(createClient).mockResolvedValue(
       buildMockClient([[], [], [], [], [], []]) as never
     );
     const container = await renderPage();
-    expect(container.textContent).toContain('System Health');
+    expect(container.textContent).toContain('Review');
   });
 
-  it('passes flagged nodes to SystemHealthClient', async () => {
-    const flaggedNode = { id: 'f1', title: 'Flagged node', status: 'flagged_for_review' };
+  it('merges flagged + awaiting nodes into the review queue', async () => {
+    const flaggedNode = { id: 'f1', title: 'Flagged node', status: 'flagged_for_review', parent_node_id: null };
+    const awaitingNode = { id: 'a1', title: 'Awaiting node', status: 'llm_reviewed', parent_node_id: null };
     vi.mocked(createClient).mockResolvedValue(
-      buildMockClient([[flaggedNode], [], [], [], [], []]) as never
+      buildMockClient([[flaggedNode], [], [awaitingNode], [], [], []]) as never
     );
     const container = await renderPage();
-    expect(container.textContent).toContain('flagged:1');
+    expect(container.textContent).toContain('queue:2');
   });
 
   it('redirects to /login when not authenticated', async () => {

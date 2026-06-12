@@ -3,6 +3,7 @@ import { withAuth } from '@/lib/api/withAuth';
 import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalContext } from '@/lib/agents/extraction';
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
+import { childReviewStatus } from '@/lib/agents/childTriage';
 import { isOwnedStoragePath } from '@/lib/files/storagePath';
 import type { MeetingExtraction } from '@/lib/types/nodes';
 
@@ -147,7 +148,7 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
         description: extracted.summary,
         confidence_level: extracted.confidence_level,
         confidence_basis: 'observation' as const,
-        status: 'llm_reviewed' as const,
+        status: childReviewStatus(extracted.confidence_level),
         author_id: user.id,
         parent_node_id: node_id,
         domain_tags: extracted.domain_tags,
@@ -207,7 +208,7 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
         description: extracted.summary,
         confidence_level: extracted.confidence_level,
         confidence_basis: 'observation' as const,
-        status: 'llm_reviewed' as const,
+        status: childReviewStatus(extracted.confidence_level),
         author_id: user.id,
         parent_node_id: node_id,
         domain_tags: extracted.domain_tags,
