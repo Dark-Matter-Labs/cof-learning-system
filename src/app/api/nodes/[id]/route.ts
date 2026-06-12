@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api/withAuth';
 import type { NodeStatus, ConfidenceBasis } from '@/lib/types/nodes';
 
 const ALLOWED_STATUSES: readonly NodeStatus[] = ['promoted', 'archived', 'falsified', 'suspended'];
@@ -12,17 +12,7 @@ const ALLOWED_CONFIDENCE_BASES: readonly ConfidenceBasis[] = [
   'strong_evidence',
 ];
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PATCH = withAuth<{ id: string }>(async ({ request, supabase, params }) => {
   const { id } = await params;
 
   let body: Record<string, unknown>;
@@ -110,4 +100,4 @@ export async function PATCH(
   }
 
   return NextResponse.json({ data });
-}
+});

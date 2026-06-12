@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -9,11 +9,7 @@ const SaveSchema = z.object({
   context_node_ids: z.array(z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)).max(50).default([]),
 });
 
-export async function POST(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ user, supabase, request }) => {
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
@@ -63,4 +59,4 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   return NextResponse.json({ data: { node, edges_created: edgesCreated } }, { status: 201 });
-}
+});

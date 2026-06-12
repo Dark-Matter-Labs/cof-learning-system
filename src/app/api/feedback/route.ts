@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { applyCorrection } from '@/lib/correction/agent';
@@ -54,11 +55,7 @@ function extractGeneratedText(sourceType: SourceType, record: Record<string, unk
   return mr ? JSON.stringify(mr) : '';
 }
 
-export async function POST(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -110,4 +107,4 @@ export async function POST(request: Request): Promise<Response> {
     { id: feedbackId, created_at: (feedback as Record<string, unknown>)['created_at'] },
     { status: 201 }
   );
-}
+});

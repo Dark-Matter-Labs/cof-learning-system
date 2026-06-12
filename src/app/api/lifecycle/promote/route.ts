@@ -1,12 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { checkHunchPromotion } from '@/lib/lifecycle/autoPromote';
 
-export async function POST(): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ user, supabase }) => {
   const { data: hunches, error } = await supabase
     .from('nodes')
     .select('id, lifecycle_stage')
@@ -50,4 +46,4 @@ export async function POST(): Promise<Response> {
   }
 
   return NextResponse.json({ data: { promoted: promoted.length, ids: promoted, failed: failed.length } });
-}
+});

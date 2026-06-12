@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -6,11 +6,7 @@ const schema = z.object({
   members: z.array(z.object({ name: z.string().min(1), role: z.string().optional() })).min(1),
 });
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -34,4 +30,4 @@ export async function POST(request: Request) {
   const { data, error } = await supabase.from('nodes').insert(nodes).select();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data }, { status: 201 });
-}
+});

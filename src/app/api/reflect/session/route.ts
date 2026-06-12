@@ -1,15 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import type { ReflectionSessionPayload } from '@/app/reflect/types';
 
-export async function POST(request: Request): Promise<Response> {
+export const POST = withAuth(async ({ user, supabase, request }) => {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body: ReflectionSessionPayload = await request.json();
 
     // Validate required fields
@@ -40,4 +34,4 @@ export async function POST(request: Request): Promise<Response> {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

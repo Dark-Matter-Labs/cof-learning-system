@@ -1,14 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api/withAuth';
 
-export async function GET(request: Request) {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAuth(async ({ supabase, request }) => {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q');
   const type = searchParams.get('type');
@@ -35,4 +28,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ data: data ?? [] });
-}
+});

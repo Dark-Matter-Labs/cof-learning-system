@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
@@ -16,13 +16,7 @@ const EXT_MAP: Record<string, string> = {
   'text/plain': 'txt',
 };
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ request, user }) => {
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -70,4 +64,4 @@ export async function POST(request: Request) {
     mime_type: file.type,
     size: file.size,
   });
-}
+});

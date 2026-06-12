@@ -43,7 +43,7 @@ describe('GET /api/settings/usage', () => {
 
   it('returns 200 with usage data', async () => {
     const { GET } = await import('../route');
-    const res = await GET();
+    const res = await GET(new Request('http://t', { method: 'GET' }));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: { totalCalls: number; cachedCalls: number } };
     expect(body.data.totalCalls).toBe(2);

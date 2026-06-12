@@ -1,15 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { generateStepContent } from '@/lib/portfolio/generate';
 import { STEP_AGENTS } from '@/lib/portfolio/agents';
+import { withAuth } from '@/lib/api/withAuth';
 
-type Params = { id: string; step: string };
-
-export async function POST(_req: Request, { params }: { params: Promise<Params> }): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth<{ id: string; step: string }>(async ({ user, supabase, params }) => {
   const { id, step } = await params;
   const stepNumber = parseInt(step, 10);
   if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 13) {
@@ -45,4 +39,4 @@ export async function POST(_req: Request, { params }: { params: Promise<Params> 
     const message = err instanceof Error ? err.message : 'Generation failed';
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

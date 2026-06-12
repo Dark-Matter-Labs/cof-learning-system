@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { propagateSignal } from '@/lib/signals/propagate';
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ request }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -32,4 +25,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

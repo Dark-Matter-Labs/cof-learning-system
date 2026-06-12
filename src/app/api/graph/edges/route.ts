@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -15,11 +16,7 @@ export async function GET() {
   return NextResponse.json({ data });
 }
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   const body = await request.json();
   const { data, error } = await supabase
     .from('edges')
@@ -37,4 +34,4 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ data }, { status: 201 });
-}
+});

@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { z } from 'zod';
 
 const VALID_STAGES = ['hypothesis', 'uncertainty', 'navigation', 'coherence', 'holding', 'archived'] as const;
@@ -10,11 +10,7 @@ const schema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export async function PATCH(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const PATCH = withAuth(async ({ user, supabase, request }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -47,4 +43,4 @@ export async function PATCH(request: Request): Promise<Response> {
   });
 
   return NextResponse.json({ data: { node_id, stage } });
-}
+});

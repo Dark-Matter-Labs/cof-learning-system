@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth(async ({ supabase }) => {
   const nodeTypeGroups = [
     'goal_space',
     'site',
@@ -33,4 +29,4 @@ export async function GET() {
     .select('*', { count: 'exact', head: true });
 
   return NextResponse.json({ data: { nodes: counts, edges: edgeCount ?? 0 } }, { status: 200 });
-}
+});

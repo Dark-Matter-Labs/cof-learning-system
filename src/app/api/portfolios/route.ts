@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { STEP_NAMES } from '@/lib/portfolio/agents';
+import { withAuth } from '@/lib/api/withAuth';
 
 const createSchema = z.object({
   title: z.string().min(1).max(200),
@@ -9,11 +9,7 @@ const createSchema = z.object({
   description: z.string().max(2000).optional(),
 });
 
-export async function GET(): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth(async ({ user, supabase }) => {
   const { data, error } = await supabase
     .from('portfolios')
     .select('id, title, subtitle, status, current_step, created_at, updated_at')
@@ -23,13 +19,9 @@ export async function GET(): Promise<Response> {
   if (error) return NextResponse.json({ error: 'Failed to load portfolios' }, { status: 500 });
 
   return NextResponse.json({ data: data ?? [] });
-}
+});
 
-export async function POST(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ user, supabase, request }) => {
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -63,4 +55,4 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   return NextResponse.json({ data: { id: portfolio.id } }, { status: 201 });
-}
+});

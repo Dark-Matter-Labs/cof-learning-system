@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { callLLM } from '@/lib/llm';
 
@@ -43,13 +43,7 @@ function normalizeTour(v: unknown): TourResponse | null {
   return chapters.length > 0 ? { chapters } : null;
 }
 
-export async function GET(_request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAuth(async ({ user, supabase }) => {
   const { data: profile } = await supabase
     .from('profiles')
     .select('guided_tour, guided_tour_generated_at')
@@ -61,15 +55,9 @@ export async function GET(_request: Request): Promise<Response> {
   }
 
   return Response.json({ tour: profile.guided_tour, generatedAt: profile.guided_tour_generated_at });
-}
+});
 
-export async function POST(_request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ user, supabase }) => {
   const { data: nodesData, error: dbError } = await supabase
     .from('nodes')
     .select('id, node_type, title, description, status')
@@ -124,4 +112,4 @@ export async function POST(_request: Request): Promise<Response> {
     console.error('[tour] JSON parse failed:', err, '| raw (200):', llmText.slice(0, 200));
     return Response.json({ error: 'Failed to parse tour response' }, { status: 500 });
   }
-}
+});

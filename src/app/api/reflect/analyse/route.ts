@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 
 export const maxDuration = 300;
@@ -45,13 +45,7 @@ function bfsConnectedIds(
   return visited;
 }
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-
-  // Fix 1: Destructure authError and guard on both
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ supabase, request }) => {
   let body: { type?: string; value?: string; label?: string };
   try {
     body = await request.json() as { type?: string; value?: string; label?: string };
@@ -139,4 +133,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'LLM call failed' }, { status: 500 });
   }
-}
+});

@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { estimateCostMicroCents } from '@/lib/llm/usage';
 
 interface UsageRow {
@@ -10,11 +10,7 @@ interface UsageRow {
   cached: boolean;
 }
 
-export async function GET(): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth(async ({ supabase }) => {
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
   const { data, error } = await supabase
@@ -54,4 +50,4 @@ export async function GET(): Promise<Response> {
       byAgent,
     },
   });
-}
+});
