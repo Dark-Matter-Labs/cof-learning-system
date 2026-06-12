@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ReflectClient } from './ReflectClient';
-import type { GoalSpaceInfo, ReflectionSession } from './types';
+import type { FilterOption } from '@/lib/types/filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,27 +10,34 @@ export default async function ReflectPage() {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) redirect('/login');
 
-  const { data: goalSpaces } = await supabase
-    .from('nodes')
-    .select('id, title')
-    .eq('node_type', 'goal_space')
-    .neq('status', 'archived');
+  const [sitesRes, optionsRes, goalSpacesRes] = await Promise.all([
+    supabase
+      .from('nodes')
+      .select('id, title')
+      .eq('node_type', 'site')
+      .neq('status', 'archived'),
+    supabase
+      .from('nodes')
+      .select('id, title')
+      .eq('node_type', 'option')
+      .in('status', ['promoted', 'human_reviewed']),
+    supabase
+      .from('nodes')
+      .select('id, title')
+      .eq('node_type', 'goal_space')
+      .neq('status', 'archived'),
+  ]);
 
-  const { data: lastSession } = await supabase
-    .from('reflection_sessions')
-    .select('id, machine_reflection, human_responses, decisions, convergence_snapshot, participants, created_at')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const sites: FilterOption[] = (sitesRes.data ?? []).map(n => ({ id: n.id as string, label: n.title as string, type: 'site' }));
+  const options: FilterOption[] = (optionsRes.data ?? []).map(n => ({ id: n.id as string, label: n.title as string, type: 'option' }));
+  const goalSpaces: FilterOption[] = (goalSpacesRes.data ?? []).map(n => ({ id: n.id as string, label: n.title as string, type: 'goal_space' }));
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Reflection Session</h1>
-      <ReflectClient
-        goalSpaces={(goalSpaces ?? []) as GoalSpaceInfo[]}
-        lastSession={lastSession as ReflectionSession | null}
-        userId={user.id}
-      />
+    <div className="page-with-nav">
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6">Reflection</h1>
+        <ReflectClient sites={sites} options={options} goalSpaces={goalSpaces} />
+      </div>
     </div>
   );
 }

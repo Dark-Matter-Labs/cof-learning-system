@@ -4,18 +4,13 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
-import type { FilterOption } from '@/lib/types/filter';
 import { FlaggedItem } from '@/components/review/FlaggedItem';
-import { ReflectionSection } from '@/components/review/ReflectionSection';
 import { Markdown } from '@/components/ui/Markdown';
 
 interface SystemHealthClientProps {
   readonly flagged: readonly Node[];
   readonly tensions: readonly TensionAlert[];
   readonly learnings: readonly Node[];
-  readonly sites: readonly FilterOption[];
-  readonly options: readonly FilterOption[];
-  readonly goalSpaces: readonly FilterOption[];
 }
 
 const SEVERITY_COLORS: Record<string, { readonly text: string; readonly border: string }> = {
@@ -28,9 +23,6 @@ export function SystemHealthClient({
   flagged: initialFlagged,
   tensions,
   learnings,
-  sites,
-  options,
-  goalSpaces,
 }: SystemHealthClientProps) {
   const [flagged, setFlagged] = useState<readonly Node[]>(initialFlagged);
   const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
@@ -118,8 +110,6 @@ export function SystemHealthClient({
           </div>
         </section>
       )}
-
-      <ReflectionSection sites={sites} options={options} goalSpaces={goalSpaces} />
 
       {learnings.length > 0 && (
         <section>

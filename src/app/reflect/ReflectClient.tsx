@@ -1,213 +1,152 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ConvergenceSparkline } from '@/components/graph/convergence/ConvergenceSparkline';
-import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
-import { Spinner } from '@/components/ui/Spinner';
-import { REFLECTION_QUESTIONS } from './questions';
-import type { DecisionEntry, ReflectionSessionPayload, GoalSpaceInfo, ReflectionSession } from './types';
-import type { ConvergenceData } from '@/lib/types/convergence';
+import { useState } from 'react';
+import type { FilterOption } from '@/lib/types/filter';
+import { Markdown } from '@/components/ui/Markdown';
 
 interface ReflectClientProps {
-  readonly goalSpaces: readonly GoalSpaceInfo[];
-  readonly lastSession: ReflectionSession | null;
-  readonly userId: string;
+  readonly sites: readonly FilterOption[];
+  readonly options: readonly FilterOption[];
+  readonly goalSpaces: readonly FilterOption[];
 }
 
-export function ReflectClient({ goalSpaces, lastSession, userId }: ReflectClientProps) {
-  const [days, setDays] = useState<30 | 60 | 90>(30);
-  const [sparklineData, setSparklineData] = useState<Record<string, ConvergenceData>>({});
-  const [answers, setAnswers] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
-    for (const q of REFLECTION_QUESTIONS) {
-      initial[q.id] = lastSession?.human_responses?.[q.id] ?? '';
-    }
-    return initial;
-  });
-  const [decisions, setDecisions] = useState<readonly DecisionEntry[]>([]);
-  const [newDecisionText, setNewDecisionText] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [saveResult, setSaveResult] = useState<'idle' | 'success' | 'error'>('idle');
-  const [sessionId, setSessionId] = useState<string | null>(null);
+type FilterState =
+  | { readonly type: 'system' }
+  | { readonly type: 'site' | 'option' | 'goal_space'; readonly id: string; readonly label: string };
 
-  useEffect(() => {
-    if (goalSpaces.length === 0) return;
-    Promise.all(
-      goalSpaces.map(gs =>
-        fetch(`/api/convergence/snapshots?goal_space_id=${gs.id}&days=${days}`)
-          .then(r => r.json())
-          .then(json => ({ goalSpaceId: gs.id, data: json.data ?? null }))
-          .catch(() => ({ goalSpaceId: gs.id, data: null }))
-      )
-    ).then(results => {
-      const map: Record<string, ConvergenceData> = {};
-      for (const r of results) {
-        if (r.data) map[r.goalSpaceId] = r.data;
-      }
-      setSparklineData(map);
-    });
-  }, [goalSpaces, days]);
+type Status = 'idle' | 'loading' | 'done' | 'error';
 
-  const windowButtonClass = (d: 30 | 60 | 90) =>
-    days === d
-      ? 'px-3 py-1 text-sm rounded bg-xco-ocean text-xco-paper'
-      : 'px-3 py-1 text-sm rounded bg-cof-bg-subtle text-cof-text-secondary hover:bg-cof-border';
+export function ReflectClient({ sites, options, goalSpaces }: ReflectClientProps) {
+  const [filter, setFilter] = useState<FilterState>({ type: 'system' });
+  const [status, setStatus] = useState<Status>('idle');
+  const [synthesis, setSynthesis] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleAddDecision = () => {
-    if (newDecisionText.trim()) {
-      setDecisions(prev => [...prev, { text: newDecisionText.trim(), node_id: null }]);
-      setNewDecisionText('');
-    }
-  };
+  const hasFilters = sites.length > 0 || options.length > 0 || goalSpaces.length > 0;
+  const filterLabel = filter.type === 'system' ? 'Whole system' : filter.label;
 
-  const handleRemoveDecision = (idx: number) => {
-    setDecisions(prev => prev.filter((_, i) => i !== idx));
-  };
+  async function handleRunReflection() {
+    setStatus('loading');
+    setSynthesis('');
+    setErrorMsg('');
 
-  async function handleSave() {
-    setSaving(true);
-    setSaveResult('idle');
-    const convergenceSnapshot: Record<string, { score: number; computed_at: string }> = {};
-    for (const [gsId, data] of Object.entries(sparklineData)) {
-      if (data.latest) {
-        convergenceSnapshot[gsId] = { score: data.latest.score, computed_at: data.latest.computed_at };
-      }
-    }
-    const payload: ReflectionSessionPayload = {
-      machine_reflection: {},
-      human_responses: answers,
-      decisions,
-      convergence_snapshot: convergenceSnapshot,
-      participants: [userId],
-      node_count_at_reflection: 0,
-      triggered_by: 'on_demand',
-    };
+    const body =
+      filter.type === 'system'
+        ? { type: 'system', label: 'Whole system' }
+        : { type: filter.type, value: filter.id, label: filter.label };
+
     try {
-      const res = await fetch('/api/reflect/session', {
+      const res = await fetch('/api/reflect/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
-      if (res.ok) {
-        const body = await res.json() as { id?: string };
-        setSessionId(body.id ?? null);
-        setSaveResult('success');
-      } else {
-        setSaveResult('error');
+      if (!res.ok) {
+        setErrorMsg('Reflection failed — try again');
+        setStatus('error');
+        return;
       }
+      const json = await res.json() as { synthesis?: string };
+      setSynthesis(json.synthesis ?? '');
+      setStatus('done');
     } catch {
-      setSaveResult('error');
-    } finally {
-      setSaving(false);
+      setErrorMsg('Reflection failed — try again');
+      setStatus('error');
     }
   }
 
+  function handleFilterChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value;
+    if (val === 'system') {
+      setFilter({ type: 'system' });
+    } else {
+      const colonIdx = val.indexOf('::');
+      const type = val.slice(0, colonIdx) as 'site' | 'option' | 'goal_space';
+      const id = val.slice(colonIdx + 2);
+      const opt = [...sites, ...options, ...goalSpaces].find(o => o.id === id);
+      setFilter({ type, id, label: opt?.label ?? id });
+    }
+    setStatus('idle');
+    setSynthesis('');
+  }
+
+  const selectValue = filter.type === 'system' ? 'system' : `${filter.type}::${filter.id}`;
+
   return (
-    <div className="space-y-8">
-      {/* Section 1: Trajectory Overview */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Trajectory Overview</h2>
-          <div className="flex gap-2">
-            <button className={windowButtonClass(30)} onClick={() => setDays(30)}>30d</button>
-            <button className={windowButtonClass(60)} onClick={() => setDays(60)}>60d</button>
-            <button className={windowButtonClass(90)} onClick={() => setDays(90)}>90d</button>
-          </div>
-        </div>
-        {goalSpaces.length === 0 ? (
-          <p className="text-sm text-gray-500">No goal spaces found.</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {goalSpaces.map(gs => (
-              <div key={gs.id} className="bg-gray-100 dark:bg-gray-800 rounded p-4">
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">{gs.title}</p>
-                <ConvergenceSparkline snapshots={sparklineData[gs.id]?.history ?? []} />
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  Score: {sparklineData[gs.id]?.latest?.score?.toFixed(1) ?? '---'}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+    <div className="space-y-6">
+      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+        Ask the system to synthesise what&apos;s known — for the whole picture, or filtered to one
+        goal space, site, or option.
+      </p>
 
-      {/* Section 2: Guided Questions */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Reflection Questions</h2>
-        <div className="space-y-4">
-          {REFLECTION_QUESTIONS.map(q => (
-            <div key={q.id}>
-              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">{q.text}</label>
-              <textarea
-                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-2 text-gray-900 dark:text-gray-100 min-h-[80px] focus:outline-none focus:border-teal-500"
-                value={answers[q.id] ?? ''}
-                onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 3: Decisions Log */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Decisions</h2>
-        {decisions.length > 0 && (
-          <ul className="space-y-2 mb-4">
-            {decisions.map((d, idx) => (
-              <li key={idx} className="flex items-start justify-between bg-gray-100 dark:bg-gray-800 rounded p-3">
-                <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">{d.text}</span>
-                {d.node_id && (
-                  <span className="text-xs text-xco-teal ml-2 shrink-0">node: {d.node_id}</span>
-                )}
-                <button
-                  className="text-gray-500 hover:text-red-400 ml-3 text-xs shrink-0"
-                  onClick={() => handleRemoveDecision(idx)}
-                  aria-label="Remove decision"
-                >
-                  x
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Record a decision..."
-            className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
-            value={newDecisionText}
-            onChange={e => setNewDecisionText(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleAddDecision(); }}
-          />
-          <button
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-            onClick={handleAddDecision}
+      <div className="flex items-center gap-3 flex-wrap">
+        {hasFilters ? (
+          <select
+            aria-label="Reflection scope"
+            value={selectValue}
+            onChange={handleFilterChange}
+            className="text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-3 py-1.5 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-teal-500"
           >
-            Add
-          </button>
-        </div>
-      </section>
+            <option value="system">Whole system</option>
+            {goalSpaces.length > 0 && (
+              <optgroup label="Goal spaces">
+                {goalSpaces.map(g => (
+                  <option key={g.id} value={`goal_space::${g.id}`}>{g.label}</option>
+                ))}
+              </optgroup>
+            )}
+            {sites.length > 0 && (
+              <optgroup label="Sites">
+                {sites.map(s => (
+                  <option key={s.id} value={`site::${s.id}`}>{s.label}</option>
+                ))}
+              </optgroup>
+            )}
+            {options.length > 0 && (
+              <optgroup label="Options">
+                {options.map(o => (
+                  <option key={o.id} value={`option::${o.id}`}>{o.label}</option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        ) : (
+          <select
+            aria-label="Reflection scope"
+            value="system"
+            disabled
+            className="text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-3 py-1.5 text-gray-500"
+          >
+            <option value="system">Whole system</option>
+          </select>
+        )}
 
-      {/* Section 4: Save */}
-      <section className="mb-8">
         <button
-          className="inline-flex items-center gap-2 px-6 py-2 bg-xco-ocean text-xco-paper rounded hover:bg-xco-teal disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleSave}
-          disabled={saving}
+          type="button"
+          onClick={() => void handleRunReflection()}
+          disabled={status === 'loading'}
+          className="text-sm bg-xco-ocean text-xco-paper rounded-lg px-4 py-1.5 hover:bg-xco-teal disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving && <Spinner size="sm" label="Saving" />}
-          {saving ? 'Saving…' : 'Save Reflection Session'}
+          {status === 'loading' ? 'Analysing…' : status === 'done' ? 'Re-run' : 'Run reflection'}
         </button>
-        {saveResult === 'success' && (
-          <p className="mt-2 text-sm text-xco-teal">Session saved</p>
-        )}
-        {saveResult === 'error' && (
-          <p className="mt-2 text-sm text-red-400">Failed to save</p>
-        )}
-        {saveResult === 'success' && sessionId && (
-          <FeedbackWidget sourceType="reflection" sourceId={sessionId} />
-        )}
-      </section>
+      </div>
+
+      {status === 'error' && <p className="text-sm text-red-400">{errorMsg}</p>}
+
+      {status === 'done' && (
+        synthesis ? (
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-5">
+            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-3">
+              {filterLabel}
+            </p>
+            <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              <Markdown>{synthesis}</Markdown>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">No synthesis returned — there may be nothing captured for this scope yet.</p>
+        )
+      )}
     </div>
   );
 }
