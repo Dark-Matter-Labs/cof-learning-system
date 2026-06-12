@@ -1,7 +1,7 @@
 import { callLLM } from '@/lib/llm';
 import { z } from 'zod';
 import { getDistillableTypes } from '@/lib/config/captureTypes';
-import { extractJsonObject } from '@/lib/utils/json';
+import { parseLlmJson } from '@/lib/llm/parse';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 interface NodeSummary {
@@ -53,7 +53,7 @@ export async function runDistillation(
 
   let groups: Array<{ node_ids: string[]; rationale: string }> = [];
   try {
-    const parsed = clusterSchema.parse(JSON.parse(extractJsonObject(clusterResult.content)));
+    const parsed = parseLlmJson(clusterResult.content, clusterSchema);
     groups = parsed.groups ?? [];
   } catch {
     return { created: 0, errors: ['Cluster LLM response was not valid JSON or schema'] };
@@ -85,7 +85,7 @@ export async function runDistillation(
         maxTokens: 1024,
       });
 
-      const synthesis = synthesisSchema.parse(JSON.parse(extractJsonObject(synthResult.content)));
+      const synthesis = parseLlmJson(synthResult.content, synthesisSchema);
 
       const { error } = await supabase.from('distillation_candidates').insert({
         node_ids: groupNodes.map(n => n.id),

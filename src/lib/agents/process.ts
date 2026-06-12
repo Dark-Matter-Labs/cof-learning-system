@@ -1,5 +1,6 @@
 import type { Node } from '@/lib/types/nodes';
 import { callLLM } from '@/lib/llm';
+import { parseLlmJsonLoose } from '@/lib/llm/parse';
 import type { GoalContext } from '@/lib/agents/extraction';
 
 export interface SuggestedNodeImpact {
@@ -59,8 +60,9 @@ Return ONLY valid JSON array:
 Only include commitments where the learning is clearly relevant. If a commitment is unaffected, exclude it.`;
 
 function parseJsonResponse<T>(content: string): T {
-  const cleaned = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  return JSON.parse(cleaned) as T;
+  // Handles both object and array responses (step 3 returns an array), plus
+  // ```json fences and trailing prose.
+  return parseLlmJsonLoose(content) as T;
 }
 
 export async function suggestAffectedNodes(

@@ -6,7 +6,7 @@ import {
   getLlmNodeTypeEnum,
   getLlmNodeTypeDescriptions,
 } from '@/lib/config/captureTypes';
-import { extractJsonObject } from '@/lib/utils/json';
+import { parseLlmJsonLoose } from '@/lib/llm/parse';
 
 // Computed once at module load from taxonomy config — change captureTypes.ts to update these.
 const LLM_NODE_TYPE_ENUM = getLlmNodeTypeEnum();
@@ -188,12 +188,9 @@ export function buildExtractionPrompt(
 }
 
 export function parseExtractionResponse(content: string): LlmExtraction {
-  const stripped = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  const cleaned = extractJsonObject(stripped);
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = parseLlmJsonLoose(content);
   } catch {
     // LLM returned natural language instead of JSON — likely a PDF it cannot read
     throw new Error('PDF_UNREADABLE');
@@ -271,16 +268,18 @@ export function buildMeetingExtractionPrompt(
 }
 
 export function parseMeetingExtractionResponse(content: string): MeetingExtraction {
-  const stripped = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  const cleaned = extractJsonObject(stripped);
-  const parsed = JSON.parse(cleaned);
+  const parsed = parseLlmJsonLoose(content);
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('Meeting extraction response must be a JSON object');
+  }
+  const obj = parsed as Record<string, unknown>;
   const required = ['meeting_title', 'meeting_summary', 'extracted_nodes'];
   for (const field of required) {
-    if (!(field in parsed)) {
+    if (!(field in obj)) {
       throw new Error(`Missing required field: ${field}`);
     }
   }
-  if (!Array.isArray(parsed.extracted_nodes) || parsed.extracted_nodes.length === 0) {
+  if (!Array.isArray(obj.extracted_nodes) || obj.extracted_nodes.length === 0) {
     throw new Error('extracted_nodes must be a non-empty array');
   }
   return parsed as MeetingExtraction;
@@ -349,14 +348,16 @@ export function buildDocumentExtractionPrompt(
 }
 
 export function parseDocumentExtractionResponse(content: string): DocumentExtraction {
-  const stripped = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  const cleaned = extractJsonObject(stripped);
-  const parsed = JSON.parse(cleaned);
+  const parsed = parseLlmJsonLoose(content);
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('Document extraction response must be a JSON object');
+  }
+  const obj = parsed as Record<string, unknown>;
   const required = ['document_title', 'document_summary', 'extracted_nodes'];
   for (const field of required) {
-    if (!(field in parsed)) throw new Error(`Missing required field: ${field}`);
+    if (!(field in obj)) throw new Error(`Missing required field: ${field}`);
   }
-  if (!Array.isArray(parsed.extracted_nodes) || parsed.extracted_nodes.length === 0) {
+  if (!Array.isArray(obj.extracted_nodes) || obj.extracted_nodes.length === 0) {
     throw new Error('extracted_nodes must be a non-empty array');
   }
   return parsed as DocumentExtraction;

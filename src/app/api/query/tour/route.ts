@@ -5,7 +5,7 @@ import { callLLM } from '@/lib/llm';
 export const maxDuration = 300;
 import { serializeNodesForQuery, buildTourPrompt } from '@/lib/agents/query';
 import type { TourResponse, TourChapter, QuerySerializedNode } from '@/lib/agents/query';
-import { extractJsonObject } from '@/lib/utils/json';
+import { parseLlmJsonLoose } from '@/lib/llm/parse';
 
 const EMPTY_TOUR: TourResponse = {
   chapters: [
@@ -103,8 +103,7 @@ export async function POST(_request: Request): Promise<Response> {
   }
 
   try {
-    const extracted = extractJsonObject(llmText);
-    const parsed = JSON.parse(extracted) as unknown;
+    const parsed = parseLlmJsonLoose(llmText);
     const tour = normalizeTour(parsed);
     if (!tour) {
       console.error('[tour] Invalid tour structure after normalize. Raw (200):', llmText.slice(0, 200));

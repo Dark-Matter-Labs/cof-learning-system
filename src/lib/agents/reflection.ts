@@ -1,3 +1,5 @@
+import { parseLlmJsonLoose } from '@/lib/llm/parse';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ReflectionContext {
@@ -175,13 +177,7 @@ const REQUIRED_FIELDS = [
 ] as const;
 
 export function parseReflectionResponse(content: string): ReflectionReport {
-  // Strip markdown code fences if present
-  const cleaned = content
-    .replace(/^```(?:json)?\n?/m, '')
-    .replace(/\n?```$/m, '')
-    .trim();
-
-  const parsed: unknown = JSON.parse(cleaned);
+  const parsed: unknown = parseLlmJsonLoose(content);
 
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     throw new Error('Reflection response must be a JSON object');
