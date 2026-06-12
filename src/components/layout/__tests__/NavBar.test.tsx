@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+  usePathname: () => '/capture',
   useRouter: () => ({ push: vi.fn() }),
 }));
 
@@ -12,8 +11,6 @@ vi.mock('@/components/layout/AuthProvider', () => ({
 }));
 
 vi.mock('@/lib/supabase/client', () => {
-  // NavBar's useEffect opens a realtime channel to keep the review count live.
-  // Provide a chainable channel stub so the effect doesn't throw during render.
   const channel = {
     on: vi.fn(() => channel),
     subscribe: vi.fn(() => channel),
@@ -30,23 +27,37 @@ vi.mock('@/lib/supabase/client', () => {
 import { NavBar } from '../NavBar';
 
 describe('NavBar', () => {
-  it('renders Dashboard link', () => {
+  it('renders the primary nav links', () => {
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    for (const label of ['Capture', 'Review', 'Graph', 'Ask', 'Reflect', 'Commitments']) {
+      expect(screen.getByText(label)).toBeTruthy();
+    }
   });
 
-  it('renders Graph link', () => {
+  it('hides secondary links until the More menu is opened', () => {
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Graph')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard')).toBeNull();
+    expect(screen.queryByText('Portfolios')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+
+    expect(screen.getByText('Dashboard')).toBeTruthy();
+    expect(screen.getByText('Portfolios')).toBeTruthy();
+    expect(screen.getByText('Intelligence')).toBeTruthy();
   });
 
-  it('renders Commitments link', () => {
+  it('shows the review-count badge only when count > 0', () => {
+    const { unmount } = render(<NavBar reviewCount={3} />);
+    expect(screen.getByText(/3 to review/)).toBeTruthy();
+    unmount();
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Commitments')).toBeInTheDocument();
+    expect(screen.queryByText(/to review/)).toBeNull();
   });
 
-  it('renders Health link', () => {
+  it('opens a mobile drawer (with Sign out) from the hamburger', () => {
     render(<NavBar reviewCount={0} />);
-    expect(screen.getByText('Health')).toBeInTheDocument();
+    expect(screen.queryByText('Sign out')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    expect(screen.getByText('Sign out')).toBeTruthy();
   });
 });

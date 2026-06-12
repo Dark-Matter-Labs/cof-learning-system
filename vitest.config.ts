@@ -18,7 +18,6 @@ export default defineConfig({
       // to silence newly-introduced failures.
       'src/app/api/query/tour/__tests__/route.test.ts',
       'src/app/query/__tests__/GuidedTour.test.tsx',
-      'src/components/layout/__tests__/NavBar.test.tsx',
       'src/components/review/__tests__/SimpleReviewClient.test.tsx',
       'src/lib/integrations/slack/__tests__/handler.test.ts',
     ],

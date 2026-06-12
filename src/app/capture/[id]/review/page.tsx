@@ -167,8 +167,8 @@ export default function ReviewPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-800 rounded w-48" />
-          <div className="h-32 bg-gray-800 rounded" />
+          <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-48" />
+          <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded" />
         </div>
       </div>
     );

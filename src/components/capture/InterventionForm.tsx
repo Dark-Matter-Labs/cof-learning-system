@@ -82,10 +82,10 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-5 w-[480px] max-h-[90vh] overflow-y-auto">
+      <div className="bg-cof-bg-elevated border border-cof-border rounded-xl shadow-2xl p-5 w-[480px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-bold text-gray-200">New intervention</h2>
+            <h2 className="text-sm font-bold text-cof-text-primary">New intervention</h2>
             <p className="text-[10px] text-gray-500 mt-0.5">
               An intervention bridges commitment and learning — both links are required.
             </p>
@@ -102,7 +102,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="What are you doing?"
-              className="w-full bg-gray-800 border border-gray-700 text-sm text-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-600"
+              className="w-full bg-cof-bg-subtle border border-cof-border text-sm text-cof-text-primary rounded-lg px-3 py-2 focus:outline-none focus:border-cof-border-strong"
               autoFocus
             />
             {errors.title && <p className="text-[10px] text-red-400 mt-1">{errors.title}</p>}
@@ -115,12 +115,12 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="What are you actually doing and why?"
-              className="w-full bg-gray-800 border border-gray-700 text-sm text-gray-200 rounded-lg px-3 py-2 h-20 resize-none focus:outline-none focus:border-gray-600"
+              className="w-full bg-cof-bg-subtle border border-cof-border text-sm text-cof-text-primary rounded-lg px-3 py-2 h-20 resize-none focus:outline-none focus:border-cof-border-strong"
             />
           </div>
 
           {/* Required: commitment link */}
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3">
+          <div className="bg-cof-bg-subtle/50 border border-cof-border/50 rounded-lg p-3">
             <label className="block text-[10px] text-[#185FA5] uppercase tracking-wide font-semibold mb-1.5">
               Required: Which commitment does this serve?
             </label>
@@ -130,7 +130,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
               <select
                 value={commitmentId}
                 onChange={e => setCommitmentId(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-gray-600"
+                className="w-full bg-cof-bg-subtle border border-cof-border text-xs text-cof-text-secondary rounded px-2 py-1.5 focus:outline-none focus:border-cof-border-strong"
               >
                 <option value="">— Select a commitment —</option>
                 {commitments.map(c => (
@@ -145,7 +145,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
           </div>
 
           {/* Required: assumption link */}
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3">
+          <div className="bg-cof-bg-subtle/50 border border-cof-border/50 rounded-lg p-3">
             <label className="block text-[10px] text-[#534AB7] uppercase tracking-wide font-semibold mb-1.5">
               Required: Which assumption does this test?
             </label>
@@ -155,7 +155,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
               <select
                 value={assumptionId}
                 onChange={e => setAssumptionId(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-gray-600"
+                className="w-full bg-cof-bg-subtle border border-cof-border text-xs text-cof-text-secondary rounded px-2 py-1.5 focus:outline-none focus:border-cof-border-strong"
               >
                 <option value="">— Select an assumption —</option>
                 {assumptions.map(a => (
@@ -179,7 +179,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
               value={decisionRule}
               onChange={e => setDecisionRule(e.target.value)}
               placeholder={`If [signal A], then [action X]. If [signal B], then [action Y].`}
-              className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-200 rounded-lg px-3 py-2 h-24 resize-none focus:outline-none focus:border-gray-600 font-mono"
+              className="w-full bg-cof-bg-subtle border border-cof-border text-xs text-cof-text-primary rounded-lg px-3 py-2 h-24 resize-none focus:outline-none focus:border-cof-border-strong font-mono"
             />
             {errors.decisionRule && <p className="text-[10px] text-red-400 mt-1">{errors.decisionRule}</p>}
           </div>
@@ -193,7 +193,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
               value={signalsToWatch}
               onChange={e => setSignalsToWatch(e.target.value)}
               placeholder="What will you be looking for? What would confirm or disconfirm the assumption?"
-              className="w-full bg-gray-800 border border-gray-700 text-xs text-gray-200 rounded-lg px-3 py-2 h-20 resize-none focus:outline-none focus:border-gray-600"
+              className="w-full bg-cof-bg-subtle border border-cof-border text-xs text-cof-text-primary rounded-lg px-3 py-2 h-20 resize-none focus:outline-none focus:border-cof-border-strong"
             />
           </div>
         </div>
@@ -202,7 +202,7 @@ export function InterventionForm({ commitments, assumptions, onClose, onCreated 
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-gray-500 hover:text-gray-300 px-3 py-2"
+            className="text-xs text-gray-500 hover:text-cof-text-secondary px-3 py-2"
           >
             Cancel
           </button>
