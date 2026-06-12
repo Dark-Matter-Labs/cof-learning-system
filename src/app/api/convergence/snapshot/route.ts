@@ -1,18 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { computeConvergenceScore } from '@/lib/graph/convergence';
 import { NextResponse } from 'next/server';
 import type { Node } from '@/lib/types/nodes';
 import type { Edge } from '@/lib/types/edges';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async ({ request, user, supabase }) => {
   try {
-    const supabase = await createClient();
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { goal_space_id, all } = body as { goal_space_id?: string; all?: boolean };
 
@@ -90,4 +83,4 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

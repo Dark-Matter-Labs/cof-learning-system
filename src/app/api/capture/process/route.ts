@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { withAuth } from '@/lib/api/withAuth';
 import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalContext } from '@/lib/agents/extraction';
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
@@ -9,14 +9,7 @@ import type { MeetingExtraction } from '@/lib/types/nodes';
 export const maxDuration = 300;
 import { NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   const { node_id } = await request.json();
 
   if (!node_id) {
@@ -342,4 +335,4 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
-}
+});

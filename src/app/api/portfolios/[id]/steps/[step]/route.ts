@@ -1,6 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { withAuth } from '@/lib/api/withAuth';
 
 const patchSchema = z.object({
   content: z.record(z.string(), z.unknown()).optional(),
@@ -8,9 +9,7 @@ const patchSchema = z.object({
   status: z.enum(['not_started', 'ai_drafted', 'in_review', 'complete']).optional(),
 });
 
-type Params = { id: string; step: string };
-
-async function getPortfolioForUser(supabase: Awaited<ReturnType<typeof createClient>>, portfolioId: string, userId: string) {
+async function getPortfolioForUser(supabase: SupabaseClient, portfolioId: string, userId: string) {
   const { data } = await supabase
     .from('portfolios')
     .select('id, current_step')
@@ -20,11 +19,7 @@ async function getPortfolioForUser(supabase: Awaited<ReturnType<typeof createCli
   return data;
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<Params> }): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth<{ id: string; step: string }>(async ({ user, supabase, params }) => {
   const { id, step } = await params;
   const stepNumber = parseInt(step, 10);
   if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 13) {
@@ -44,13 +39,9 @@ export async function GET(_req: Request, { params }: { params: Promise<Params> }
   if (error || !stepData) return NextResponse.json({ error: 'Step not found' }, { status: 404 });
 
   return NextResponse.json({ data: stepData });
-}
+});
 
-export async function PATCH(request: Request, { params }: { params: Promise<Params> }): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const PATCH = withAuth<{ id: string; step: string }>(async ({ user, supabase, request, params }) => {
   const { id, step } = await params;
   const stepNumber = parseInt(step, 10);
   if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 13) {
@@ -91,4 +82,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<Para
   }
 
   return NextResponse.json({ data: stepData });
-}
+});

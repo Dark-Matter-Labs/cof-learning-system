@@ -1,15 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse, after } from 'next/server';
 import { isOwnedStoragePath } from '@/lib/files/storagePath';
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   const body = await request.json();
   const {
     title,
@@ -104,4 +97,4 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ data: node }, { status: 201 });
-}
+});

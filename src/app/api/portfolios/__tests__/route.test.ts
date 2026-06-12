@@ -16,7 +16,7 @@ describe('GET /api/portfolios', () => {
   it('returns 401 when not authenticated', async () => {
     mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: new Error('no user') });
     const { GET } = await import('../route');
-    const res = await GET();
+    const res = await GET(new Request('http://t', { method: 'GET' }));
     expect(res.status).toBe(401);
   });
 
@@ -30,7 +30,7 @@ describe('GET /api/portfolios', () => {
       }),
     });
     const { GET } = await import('../route');
-    const res = await GET();
+    const res = await GET(new Request('http://t', { method: 'GET' }));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: unknown[] };
     expect(body.data).toHaveLength(1);

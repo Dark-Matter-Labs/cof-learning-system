@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 
 export const maxDuration = 300;
 import {
@@ -8,15 +8,7 @@ import {
   type ReflectionContext,
 } from '@/lib/agents/reflection';
 
-export async function POST(_request: Request): Promise<Response> {
-  const supabase = await createClient();
-
-  // Auth check
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ user, supabase }) => {
   // Rate limit check: has reflection run in last 24 hours?
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { count } = await supabase
@@ -143,4 +135,4 @@ export async function POST(_request: Request): Promise<Response> {
       'Cache-Control': 'no-cache',
     },
   });
-}
+});

@@ -34,9 +34,17 @@ export async function middleware(request: NextRequest) {
     '/api/integrations/notion/webhook',
     '/api/integrations/folk/sync',
   ];
-  const isWebhook = WEBHOOK_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+  const { pathname } = request.nextUrl;
+  const isWebhook = WEBHOOK_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic = pathname.startsWith('/login') || pathname.startsWith('/api/auth') || isWebhook;
 
-  if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/api/auth') && !isWebhook) {
+  if (!user && !isPublic) {
+    // API routes get a 401 JSON envelope (matching withAuth) — fetch clients
+    // can't follow a login redirect and would otherwise receive an opaque 307
+    // to an HTML page. Page navigations still redirect to /login.
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);

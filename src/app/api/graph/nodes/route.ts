@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { computeConvergenceScore, shouldTriggerSnapshot } from '@/lib/graph/convergence';
 import { NextResponse } from 'next/server';
 import { nodeCreateSchema } from '@/lib/api/nodeInput';
@@ -101,11 +102,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ data });
 }
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   const parsed = nodeCreateSchema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json(
@@ -126,4 +123,4 @@ export async function POST(request: Request) {
   void checkAndTriggerSnapshots(supabase, user.id);
 
   return NextResponse.json({ data }, { status: 201 });
-}
+});

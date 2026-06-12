@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { callLLM } from '@/lib/llm';
 import { selectMissionPathwaysNodes, selectCloseContactsNodes } from '@/lib/newsletter/select';
@@ -13,11 +13,7 @@ import {
 const typeSchema = z.enum(['mission_pathways', 'close_contacts']);
 const postSchema = z.object({ type: typeSchema });
 
-export async function GET(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth(async ({ user, supabase, request }) => {
   const { searchParams } = new URL(request.url);
   const typeResult = typeSchema.safeParse(searchParams.get('type'));
   if (!typeResult.success) return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
@@ -33,13 +29,9 @@ export async function GET(request: Request): Promise<Response> {
   if (error) return NextResponse.json({ error: 'Failed to load newsletters' }, { status: 500 });
 
   return NextResponse.json({ data: data ?? [] });
-}
+});
 
-export async function POST(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ user, supabase, request }) => {
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -95,4 +87,4 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   return NextResponse.json({ data: newsletter }, { status: 201 });
-}
+});

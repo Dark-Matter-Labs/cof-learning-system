@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 export const maxDuration = 300;
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { buildQuerySystemPrompt, serializeNodesForQuery } from '@/lib/agents/query';
 import type { QuerySerializedNode } from '@/lib/agents/query';
 
@@ -25,13 +25,7 @@ interface EdgeRow {
   target_id: string;
 }
 
-export async function POST(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ user, supabase, request }) => {
   let body: z.infer<typeof QueryBodySchema>;
   try {
     const raw = await request.json();
@@ -143,4 +137,4 @@ export async function POST(request: Request): Promise<Response> {
       'X-Query-Session-Id': sessionId,
     },
   });
-}
+});

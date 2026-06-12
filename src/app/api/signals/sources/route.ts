@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -8,11 +8,7 @@ const createSchema = z.object({
   config: z.record(z.string(), z.unknown()),
 });
 
-export async function GET(): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth(async ({ user, supabase }) => {
   const { data, error } = await supabase
     .from('auto_signal_sources')
     .select('id, source_type, topic_node_id, config, enabled, last_run_at, created_at')
@@ -21,13 +17,9 @@ export async function GET(): Promise<Response> {
 
   if (error) return NextResponse.json({ error: 'Failed to load sources' }, { status: 500 });
   return NextResponse.json({ data });
-}
+});
 
-export async function POST(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ user, supabase, request }) => {
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
@@ -41,13 +33,9 @@ export async function POST(request: Request): Promise<Response> {
 
   if (error) return NextResponse.json({ error: 'Failed to create source' }, { status: 500 });
   return NextResponse.json({ data }, { status: 201 });
-}
+});
 
-export async function PATCH(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const PATCH = withAuth(async ({ user, supabase, request }) => {
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
@@ -64,4 +52,4 @@ export async function PATCH(request: Request): Promise<Response> {
 
   if (error) return NextResponse.json({ error: 'Failed to update source' }, { status: 500 });
   return NextResponse.json({ data });
-}
+});

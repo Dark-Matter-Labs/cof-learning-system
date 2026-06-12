@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { withAuth } from '@/lib/api/withAuth';
 
 const patchSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -9,11 +9,7 @@ const patchSchema = z.object({
   status: z.enum(['in_progress', 'complete', 'paused', 'archived']).optional(),
 });
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const GET = withAuth<{ id: string }>(async ({ user, supabase, params }) => {
   const { id } = await params;
 
   const { data: portfolio, error } = await supabase
@@ -32,13 +28,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .order('step_number', { ascending: true });
 
   return NextResponse.json({ data: { ...portfolio, steps: steps ?? [] } });
-}
+});
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const PATCH = withAuth<{ id: string }>(async ({ user, supabase, request, params }) => {
   const { id } = await params;
 
   let body: unknown;
@@ -60,4 +52,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (error || !data) return NextResponse.json({ error: 'Not found or update failed' }, { status: 404 });
 
   return NextResponse.json({ data });
-}
+});

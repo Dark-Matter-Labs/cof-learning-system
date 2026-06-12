@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { processSeedChat } from '@/lib/agents/setup';
@@ -24,11 +24,7 @@ const writeSchema = z.object({
   goals: z.array(z.object({ title: z.string() })),
 });
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ request, user, supabase }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -104,4 +100,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ error: 'Invalid mode. Expected chat or write.' }, { status: 400 });
-}
+});

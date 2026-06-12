@@ -67,12 +67,12 @@ describe('GET /api/distill/candidates', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error('Unauthorized') });
-    const res = await GET();
+    const res = await GET(new Request('http://t', { method: 'GET' }));
     expect(res.status).toBe(401);
   });
 
   it('returns enriched candidates with node details', async () => {
-    const res = await GET();
+    const res = await GET(new Request('http://t', { method: 'GET' }));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: Array<{ id: string; nodes: Array<{ id: string }> }> };
     expect(body.data).toHaveLength(1);
@@ -88,7 +88,7 @@ describe('GET /api/distill/candidates', () => {
         }),
       }),
     });
-    const res = await GET();
+    const res = await GET(new Request('http://t', { method: 'GET' }));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: unknown[] };
     expect(body.data).toHaveLength(0);

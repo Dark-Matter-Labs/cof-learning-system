@@ -1,15 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { suggestGoal } from '@/lib/agents/setup';
 
 const schema = z.object({ input: z.string().min(1) });
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+export const POST = withAuth(async ({ request }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -25,4 +21,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Failed to generate suggestion' }, { status: 500 });
   }
-}
+});

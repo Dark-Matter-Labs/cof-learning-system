@@ -1,20 +1,14 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 import type { FactorBreakdown } from '@/lib/graph/convergence';
 
-export async function GET(request: Request) {
+export const GET = withAuth(async ({ request, supabase }) => {
   try {
     const { searchParams } = new URL(request.url);
     const goalSpaceId = searchParams.get('goal_space_id');
 
     if (!goalSpaceId) {
       return NextResponse.json({ error: 'goal_space_id required' }, { status: 400 });
-    }
-
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Query 1: Latest snapshot (for badge + breakdown)
@@ -55,4 +49,4 @@ export async function GET(request: Request) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

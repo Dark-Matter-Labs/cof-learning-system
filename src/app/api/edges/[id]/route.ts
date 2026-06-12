@@ -1,17 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
+import { withAuth } from '@/lib/api/withAuth';
 import { NextResponse } from 'next/server';
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const DELETE = withAuth<{ id: string }>(async ({ params, supabase }) => {
   const { id } = await params;
 
   const { error } = await supabase
@@ -24,4 +14,4 @@ export async function DELETE(
   }
 
   return new NextResponse(null, { status: 204 });
-}
+});
