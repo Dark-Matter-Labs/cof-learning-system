@@ -43,7 +43,7 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
   const isBusy = submitPhase !== 'idle' || isSubmitting;
   const canSubmit = isFileMode
     ? selectedFile !== null && !isUploading && !isBusy
-    : title.trim().length > 0 && !isBusy;
+    : (title.trim().length > 0 || description.trim().length > 0) && !isBusy;
 
   const descriptionRows = entryMode === 'call' ? 10 : 5;
   const descriptionPlaceholder = entryMode === 'call'
@@ -141,14 +141,14 @@ export function QuickCaptureForm({ onSubmit, isSubmitting = false, entryMode = n
         <>
           <div>
             <label htmlFor="title" className="block text-xs text-cof-text-tertiary uppercase tracking-wide mb-1">
-              Title
+              Title <span className="normal-case text-cof-text-tertiary/70">(optional)</span>
             </label>
             <input
               id="title"
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="What's on your mind?"
+              placeholder="Leave blank — the AI will name it from your notes"
               className="w-full bg-cof-bg-elevated border border-cof-border rounded-lg px-3 py-2 text-sm text-cof-text-primary placeholder:text-cof-text-tertiary focus:outline-none focus:border-node-hunch focus:ring-1 focus:ring-node-hunch/20 transition-colors"
             />
           </div>

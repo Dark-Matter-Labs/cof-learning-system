@@ -132,10 +132,13 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
         goalContext,
       );
 
-      // Store meeting extraction on parent node
+      // Store meeting extraction on parent node; backfill the title from the
+      // LLM when the capture was submitted without one.
+      const meetingTitleUpdate = node.title === '' ? { title: meetingExtraction.meeting_title } : {};
       await supabase
         .from('nodes')
         .update({
+          ...meetingTitleUpdate,
           llm_extraction: meetingExtraction as unknown as Record<string, unknown>,
           status: 'llm_reviewed',
         })
