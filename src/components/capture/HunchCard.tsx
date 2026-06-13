@@ -35,11 +35,11 @@ export function HunchCard({ node }: HunchCardProps) {
   return (
     <Link
       href={reviewLink}
-      className={`block border rounded-lg p-4 hover:border-gray-700 transition-colors ${isError ? 'bg-red-950/20 border-red-900/40' : 'bg-gray-900 border-gray-800'}`}
+      className={`block border rounded-lg p-4 hover:border-cof-border transition-colors ${isError ? 'bg-red-950/20 border-red-900/40' : 'bg-cof-bg-elevated border-cof-border'}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-medium text-gray-200 truncate">{node.title}</h3>
+          <h3 className="text-sm font-medium text-cof-text-primary truncate">{node.title}</h3>
           {node.description && (
             <p className="mt-1 text-xs text-gray-500 line-clamp-2">{node.description}</p>
           )}

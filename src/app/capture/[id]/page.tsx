@@ -79,8 +79,8 @@ export default function HunchDetailPage() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-800 rounded w-48" />
-          <div className="h-24 bg-gray-800 rounded" />
+          <div className="h-6 bg-cof-bg-subtle rounded w-48" />
+          <div className="h-24 bg-cof-bg-subtle rounded" />
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ export default function HunchDetailPage() {
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-lg font-bold text-gray-200">{node.title}</h1>
+          <h1 className="text-lg font-bold text-cof-text-primary">{node.title}</h1>
           {node.description && (
             <p className="mt-1 text-sm text-gray-500">{node.description}</p>
           )}
@@ -106,7 +106,7 @@ export default function HunchDetailPage() {
       </div>
 
       {node.status === 'raw' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+        <div className="bg-cof-bg-elevated border border-cof-border rounded-lg p-4 text-center">
           <p className="text-sm text-gray-500 mb-3">This capture hasn&apos;t been processed yet.</p>
           <button
             onClick={handleRetry}
@@ -122,7 +122,7 @@ export default function HunchDetailPage() {
       {node.status === 'processing' && (
         <div className="bg-node-option/10 border border-node-option/30 rounded-lg p-4 text-center">
           <p className="text-sm text-node-option">{retrying ? 'Retrying…' : 'Processing with AI...'}</p>
-          <div className="mt-2 w-full bg-gray-800 rounded-full h-1">
+          <div className="mt-2 w-full bg-cof-bg-subtle rounded-full h-1">
             <div className="bg-node-option h-1 rounded-full animate-pulse w-2/3" />
           </div>
           {retryError && <p className="mt-2 text-xs text-red-400">{retryError}</p>}
