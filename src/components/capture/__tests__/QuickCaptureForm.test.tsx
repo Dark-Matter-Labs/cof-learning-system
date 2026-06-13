@@ -12,7 +12,7 @@ vi.mock('../PersonAutocomplete', () => ({
 }));
 
 describe('QuickCaptureForm', () => {
-  it('disables submit when title is empty', () => {
+  it('disables submit when both title and description are empty', () => {
     render(<QuickCaptureForm onSubmit={vi.fn()} />);
     const submitButton = screen.getByRole('button', { name: /capture/i });
     expect(submitButton).toBeDisabled();
@@ -21,6 +21,13 @@ describe('QuickCaptureForm', () => {
   it('enables submit when title is provided', () => {
     render(<QuickCaptureForm onSubmit={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Test thought' } });
+    const submitButton = screen.getByRole('button', { name: /^capture$/i });
+    expect(submitButton).not.toBeDisabled();
+  });
+
+  it('enables submit with only a description (title optional)', () => {
+    render(<QuickCaptureForm onSubmit={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'A pasted transcript with no title' } });
     const submitButton = screen.getByRole('button', { name: /^capture$/i });
     expect(submitButton).not.toBeDisabled();
   });

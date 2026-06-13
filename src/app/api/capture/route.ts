@@ -24,8 +24,12 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
   if (hasAttachment && !isOwnedStoragePath(attachment.storage_path, user.id)) {
     return NextResponse.json({ error: 'Invalid attachment path' }, { status: 403 });
   }
-  if (!hasAttachment && (!title || typeof title !== 'string' || title.trim().length === 0)) {
-    return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+  // A capture needs *something* to work with: a title, a description (the LLM
+  // titles it during extraction), or an attachment. Only reject when empty.
+  const hasTitle = typeof title === 'string' && title.trim().length > 0;
+  const hasDescription = typeof description === 'string' && description.trim().length > 0;
+  if (!hasAttachment && !hasTitle && !hasDescription) {
+    return NextResponse.json({ error: 'Add a title or some content' }, { status: 400 });
   }
 
   const externalLinks = external_link?.url
