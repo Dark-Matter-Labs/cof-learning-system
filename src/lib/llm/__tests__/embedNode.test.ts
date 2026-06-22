@@ -6,7 +6,13 @@ vi.mock('../embeddings', async (orig) => ({
   embedText: (...args: unknown[]) => mockEmbedText(...args),
 }));
 
-import { upsertNodeEmbedding } from '../embedNode';
+const mockFindDup = vi.fn();
+vi.mock('../dedup', () => ({
+  findAndRecordDuplicate: (...args: unknown[]) => mockFindDup(...args),
+  DUP_SIMILARITY_THRESHOLD: 0.88,
+}));
+
+import { upsertNodeEmbedding, indexNode } from '../embedNode';
 import { contentHashForNode } from '../embeddings';
 
 function makeSupabase(existingHash: string | null) {
@@ -33,17 +39,24 @@ describe('upsertNodeEmbedding', () => {
     expect(supabase._upsert).not.toHaveBeenCalled();
   });
 
-  it('embeds and upserts when content changed', async () => {
+  it('embeds and upserts when content changed, returning the embedding', async () => {
     mockEmbedText.mockResolvedValue([0.1, 0.2, 0.3]);
     const node = { id: 'n1', title: 'T', description: 'new' };
     const supabase = makeSupabase('stale-hash');
-    await upsertNodeEmbedding(supabase as never, node);
+    const result = await upsertNodeEmbedding(supabase as never, node);
+    expect(result).toEqual([0.1, 0.2, 0.3]);
     expect(mockEmbedText).toHaveBeenCalledOnce();
     expect(supabase._upsert).toHaveBeenCalledWith(expect.objectContaining({
       node_id: 'n1',
       embedding: [0.1, 0.2, 0.3],
       model: 'voyage-3.5',
     }));
+  });
+
+  it('returns null when the content hash is unchanged', async () => {
+    const node = { id: 'n1', title: 'T', description: 'd' };
+    const supabase = makeSupabase(contentHashForNode(node.title, node.description));
+    expect(await upsertNodeEmbedding(supabase as never, node)).toBeNull();
   });
 
   it('does not upsert when the embedding is unavailable (null)', async () => {
@@ -67,6 +80,24 @@ describe('upsertNodeEmbedding', () => {
         upsert: vi.fn(),
       })),
     };
-    await expect(upsertNodeEmbedding(supabase as never, { id: 'n1', title: 'T', description: 'd' })).resolves.toBeUndefined();
+    await expect(upsertNodeEmbedding(supabase as never, { id: 'n1', title: 'T', description: 'd' })).resolves.toBeNull();
+  });
+});
+
+describe('indexNode', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('runs dedup detection when a fresh embedding was produced', async () => {
+    mockEmbedText.mockResolvedValue([0.5, 0.6]);
+    const supabase = makeSupabase('stale-hash');
+    await indexNode(supabase as never, { id: 'n1', title: 'T', description: 'new' });
+    expect(mockFindDup).toHaveBeenCalledWith(supabase, 'n1', [0.5, 0.6]);
+  });
+
+  it('skips dedup detection when the embedding was skipped (unchanged content)', async () => {
+    const node = { id: 'n1', title: 'T', description: 'd' };
+    const supabase = makeSupabase(contentHashForNode(node.title, node.description));
+    await indexNode(supabase as never, node);
+    expect(mockFindDup).not.toHaveBeenCalled();
   });
 });

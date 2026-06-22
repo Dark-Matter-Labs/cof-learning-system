@@ -4,7 +4,7 @@ import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalCo
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
 import { childReviewStatus } from '@/lib/agents/childTriage';
-import { upsertNodeEmbedding } from '@/lib/llm/embedNode';
+import { indexNode } from '@/lib/llm/embedNode';
 import { isOwnedStoragePath } from '@/lib/files/storagePath';
 import type { MeetingExtraction } from '@/lib/types/nodes';
 
@@ -313,7 +313,7 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
       // service-role write, after the response). Children and inbox-accepted
       // nodes are covered by the inbox PATCH hook + the backfill.
       if (newStatus === 'promoted') {
-        after(() => upsertNodeEmbedding(createAdminClient(), {
+        after(() => indexNode(createAdminClient(), {
           id: node_id, title: finalTitle, description: node.description ?? null,
         }));
       }

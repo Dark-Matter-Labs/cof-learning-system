@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
 import { ReviewItem, type ReviewKind } from '@/components/review/ReviewItem';
+import { DuplicateItem, type ReviewDuplicate } from '@/components/review/DuplicateItem';
 import { Markdown } from '@/components/ui/Markdown';
 
 export interface ReviewQueueEntry {
@@ -15,6 +16,7 @@ interface SystemHealthClientProps {
   readonly queue: readonly ReviewQueueEntry[];
   readonly tensions: readonly TensionAlert[];
   readonly sourceTitles: Readonly<Record<string, string>>;
+  readonly duplicates: readonly ReviewDuplicate[];
 }
 
 const SEVERITY_COLORS: Record<string, { readonly text: string; readonly border: string }> = {
@@ -27,9 +29,35 @@ export function SystemHealthClient({
   queue: initialQueue,
   tensions,
   sourceTitles,
+  duplicates: initialDuplicates,
 }: SystemHealthClientProps) {
   const [queue, setQueue] = useState<readonly ReviewQueueEntry[]>(initialQueue);
+  const [duplicates, setDuplicates] = useState<readonly ReviewDuplicate[]>(initialDuplicates);
   const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
+
+  const resolveDuplicate = useCallback(async (candidateId: string, status: 'dismissed' | 'resolved') => {
+    await fetch(`/api/duplicates/${candidateId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch(() => {});
+  }, []);
+
+  const handleDismissDuplicate = useCallback((candidateId: string) => {
+    setDuplicates(prev => prev.filter(d => d.id !== candidateId));
+    void resolveDuplicate(candidateId, 'dismissed');
+  }, [resolveDuplicate]);
+
+  const handleArchiveDuplicate = useCallback(async (dup: ReviewDuplicate) => {
+    setDuplicates(prev => prev.filter(d => d.id !== dup.id));
+    setQueue(prev => prev.filter(e => e.node.id !== dup.node.id));
+    await fetch(`/api/nodes/${dup.node.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'archived' }),
+    }).catch(() => {});
+    void resolveDuplicate(dup.id, 'resolved');
+  }, [resolveDuplicate]);
 
   const mutate = useCallback(async (id: string, status: 'promoted' | 'archived', verb: string) => {
     try {
@@ -53,6 +81,24 @@ export function SystemHealthClient({
 
   return (
     <div className="space-y-10">
+      {duplicates.length > 0 && (
+        <section>
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            Possible duplicates <span className="text-gray-400">· {duplicates.length}</span>
+          </h2>
+          <div className="space-y-2">
+            {duplicates.map(dup => (
+              <DuplicateItem
+                key={dup.id}
+                dup={dup}
+                onDismiss={handleDismissDuplicate}
+                onArchive={handleArchiveDuplicate}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
           Review queue {queue.length > 0 && <span className="text-gray-400">· {queue.length}</span>}
