@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { withAuth } from '@/lib/api/withAuth';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { upsertNodeEmbedding } from '@/lib/llm/embedNode';
 import type { NodeStatus, ConfidenceBasis } from '@/lib/types/nodes';
 
 const ALLOWED_STATUSES: readonly NodeStatus[] = ['promoted', 'archived', 'falsified', 'suspended'];
@@ -97,6 +99,16 @@ export const PATCH = withAuth<{ id: string }>(async ({ request, supabase, params
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Keep the vector index in sync: (re-)embed when a node is now vetted (the
+  // inbox "Accept", or an edit to an already-vetted node). Runs after the
+  // response — non-fatal, service-role write.
+  const node = data as { id: string; title: string; description: string | null; status: NodeStatus };
+  if (node.status === 'promoted' || node.status === 'human_reviewed') {
+    after(() => upsertNodeEmbedding(createAdminClient(), {
+      id: node.id, title: node.title, description: node.description,
+    }));
   }
 
   return NextResponse.json({ data });
