@@ -4,11 +4,12 @@ import { runExtraction, runMeetingExtraction, runDocumentExtraction, type GoalCo
 import type { AttachmentContent } from '@/lib/agents/extraction';
 import { getCaptureType } from '@/lib/config/captureTypes';
 import { childReviewStatus } from '@/lib/agents/childTriage';
+import { upsertNodeEmbedding } from '@/lib/llm/embedNode';
 import { isOwnedStoragePath } from '@/lib/files/storagePath';
 import type { MeetingExtraction } from '@/lib/types/nodes';
 
 export const maxDuration = 300;
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 
 export const POST = withAuth(async ({ request, user, supabase }) => {
   const { node_id } = await request.json();
@@ -287,6 +288,7 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
       const maturity = extraction.maturity;
       const newStatus = maturity === 'ready_to_promote' ? 'promoted' : 'flagged_for_review';
 
+      const finalTitle = node.title === '' ? extraction.title : node.title;
       const titleUpdate = node.title === '' ? { title: extraction.title } : {};
 
       // Update node with extraction results, classified type, and new status
@@ -306,6 +308,15 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
           },
         })
         .eq('id', node_id);
+
+      // Index it for semantic search when it auto-promotes (non-fatal,
+      // service-role write, after the response). Children and inbox-accepted
+      // nodes are covered by the inbox PATCH hook + the backfill.
+      if (newStatus === 'promoted') {
+        after(() => upsertNodeEmbedding(createAdminClient(), {
+          id: node_id, title: finalTitle, description: node.description ?? null,
+        }));
+      }
 
       const { resolveConnections } = await import('@/lib/agents/connectionResolver');
       await resolveConnections(

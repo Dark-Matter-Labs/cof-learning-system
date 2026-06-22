@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { withAuth } from '@/lib/api/withAuth';
 import { buildQuerySystemPrompt, serializeNodesForQuery } from '@/lib/agents/query';
 import type { QuerySerializedNode } from '@/lib/agents/query';
+import { embedText } from '@/lib/llm/embeddings';
+import { selectContextNodeIds } from '@/lib/agents/queryRetrieval';
 
 const QueryBodySchema = z.object({
   query: z.string().trim().min(1, 'Query is required').max(2000),
@@ -56,23 +58,19 @@ export const POST = withAuth(async ({ user, supabase, request }) => {
   const allNodes = (nodesData ?? []) as QuerySerializedNode[];
   const allEdges = (edgesData ?? []) as EdgeRow[];
 
-  const searchTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-
-  const matchingIds = new Set<string>(
-    allNodes
-      .filter(n => {
-        const text = `${n.title} ${n.description ?? ''}`.toLowerCase();
-        return searchTerms.length === 0 || searchTerms.some(term => text.includes(term));
-      })
-      .map(n => n.id)
-  );
-
-  const expandedIds = new Set<string>(matchingIds);
-  for (const edge of allEdges) {
-    if (matchingIds.has(edge.source_id)) expandedIds.add(edge.target_id);
-    if (matchingIds.has(edge.target_id)) expandedIds.add(edge.source_id);
+  // Semantic retrieval via pgvector (match_nodes), falling back to lexical
+  // matching when embeddings aren't available yet — see queryRetrieval.
+  const queryEmbedding = await embedText(query, 'query');
+  let semanticIds: string[] = [];
+  if (queryEmbedding) {
+    const { data: matches } = await supabase.rpc('match_nodes', {
+      query_embedding: queryEmbedding,
+      match_count: 30,
+    });
+    semanticIds = ((matches ?? []) as Array<{ id: string }>).map(m => m.id);
   }
 
+  const expandedIds = selectContextNodeIds({ nodes: allNodes, edges: allEdges, query, semanticIds });
   const contextNodes = allNodes.filter(n => expandedIds.has(n.id));
   const contextNodeIds = contextNodes.map(n => n.id);
   const serialized = serializeNodesForQuery(contextNodes);
