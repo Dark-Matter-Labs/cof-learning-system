@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server';
 import { withAuth } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { upsertNodeEmbedding } from '@/lib/llm/embedNode';
+import { indexNode } from '@/lib/llm/embedNode';
 import type { NodeStatus, ConfidenceBasis } from '@/lib/types/nodes';
 
 const ALLOWED_STATUSES: readonly NodeStatus[] = ['promoted', 'archived', 'falsified', 'suspended'];
@@ -106,7 +106,7 @@ export const PATCH = withAuth<{ id: string }>(async ({ request, supabase, params
   // response — non-fatal, service-role write.
   const node = data as { id: string; title: string; description: string | null; status: NodeStatus };
   if (node.status === 'promoted' || node.status === 'human_reviewed') {
-    after(() => upsertNodeEmbedding(createAdminClient(), {
+    after(() => indexNode(createAdminClient(), {
       id: node.id, title: node.title, description: node.description,
     }));
   }
