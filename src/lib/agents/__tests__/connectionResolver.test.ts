@@ -42,49 +42,48 @@ const SUGGESTIONS: SuggestedConnection[] = [
 ];
 
 describe('resolveConnections', () => {
-  it('returns 0 when suggestions is empty', async () => {
+  it('returns created 0 and no unresolved when suggestions is empty', async () => {
     const supabase = makeSupabase(null);
-    const count = await resolveConnections('src-id', [], supabase as never, 'user-1');
-    expect(count).toBe(0);
+    const { created, unresolved } = await resolveConnections('src-id', [], supabase as never, 'user-1');
+    expect(created).toBe(0);
+    expect(unresolved).toEqual([]);
   });
 
   it('creates an edge when a matching node is found', async () => {
     const supabase = makeSupabase({ id: 'matched-id' });
-    const count = await resolveConnections('src-id', [SUGGESTIONS[0]], supabase as never, 'user-1');
-    expect(count).toBe(1);
+    const { created } = await resolveConnections('src-id', [SUGGESTIONS[0]], supabase as never, 'user-1');
+    expect(created).toBe(1);
     expect(supabase._mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        source_id: 'src-id',
-        target_id: 'matched-id',
-        edge_type: 'supports',
-      })
+      expect.objectContaining({ source_id: 'src-id', target_id: 'matched-id', edge_type: 'supports' }),
     );
   });
 
-  it('skips when no node matches the title', async () => {
+  it('returns unmatched valid suggestions in unresolved instead of creating', async () => {
     const supabase = makeSupabase(null);
-    const count = await resolveConnections('src-id', [SUGGESTIONS[1]], supabase as never, 'user-1');
-    expect(count).toBe(0);
+    const { created, unresolved } = await resolveConnections('src-id', [SUGGESTIONS[1]], supabase as never, 'user-1');
+    expect(created).toBe(0);
+    expect(unresolved).toEqual([SUGGESTIONS[1]]);
     expect(supabase._mockInsert).not.toHaveBeenCalled();
   });
 
   it('skips when edge already exists', async () => {
     const supabase = makeSupabase({ id: 'matched-id' }, { id: 'existing-edge' });
-    const count = await resolveConnections('src-id', [SUGGESTIONS[0]], supabase as never, 'user-1');
-    expect(count).toBe(0);
+    const { created } = await resolveConnections('src-id', [SUGGESTIONS[0]], supabase as never, 'user-1');
+    expect(created).toBe(0);
     expect(supabase._mockInsert).not.toHaveBeenCalled();
   });
 
   it('processes multiple suggestions independently', async () => {
     const supabase = makeSupabase({ id: 'matched-id' });
-    const count = await resolveConnections('src-id', SUGGESTIONS, supabase as never, 'user-1');
-    expect(count).toBeGreaterThan(0);
+    const { created } = await resolveConnections('src-id', SUGGESTIONS, supabase as never, 'user-1');
+    expect(created).toBeGreaterThan(0);
   });
 
   it('skips suggestions with empty target_title', async () => {
     const supabase = makeSupabase({ id: 'matched-id' });
     const empty: SuggestedConnection = { target_title: '  ', edge_type: 'supports', rationale: '' };
-    const count = await resolveConnections('src-id', [empty], supabase as never, 'user-1');
-    expect(count).toBe(0);
+    const { created, unresolved } = await resolveConnections('src-id', [empty], supabase as never, 'user-1');
+    expect(created).toBe(0);
+    expect(unresolved).toEqual([]);
   });
 });
