@@ -48,7 +48,7 @@ describe('PATCH /api/edge-suggestions/[id]', () => {
   it('accept inserts the edge and marks the suggestion accepted', async () => {
     const update = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) }));
     const edgeInsert = vi.fn().mockResolvedValue({ error: null });
-    const sugSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: SUGGESTION_ROW }) })) }));
+    const sugSelect = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: SUGGESTION_ROW }) })) })) }));
     mockFrom.mockImplementation((table: string) => {
       if (table === 'edge_suggestions') return { select: sugSelect, update };
       if (table === 'edges') return { insert: edgeInsert };
@@ -65,5 +65,24 @@ describe('PATCH /api/edge-suggestions/[id]', () => {
       source_id: 's1', target_id: 't1', edge_type: 'supports',
     }));
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ status: 'accepted' }));
+  });
+
+  it('accept on a missing/already-resolved suggestion returns 409 and creates no edge', async () => {
+    const update = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) }));
+    const edgeInsert = vi.fn();
+    const sugSelect = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: null }) })) })) }));
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'edge_suggestions') return { select: sugSelect, update };
+      if (table === 'edges') return { insert: edgeInsert };
+      return {};
+    });
+    const { PATCH } = await import('../[id]/route');
+    const req = new Request('http://test/api/edge-suggestions/sug-1', {
+      method: 'PATCH', body: JSON.stringify({ action: 'accept' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const res = await PATCH(req, { params: makeParams('sug-1') });
+    expect(res.status).toBe(409);
+    expect(edgeInsert).not.toHaveBeenCalled();
   });
 });

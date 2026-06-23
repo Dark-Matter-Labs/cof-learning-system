@@ -29,9 +29,10 @@ export const PATCH = withAuth<{ id: string }>(async ({ request, supabase, user, 
     .from('edge_suggestions')
     .select('source_id, target_id, edge_type')
     .eq('id', id)
+    .eq('status', 'open')
     .maybeSingle();
   if (readErr) return fail(readErr.message, 500);
-  if (!suggestion) return fail('Suggestion not found', 404);
+  if (!suggestion) return fail('Suggestion not found or already resolved', 409);
 
   const { error: edgeErr } = await supabase.from('edges').insert({
     source_id: suggestion.source_id,
