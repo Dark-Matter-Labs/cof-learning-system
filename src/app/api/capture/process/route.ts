@@ -244,7 +244,15 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
             const child = insertedChildren[i];
             const suggestions = documentExtraction.extracted_nodes[i]?.suggested_connections;
             if (suggestions && suggestions.length > 0) {
-              await resolveConnections(child.id as string, suggestions, supabase, user.id);
+              const childId = child.id as string;
+              const { unresolved } = await resolveConnections(childId, suggestions, supabase, user.id);
+              if (unresolved.length > 0) {
+                after(() =>
+                  import('@/lib/agents/semanticEdges').then(m =>
+                    m.resolveSemantically(childId, unresolved, createAdminClient(), user.id),
+                  ),
+                );
+              }
             }
           }
         }
@@ -319,12 +327,19 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
       }
 
       const { resolveConnections } = await import('@/lib/agents/connectionResolver');
-      await resolveConnections(
+      const { unresolved } = await resolveConnections(
         node_id,
         extraction.suggested_connections,
         supabase,
         user.id,
       );
+      if (unresolved.length > 0) {
+        after(() =>
+          import('@/lib/agents/semanticEdges').then(m =>
+            m.resolveSemantically(node_id, unresolved, createAdminClient(), user.id),
+          ),
+        );
+      }
 
       // Log activity
       await supabase.from('activity_log').insert({

@@ -3,6 +3,7 @@ import { getKnowledgeReviewTypes } from '@/lib/config/captureTypes';
 import { redirect } from 'next/navigation';
 import { SystemHealthClient, type ReviewQueueEntry } from './SystemHealthClient';
 import type { ReviewDuplicate } from '@/components/review/DuplicateItem';
+import type { ReviewEdgeSuggestion } from '@/components/review/SuggestedConnectionItem';
 import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
 
@@ -13,6 +14,15 @@ interface DuplicateRow {
   similar_node_id: string;
 }
 
+interface EdgeSuggestionRow {
+  id: string;
+  similarity: number;
+  edge_type: string;
+  rationale: string | null;
+  source_id: string;
+  target_id: string;
+}
+
 export const dynamic = 'force-dynamic';
 
 export default async function SystemHealthPage() {
@@ -20,7 +30,7 @@ export default async function SystemHealthPage() {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) redirect('/login');
 
-  const [flaggedRes, tensionsRes, awaitingRes, dupesRes] = await Promise.all([
+  const [flaggedRes, tensionsRes, awaitingRes, dupesRes, edgeSugRes] = await Promise.all([
     supabase
       .from('nodes')
       .select('*')
@@ -42,6 +52,11 @@ export default async function SystemHealthPage() {
       .select('id, similarity, node_id, similar_node_id')
       .eq('status', 'open')
       .order('created_at', { ascending: false }),
+    supabase
+      .from('edge_suggestions')
+      .select('id, similarity, edge_type, rationale, source_id, target_id')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false }),
   ]);
 
   const flagged = (flaggedRes.data ?? []) as unknown as Node[];
@@ -53,12 +68,14 @@ export default async function SystemHealthPage() {
   ];
 
   const dupeRows = (dupesRes.data ?? []) as DuplicateRow[];
+  const edgeSugRows = (edgeSugRes.data ?? []) as EdgeSuggestionRow[];
 
   // One title lookup covering both the "from <source>" tags on extracted
   // children and the node pairs in the duplicates section.
   const titleIds = Array.from(new Set([
     ...queue.map(e => e.node.parent_node_id).filter((id): id is string => Boolean(id)),
     ...dupeRows.flatMap(d => [d.node_id, d.similar_node_id]),
+    ...edgeSugRows.flatMap(s => [s.source_id, s.target_id]),
   ]));
   let titles: Record<string, string> = {};
   if (titleIds.length > 0) {
@@ -76,6 +93,17 @@ export default async function SystemHealthPage() {
       similarTo: { id: d.similar_node_id, title: titles[d.similar_node_id] },
     }));
 
+  const edgeSuggestions: ReviewEdgeSuggestion[] = edgeSugRows
+    .filter(s => titles[s.source_id] && titles[s.target_id])
+    .map(s => ({
+      id: s.id,
+      similarity: s.similarity,
+      edgeType: s.edge_type,
+      rationale: s.rationale,
+      source: { id: s.source_id, title: titles[s.source_id] },
+      target: { id: s.target_id, title: titles[s.target_id] },
+    }));
+
   return (
     <div className="page-with-nav">
       <div className="max-w-3xl mx-auto px-4 py-8">
@@ -85,6 +113,7 @@ export default async function SystemHealthPage() {
           tensions={(tensionsRes.data ?? []) as unknown as TensionAlert[]}
           sourceTitles={titles}
           duplicates={duplicates}
+          edgeSuggestions={edgeSuggestions}
         />
       </div>
     </div>

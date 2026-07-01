@@ -6,6 +6,11 @@ export interface SuggestedConnection {
   readonly rationale: string;
 }
 
+export interface ResolveResult {
+  readonly created: number;
+  readonly unresolved: SuggestedConnection[];
+}
+
 const VALID_EDGE_TYPES = new Set([
   'supports', 'contradicts', 'requires', 'evolved_from', 'tested_by',
   'produced', 'connected_to', 'works_at', 'authored_by', 'challenges',
@@ -18,8 +23,9 @@ export async function resolveConnections(
   suggestions: ReadonlyArray<SuggestedConnection>,
   supabase: SupabaseClient,
   userId: string,
-): Promise<number> {
-  if (!suggestions.length) return 0;
+): Promise<ResolveResult> {
+  const unresolved: SuggestedConnection[] = [];
+  if (!suggestions.length) return { created: 0, unresolved };
 
   let created = 0;
 
@@ -36,7 +42,10 @@ export async function resolveConnections(
       .limit(1)
       .maybeSingle();
 
-    if (!match) continue;
+    if (!match) {
+      unresolved.push(suggestion);
+      continue;
+    }
 
     const { data: existing } = await supabase
       .from('edges')
@@ -56,11 +65,11 @@ export async function resolveConnections(
     });
 
     if (error) {
-      process.stderr.write(`[connectionResolver] Edge insert failed (${sourceNodeId} → ${match.id}, type: ${suggestion.edge_type}): ${error.message}\n`);
+      process.stderr.write(`[connectionResolver] Edge insert failed (${sourceNodeId} -> ${match.id}, type: ${suggestion.edge_type}): ${error.message}\n`);
     } else {
       created++;
     }
   }
 
-  return created;
+  return { created, unresolved };
 }

@@ -5,6 +5,7 @@ import type { Node } from '@/lib/types/nodes';
 import type { TensionAlert } from '@/lib/types/tension';
 import { ReviewItem, type ReviewKind } from '@/components/review/ReviewItem';
 import { DuplicateItem, type ReviewDuplicate } from '@/components/review/DuplicateItem';
+import { SuggestedConnectionItem, type ReviewEdgeSuggestion } from '@/components/review/SuggestedConnectionItem';
 import { Markdown } from '@/components/ui/Markdown';
 
 export interface ReviewQueueEntry {
@@ -17,6 +18,7 @@ interface SystemHealthClientProps {
   readonly tensions: readonly TensionAlert[];
   readonly sourceTitles: Readonly<Record<string, string>>;
   readonly duplicates: readonly ReviewDuplicate[];
+  readonly edgeSuggestions: readonly ReviewEdgeSuggestion[];
 }
 
 const SEVERITY_COLORS: Record<string, { readonly text: string; readonly border: string }> = {
@@ -30,9 +32,11 @@ export function SystemHealthClient({
   tensions,
   sourceTitles,
   duplicates: initialDuplicates,
+  edgeSuggestions: initialEdgeSuggestions,
 }: SystemHealthClientProps) {
   const [queue, setQueue] = useState<readonly ReviewQueueEntry[]>(initialQueue);
   const [duplicates, setDuplicates] = useState<readonly ReviewDuplicate[]>(initialDuplicates);
+  const [edgeSuggestions, setEdgeSuggestions] = useState<readonly ReviewEdgeSuggestion[]>(initialEdgeSuggestions);
   const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
 
   const resolveDuplicate = useCallback(async (candidateId: string, status: 'dismissed' | 'resolved') => {
@@ -58,6 +62,24 @@ export function SystemHealthClient({
     }).catch(() => {});
     void resolveDuplicate(dup.id, 'resolved');
   }, [resolveDuplicate]);
+
+  const resolveEdgeSuggestion = useCallback(async (id: string, action: 'accept' | 'dismiss') => {
+    await fetch(`/api/edge-suggestions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    }).catch(() => {});
+  }, []);
+
+  const handleAcceptSuggestion = useCallback((suggestion: ReviewEdgeSuggestion) => {
+    setEdgeSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+    void resolveEdgeSuggestion(suggestion.id, 'accept');
+  }, [resolveEdgeSuggestion]);
+
+  const handleDismissSuggestion = useCallback((id: string) => {
+    setEdgeSuggestions(prev => prev.filter(s => s.id !== id));
+    void resolveEdgeSuggestion(id, 'dismiss');
+  }, [resolveEdgeSuggestion]);
 
   const mutate = useCallback(async (id: string, status: 'promoted' | 'archived', verb: string) => {
     try {
@@ -93,6 +115,24 @@ export function SystemHealthClient({
                 dup={dup}
                 onDismiss={handleDismissDuplicate}
                 onArchive={handleArchiveDuplicate}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {edgeSuggestions.length > 0 && (
+        <section>
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            Suggested connections <span className="text-gray-400">· {edgeSuggestions.length}</span>
+          </h2>
+          <div className="space-y-2">
+            {edgeSuggestions.map(suggestion => (
+              <SuggestedConnectionItem
+                key={suggestion.id}
+                suggestion={suggestion}
+                onAccept={handleAcceptSuggestion}
+                onDismiss={handleDismissSuggestion}
               />
             ))}
           </div>
