@@ -32,7 +32,7 @@ describe('upsertNodeEmbedding', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('skips embedding + upsert when the content hash is unchanged', async () => {
-    const node = { id: 'n1', title: 'T', description: 'd' };
+    const node = { id: 'n1', title: 'T', description: 'd', node_type: 'learning' };
     const supabase = makeSupabase(contentHashForNode(node.title, node.description));
     await upsertNodeEmbedding(supabase as never, node);
     expect(mockEmbedText).not.toHaveBeenCalled();
@@ -41,7 +41,7 @@ describe('upsertNodeEmbedding', () => {
 
   it('embeds and upserts when content changed, returning the embedding', async () => {
     mockEmbedText.mockResolvedValue([0.1, 0.2, 0.3]);
-    const node = { id: 'n1', title: 'T', description: 'new' };
+    const node = { id: 'n1', title: 'T', description: 'new', node_type: 'learning' };
     const supabase = makeSupabase('stale-hash');
     const result = await upsertNodeEmbedding(supabase as never, node);
     expect(result).toEqual([0.1, 0.2, 0.3]);
@@ -54,7 +54,7 @@ describe('upsertNodeEmbedding', () => {
   });
 
   it('returns null when the content hash is unchanged', async () => {
-    const node = { id: 'n1', title: 'T', description: 'd' };
+    const node = { id: 'n1', title: 'T', description: 'd', node_type: 'learning' };
     const supabase = makeSupabase(contentHashForNode(node.title, node.description));
     expect(await upsertNodeEmbedding(supabase as never, node)).toBeNull();
   });
@@ -62,13 +62,13 @@ describe('upsertNodeEmbedding', () => {
   it('does not upsert when the embedding is unavailable (null)', async () => {
     mockEmbedText.mockResolvedValue(null);
     const supabase = makeSupabase(null);
-    await upsertNodeEmbedding(supabase as never, { id: 'n1', title: 'T', description: 'd' });
+    await upsertNodeEmbedding(supabase as never, { id: 'n1', title: 'T', description: 'd', node_type: 'learning' });
     expect(supabase._upsert).not.toHaveBeenCalled();
   });
 
   it('no-ops on empty content without embedding', async () => {
     const supabase = makeSupabase(null);
-    await upsertNodeEmbedding(supabase as never, { id: 'n1', title: '', description: null });
+    await upsertNodeEmbedding(supabase as never, { id: 'n1', title: '', description: null, node_type: 'learning' });
     expect(mockEmbedText).not.toHaveBeenCalled();
   });
 
@@ -80,7 +80,7 @@ describe('upsertNodeEmbedding', () => {
         upsert: vi.fn(),
       })),
     };
-    await expect(upsertNodeEmbedding(supabase as never, { id: 'n1', title: 'T', description: 'd' })).resolves.toBeNull();
+    await expect(upsertNodeEmbedding(supabase as never, { id: 'n1', title: 'T', description: 'd', node_type: 'learning' })).resolves.toBeNull();
   });
 });
 
@@ -90,12 +90,12 @@ describe('indexNode', () => {
   it('runs dedup detection when a fresh embedding was produced', async () => {
     mockEmbedText.mockResolvedValue([0.5, 0.6]);
     const supabase = makeSupabase('stale-hash');
-    await indexNode(supabase as never, { id: 'n1', title: 'T', description: 'new' });
-    expect(mockFindDup).toHaveBeenCalledWith(supabase, 'n1', [0.5, 0.6]);
+    await indexNode(supabase as never, { id: 'n1', title: 'T', description: 'new', node_type: 'learning' });
+    expect(mockFindDup).toHaveBeenCalledWith(supabase, { id: 'n1', node_type: 'learning' }, [0.5, 0.6]);
   });
 
   it('skips dedup detection when the embedding was skipped (unchanged content)', async () => {
-    const node = { id: 'n1', title: 'T', description: 'd' };
+    const node = { id: 'n1', title: 'T', description: 'd', node_type: 'learning' };
     const supabase = makeSupabase(contentHashForNode(node.title, node.description));
     await indexNode(supabase as never, node);
     expect(mockFindDup).not.toHaveBeenCalled();
