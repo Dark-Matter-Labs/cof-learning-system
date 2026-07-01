@@ -104,10 +104,10 @@ export const PATCH = withAuth<{ id: string }>(async ({ request, supabase, params
   // Keep the vector index in sync: (re-)embed when a node is now vetted (the
   // inbox "Accept", or an edit to an already-vetted node). Runs after the
   // response — non-fatal, service-role write.
-  const node = data as { id: string; title: string; description: string | null; status: NodeStatus };
+  const node = data as { id: string; title: string; description: string | null; status: NodeStatus; node_type: string };
   if (node.status === 'promoted' || node.status === 'human_reviewed') {
     after(() => indexNode(createAdminClient(), {
-      id: node.id, title: node.title, description: node.description,
+      id: node.id, title: node.title, description: node.description, node_type: node.node_type,
     }));
   }
 
