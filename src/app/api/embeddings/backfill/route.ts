@@ -10,7 +10,7 @@ export const POST = withAuth(async ({ supabase }) => {
   const [{ data: nodes }, { data: existing }] = await Promise.all([
     supabase
       .from('nodes')
-      .select('id, title, description')
+      .select('id, title, description, node_type')
       .in('status', ['promoted', 'human_reviewed']),
     supabase.from('node_embeddings').select('node_id'),
   ]);
@@ -25,6 +25,7 @@ export const POST = withAuth(async ({ supabase }) => {
       id: n.id as string,
       title: n.title as string,
       description: (n.description ?? null) as string | null,
+      node_type: n.node_type as string,
     });
   }
 

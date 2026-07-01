@@ -322,7 +322,7 @@ export const POST = withAuth(async ({ request, user, supabase }) => {
       // nodes are covered by the inbox PATCH hook + the backfill.
       if (newStatus === 'promoted') {
         after(() => indexNode(createAdminClient(), {
-          id: node_id, title: finalTitle, description: node.description ?? null,
+          id: node_id, title: finalTitle, description: node.description ?? null, node_type: classifiedNodeType,
         }));
       }
 

@@ -6,6 +6,7 @@ export interface EmbeddableNode {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
+  readonly node_type: string;
 }
 
 /**
@@ -56,6 +57,6 @@ export async function upsertNodeEmbedding(
 export async function indexNode(supabase: SupabaseClient, node: EmbeddableNode): Promise<void> {
   const embedding = await upsertNodeEmbedding(supabase, node);
   if (embedding) {
-    await findAndRecordDuplicate(supabase, node.id, embedding);
+    await findAndRecordDuplicate(supabase, { id: node.id, node_type: node.node_type }, embedding);
   }
 }

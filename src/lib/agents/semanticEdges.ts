@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { embedText } from '@/lib/llm/embeddings';
+import { getSemanticMatchableTypes } from '@/lib/config/captureTypes';
 import type { SuggestedConnection } from './connectionResolver';
 
 /** Auto-create an edge at/above this cosine similarity. */
@@ -37,6 +38,7 @@ export async function resolveSemantically(
       const { data, error } = await supabase.rpc('match_nodes', {
         query_embedding: embedding,
         match_count: 5,
+        allowed_types: getSemanticMatchableTypes(),
       });
       if (error) {
         console.error('[semanticEdges] match_nodes failed:', error.message);
