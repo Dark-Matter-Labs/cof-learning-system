@@ -13,6 +13,9 @@ function makeSupabase(matches: Match[], rpcError: { message: string } | null = n
   return supabase;
 }
 
+// 'learning' is in the matchable set; 'person' is not.
+const LEARNING = { id: 'self', node_type: 'learning' };
+
 describe('findAndRecordDuplicate', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
@@ -21,31 +24,43 @@ describe('findAndRecordDuplicate', () => {
       { id: 'self', similarity: 1 },
       { id: 'other', similarity: 0.92 },
     ]);
-    await findAndRecordDuplicate(supabase as never, 'self', [0.1, 0.2]);
+    await findAndRecordDuplicate(supabase as never, LEARNING, [0.1, 0.2]);
     expect(supabase._upsert).toHaveBeenCalledWith(
       expect.objectContaining({ node_id: 'self', similar_node_id: 'other', status: 'open' }),
       expect.objectContaining({ onConflict: 'node_id,similar_node_id' }),
     );
   });
 
+  it('scopes the match to the same node_type via allowed_types', async () => {
+    const supabase = makeSupabase([{ id: 'self', similarity: 1 }, { id: 'other', similarity: 0.92 }]);
+    await findAndRecordDuplicate(supabase as never, LEARNING, [0.1]);
+    expect(supabase.rpc).toHaveBeenCalledWith('match_nodes', expect.objectContaining({
+      allowed_types: ['learning'],
+    }));
+  });
+
+  it('skips entirely (no rpc) when the source node_type is not matchable', async () => {
+    const supabase = makeSupabase([{ id: 'self', similarity: 1 }, { id: 'other', similarity: 0.99 }]);
+    await findAndRecordDuplicate(supabase as never, { id: 'self', node_type: 'person' }, [0.1]);
+    expect(supabase.rpc).not.toHaveBeenCalled();
+    expect(supabase._upsert).not.toHaveBeenCalled();
+  });
+
   it('records nothing when the best non-self match is below threshold', async () => {
-    const supabase = makeSupabase([
-      { id: 'self', similarity: 1 },
-      { id: 'other', similarity: 0.5 },
-    ]);
-    await findAndRecordDuplicate(supabase as never, 'self', [0.1]);
+    const supabase = makeSupabase([{ id: 'self', similarity: 1 }, { id: 'other', similarity: 0.5 }]);
+    await findAndRecordDuplicate(supabase as never, LEARNING, [0.1]);
     expect(supabase._upsert).not.toHaveBeenCalled();
   });
 
   it('records nothing when only the node itself comes back', async () => {
     const supabase = makeSupabase([{ id: 'self', similarity: 1 }]);
-    await findAndRecordDuplicate(supabase as never, 'self', [0.1]);
+    await findAndRecordDuplicate(supabase as never, LEARNING, [0.1]);
     expect(supabase._upsert).not.toHaveBeenCalled();
   });
 
   it('is non-fatal on an rpc error', async () => {
     const supabase = makeSupabase([], { message: 'boom' });
-    await expect(findAndRecordDuplicate(supabase as never, 'self', [0.1])).resolves.toBeUndefined();
+    await expect(findAndRecordDuplicate(supabase as never, LEARNING, [0.1])).resolves.toBeUndefined();
     expect(supabase._upsert).not.toHaveBeenCalled();
   });
 
