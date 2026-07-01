@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { getSemanticMatchableTypes } from '@/lib/config/captureTypes';
 
 const mockEmbedText = vi.fn();
 vi.mock('@/lib/llm/embeddings', () => ({
@@ -51,6 +52,9 @@ describe('resolveSemantically', () => {
       expect.objectContaining({ source_id: 'src', target_id: 'target', edge_type: 'supports', weight: 0.9 }),
     );
     expect(supabase._suggestionUpsert).not.toHaveBeenCalled();
+    expect(supabase.rpc).toHaveBeenCalledWith('match_nodes', expect.objectContaining({
+      allowed_types: getSemanticMatchableTypes(),
+    }));
   });
 
   it('records a review suggestion when the top match is in the review band', async () => {
