@@ -37,6 +37,7 @@ export interface CaptureTypeConfig {
   };
   readonly isKnowledgeNode: boolean;
   readonly isDistillable: boolean;
+  readonly isSemanticMatchable: boolean;
 }
 
 // ─── Deployment-level config ─────────────────────────────────────────────────
@@ -71,6 +72,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A directional belief, emerging insight, or speculation about how things work' },
     isKnowledgeNode: false,
     isDistillable: true,
+    isSemanticMatchable: true,
   },
   {
     id: 'assumption_background',
@@ -84,6 +86,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A contextual claim treated as given (e.g. "3-4° warming is coming")' },
     isKnowledgeNode: false,
     isDistillable: true,
+    isSemanticMatchable: true,
   },
   {
     id: 'assumption_foreground',
@@ -97,6 +100,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'An actively testable if/then proposition' },
     isKnowledgeNode: false,
     isDistillable: true,
+    isSemanticMatchable: true,
   },
   {
     id: 'test',
@@ -110,6 +114,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A specific probe or experiment being run' },
     isKnowledgeNode: false,
     isDistillable: false,
+    isSemanticMatchable: false,
   },
   {
     id: 'learning',
@@ -123,6 +128,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A conclusion drawn from tests or signals' },
     isKnowledgeNode: true,
     isDistillable: true,
+    isSemanticMatchable: true,
   },
   {
     id: 'option',
@@ -136,6 +142,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A potential path or strategic opportunity' },
     isKnowledgeNode: false,
     isDistillable: true,
+    isSemanticMatchable: true,
   },
   {
     id: 'commitment',
@@ -149,6 +156,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A resource allocation or delivery obligation' },
     isKnowledgeNode: false,
     isDistillable: false,
+    isSemanticMatchable: false,
   },
   {
     id: 'signal',
@@ -162,6 +170,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'Feedback from reality — new data, a conversation result, external evidence' },
     isKnowledgeNode: true,
     isDistillable: false,
+    isSemanticMatchable: true,
   },
   {
     id: 'goal_space',
@@ -175,6 +184,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A high-level goal area' },
     isKnowledgeNode: false,
     isDistillable: false,
+    isSemanticMatchable: false,
   },
   {
     id: 'trigger_outcome',
@@ -188,6 +198,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A measurable outcome indicating goal progress' },
     isKnowledgeNode: false,
     isDistillable: false,
+    isSemanticMatchable: false,
   },
   {
     id: 'meeting_notes',
@@ -201,6 +212,7 @@ export const CAPTURE_TYPES: readonly CaptureTypeConfig[] = [
     llm: { description: 'A meeting or call transcript' },
     isKnowledgeNode: false,
     isDistillable: false,
+    isSemanticMatchable: false,
   },
 ] as const;
 
@@ -261,5 +273,12 @@ export function getLlmNodeTypeDescriptions(): string {
 export function getDistillableTypes(): readonly string[] {
   return CAPTURE_TYPES
     .filter(t => t.isDistillable)
+    .map(t => t.id);
+}
+
+/** Node types eligible for embedding-based dedup / semantic edge matching. */
+export function getSemanticMatchableTypes(): readonly string[] {
+  return CAPTURE_TYPES
+    .filter(t => t.isSemanticMatchable)
     .map(t => t.id);
 }
